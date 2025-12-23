@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: mopl-spring
+  profiles:
+    active: dev
