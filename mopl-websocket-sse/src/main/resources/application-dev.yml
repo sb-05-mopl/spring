@@ -1,0 +1,40 @@
+server:
+  port: 9090
+
+spring:
+  datasource:
+    url: jdbc:postgresql://dev-db-server:5432/mopl_dev
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  data:
+    redis:
+      host: dev-redis-server
+      port: 6379
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: INFO
+    com.mopl: DEBUG

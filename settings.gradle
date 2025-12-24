@@ -1,1 +1,4 @@
 rootProject.name = 'mopl_spring'
+
+include 'mopl-core'
+include 'mopl-websocket-sse'

@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: mopl-core
+  profiles:
+    active: local
