@@ -25,7 +25,7 @@ public class LoggingAspect {
 		String methodName = joinPoint.getSignature().getName();
 		String signature = getMethodSignature(joinPoint);
 
-		log.debug("[LoggingAspect] START - {}.{}({})", className, methodName, signature);
+		log.info("[LoggingAspect] START - {}.{}({})", className, methodName, signature);
 
 		long startTime = System.currentTimeMillis();
 
@@ -37,7 +37,7 @@ public class LoggingAspect {
 				log.warn("[LoggingAspect] SLOW - {}.{} | {}ms - 실행 시간이 {}ms보다 느립니다",
 					className, methodName, executionTime, slowMethodThreshold);
 			} else {
-				log.debug("[LoggingAspect] END - {}.{} | {}ms",
+				log.info("[LoggingAspect] END - {}.{} | {}ms",
 					className, methodName, executionTime);
 			}
 
