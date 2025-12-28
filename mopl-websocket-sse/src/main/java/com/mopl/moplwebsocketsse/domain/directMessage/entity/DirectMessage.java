@@ -29,20 +29,15 @@ public class DirectMessage extends BaseEntity {
 	@JoinColumn(name = "sender_id", nullable = false)
 	private User sender;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "receiver_id", nullable = false)
-	private User receiver;
-
 	@Column(nullable = false, columnDefinition = "TEXT")
 	private String content;
 
 	@Column(name = "read_at")
 	private Instant readAt;
 
-	public DirectMessage(Conversation conversation, User sender, User receiver, String content) {
+	public DirectMessage(Conversation conversation, User sender, String content) {
 		this.conversation = conversation;
 		this.sender = sender;
-		this.receiver = receiver;
 		this.content = content;
 		this.readAt = null;
 	}
