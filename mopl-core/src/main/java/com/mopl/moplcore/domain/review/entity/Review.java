@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 public class Review extends BaseUpdatableEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id", nullable = false)
+	@JoinColumn(name = "author_id", nullable = false) // user_id -> author_id 더 직관적인 것 같음
 	private User user;
 
 	@ManyToOne(fetch = FetchType.LAZY)
