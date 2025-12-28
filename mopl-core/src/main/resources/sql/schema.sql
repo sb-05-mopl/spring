@@ -155,7 +155,7 @@ CREATE TABLE notifications (
                                created_at TIMESTAMP NOT NULL,
                                content TEXT NOT NULL,
                                level VARCHAR NOT NULL,
-                               read_at TIMESTAMP NULL,
+                               read_at TIMESTAMP,
 
                                CONSTRAINT pk_notifications PRIMARY KEY (id),
 
@@ -217,6 +217,7 @@ CREATE TABLE direct_messages (
                                  sender_id UUID NOT NULL,
                                  content TEXT NOT NULL,
                                  created_at TIMESTAMP NOT NULL,
+                                 read_at timestamp,
 
                                  CONSTRAINT pk_direct_messages PRIMARY KEY (id),
                                  CONSTRAINT fk_dm_conversation
