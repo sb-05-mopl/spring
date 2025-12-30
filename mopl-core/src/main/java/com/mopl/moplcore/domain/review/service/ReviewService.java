@@ -12,7 +12,11 @@ import com.mopl.moplcore.domain.review.dto.CursorResponseReviewDto;
 import com.mopl.moplcore.domain.review.dto.ReviewCreateRequest;
 import com.mopl.moplcore.domain.review.dto.ReviewDto;
 import com.mopl.moplcore.domain.review.dto.ReviewSearchRequest;
+import com.mopl.moplcore.domain.review.dto.ReviewUpdateRequest;
 import com.mopl.moplcore.domain.review.entity.Review;
+import com.mopl.moplcore.domain.review.exception.ForbiddenReviewAccessException;
+import com.mopl.moplcore.domain.review.exception.ReviewAlreadyExistsException;
+import com.mopl.moplcore.domain.review.exception.ReviewNotFoundException;
 import com.mopl.moplcore.domain.review.mapper.ReviewMapper;
 import com.mopl.moplcore.domain.review.repository.ReviewRepository;
 import com.mopl.moplcore.domain.user.entity.User;
@@ -32,6 +36,10 @@ public class ReviewService {
 
 	@Transactional
 	public ReviewDto create(ReviewCreateRequest request, UUID authorId) {
+		if (reviewRepository.existsByAuthorIdAndContentId(authorId, request.contentId())) {
+			throw new ReviewAlreadyExistsException();
+		}
+
 		/* TODO : User, Content 있는지 확인하는 검증 라인
 		    다른 도메인 예외 추가시 변경
 		User author = userRepository.findById(authorId)
@@ -100,5 +108,31 @@ public class ReviewService {
 			request.sortBy(),
 			request.sortDirection()
 		);
+	}
+
+	@Transactional
+	public ReviewDto update(UUID reviewId, ReviewUpdateRequest request, UUID requesterId) {
+		Review review = reviewRepository.findById(reviewId)
+			.orElseThrow(() -> ReviewNotFoundException.withReviewId(reviewId));
+
+		if (!review.getAuthor().getId().equals(requesterId)) {
+			throw new ForbiddenReviewAccessException();
+		}
+
+		review.update(request.text(), request.rating());
+
+		return reviewMapper.toDto(review);
+	}
+
+	@Transactional
+	public void delete(UUID reviewId, UUID requesterId) {
+		Review review = reviewRepository.findById(reviewId)
+			.orElseThrow(() -> ReviewNotFoundException.withReviewId(reviewId));
+
+		if (!review.getAuthor().getId().equals(requesterId)) {
+			throw new ForbiddenReviewAccessException();
+		}
+
+		reviewRepository.delete(review);
 	}
 }

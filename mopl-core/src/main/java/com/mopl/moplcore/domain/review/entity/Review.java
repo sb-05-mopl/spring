@@ -1,9 +1,9 @@
 package com.mopl.moplcore.domain.review.entity;
 
-
 import com.mopl.moplcore.domain.common.entity.BaseUpdatableEntity;
 import com.mopl.moplcore.domain.content.entity.Content;
 import com.mopl.moplcore.domain.review.exception.InvalidRatingException;
+import com.mopl.moplcore.domain.review.exception.InvalidReviewTextException;
 import com.mopl.moplcore.domain.user.entity.User;
 
 import jakarta.persistence.Column;
@@ -41,6 +41,7 @@ public class Review extends BaseUpdatableEntity {
 
 	@Builder
 	public Review(User author, Content content, String text, double rating) {
+		validateReviewText(text);
 		validateRating(rating);
 		this.author = author;
 		this.content = content;
@@ -49,12 +50,20 @@ public class Review extends BaseUpdatableEntity {
 	}
 
 	public void update(String text, Double rating) {
-		if(text != null) {
+		if (text != null) {
+			validateReviewText(text);
 			this.text = text;
 		}
-		if(rating != null) {
+
+		if (rating != null) {
 			validateRating(rating);
 			this.rating = rating;
+		}
+	}
+
+	private void validateReviewText(String text) {
+		if (text == null || text.isBlank()) {
+			throw new InvalidReviewTextException();
 		}
 	}
 
