@@ -118,4 +118,16 @@ public class ReviewService {
 
 		return reviewMapper.toDto(review);
 	}
+
+	@Transactional
+	public void delete(UUID reviewId, UUID requesterId) {
+		Review review = reviewRepository.findById(reviewId)
+			.orElseThrow(() -> ReviewNotFoundException.withReviewId(reviewId));
+
+		if (!review.getAuthor().getId().equals(requesterId)) {
+			throw new ForbiddenReviewAccessException();
+		}
+
+		reviewRepository.delete(review);
+	}
 }
