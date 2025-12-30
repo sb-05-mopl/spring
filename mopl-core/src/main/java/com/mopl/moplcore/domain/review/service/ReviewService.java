@@ -9,7 +9,10 @@ import com.mopl.moplcore.domain.content.entity.Content;
 import com.mopl.moplcore.domain.content.repository.ContentRepository;
 import com.mopl.moplcore.domain.review.dto.ReviewCreateRequest;
 import com.mopl.moplcore.domain.review.dto.ReviewDto;
+import com.mopl.moplcore.domain.review.dto.ReviewUpdateRequest;
 import com.mopl.moplcore.domain.review.entity.Review;
+import com.mopl.moplcore.domain.review.exception.ForbiddenReviewAccessException;
+import com.mopl.moplcore.domain.review.exception.ReviewNotFoundException;
 import com.mopl.moplcore.domain.review.mapper.ReviewMapper;
 import com.mopl.moplcore.domain.review.repository.ReviewRepository;
 import com.mopl.moplcore.domain.user.entity.User;
@@ -52,5 +55,19 @@ public class ReviewService {
 		Review saved = reviewRepository.save(review);
 
 		return reviewMapper.toDto(saved);
+	}
+
+	@Transactional
+	public ReviewDto update(UUID reviewId, ReviewUpdateRequest request, UUID requesterId) {
+		Review review = reviewRepository.findById(reviewId)
+			.orElseThrow(() -> ReviewNotFoundException.withReviewId(reviewId));
+
+		if (!review.getAuthor().getId().equals(requesterId)) {
+			throw new ForbiddenReviewAccessException();
+		}
+
+		review.update(request.text(), request.rating());
+
+		return reviewMapper.toDto(review);
 	}
 }
