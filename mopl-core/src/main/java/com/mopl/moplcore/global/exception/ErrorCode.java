@@ -24,6 +24,7 @@ public enum ErrorCode {
 	INVALID_RATING(HttpStatus.BAD_REQUEST, "평점은 1.0 ~ 5.0 사이여야 합니다"),
 	FORBIDDEN_REVIEW_ACCESS(HttpStatus.FORBIDDEN, "본인의 리뷰만 수정/삭제할 수 있습니다"),
 	INVALID_REVIEW_TEXT(HttpStatus.BAD_REQUEST, "리뷰 내용은 공백일 수 없습니다"),
+	REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 해당 콘텐츠에 리뷰를 작성하셨습니다"),
 
     PLAYLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "플레이리스트를 찾을 수 없습니다"),
     PLAYLIST_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "플레이리스트 생성 한도를 초과했습니다"),
