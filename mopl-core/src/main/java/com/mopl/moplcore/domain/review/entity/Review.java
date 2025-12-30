@@ -31,7 +31,7 @@ public class Review extends BaseUpdatableEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "content_id", nullable = false)
-	private Content contentId;
+	private Content content;
 
 	@Column(nullable = false, columnDefinition = "TEXT")
 	private String text;
@@ -43,7 +43,7 @@ public class Review extends BaseUpdatableEntity {
 	public Review(User author, Content content, String text, double rating) {
 		validateRating(rating);
 		this.author = author;
-		this.contentId = content;
+		this.content = content;
 		this.text = text;
 		this.rating = rating;
 	}
