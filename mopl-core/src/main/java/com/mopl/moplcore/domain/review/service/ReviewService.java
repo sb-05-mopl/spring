@@ -12,7 +12,10 @@ import com.mopl.moplcore.domain.review.dto.CursorResponseReviewDto;
 import com.mopl.moplcore.domain.review.dto.ReviewCreateRequest;
 import com.mopl.moplcore.domain.review.dto.ReviewDto;
 import com.mopl.moplcore.domain.review.dto.ReviewSearchRequest;
+import com.mopl.moplcore.domain.review.dto.ReviewUpdateRequest;
 import com.mopl.moplcore.domain.review.entity.Review;
+import com.mopl.moplcore.domain.review.exception.ForbiddenReviewAccessException;
+import com.mopl.moplcore.domain.review.exception.ReviewNotFoundException;
 import com.mopl.moplcore.domain.review.mapper.ReviewMapper;
 import com.mopl.moplcore.domain.review.repository.ReviewRepository;
 import com.mopl.moplcore.domain.user.entity.User;
@@ -100,5 +103,31 @@ public class ReviewService {
 			request.sortBy(),
 			request.sortDirection()
 		);
+	}
+
+	@Transactional
+	public ReviewDto update(UUID reviewId, ReviewUpdateRequest request, UUID requesterId) {
+		Review review = reviewRepository.findById(reviewId)
+			.orElseThrow(() -> ReviewNotFoundException.withReviewId(reviewId));
+
+		if (!review.getAuthor().getId().equals(requesterId)) {
+			throw new ForbiddenReviewAccessException();
+		}
+
+		review.update(request.text(), request.rating());
+
+		return reviewMapper.toDto(review);
+	}
+
+	@Transactional
+	public void delete(UUID reviewId, UUID requesterId) {
+		Review review = reviewRepository.findById(reviewId)
+			.orElseThrow(() -> ReviewNotFoundException.withReviewId(reviewId));
+
+		if (!review.getAuthor().getId().equals(requesterId)) {
+			throw new ForbiddenReviewAccessException();
+		}
+
+		reviewRepository.delete(review);
 	}
 }
