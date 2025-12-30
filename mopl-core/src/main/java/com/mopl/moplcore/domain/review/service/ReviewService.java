@@ -1,5 +1,6 @@
 package com.mopl.moplcore.domain.review.service;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -7,8 +8,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mopl.moplcore.domain.content.entity.Content;
 import com.mopl.moplcore.domain.content.repository.ContentRepository;
+import com.mopl.moplcore.domain.review.dto.CursorResponseReviewDto;
 import com.mopl.moplcore.domain.review.dto.ReviewCreateRequest;
 import com.mopl.moplcore.domain.review.dto.ReviewDto;
+import com.mopl.moplcore.domain.review.dto.ReviewSearchRequest;
 import com.mopl.moplcore.domain.review.dto.ReviewUpdateRequest;
 import com.mopl.moplcore.domain.review.entity.Review;
 import com.mopl.moplcore.domain.review.exception.ForbiddenReviewAccessException;
@@ -55,6 +58,51 @@ public class ReviewService {
 		Review saved = reviewRepository.save(review);
 
 		return reviewMapper.toDto(saved);
+	}
+
+	@Transactional(readOnly = true)
+	public CursorResponseReviewDto findReviews(ReviewSearchRequest request) {
+		long totalCount = reviewRepository.count(request.contentId());
+
+		List<Review> reviews = reviewRepository.findByContentIdWithCursor(
+			request.contentId(),
+			request.cursor(),
+			request.idAfter(),
+			request.limit(),
+			request.sortBy().name(),
+			request.sortDirection().name()
+		);
+
+		boolean hasNext = reviews.size() > request.limit();
+		List<Review> reviewsLimit = hasNext ? reviews.subList(0, request.limit()) : reviews;
+
+		List<ReviewDto> reviewDtos = reviewsLimit.stream()
+			.map(reviewMapper::toDto)
+			.toList();
+
+		String nextCursor = null;
+		UUID nextIdAfter = null;
+
+		if (hasNext && !reviewsLimit.isEmpty()) {
+			Review lastReview = reviewsLimit.getLast();
+
+			nextCursor = switch (request.sortBy()) {
+				case createdAt -> lastReview.getCreatedAt().toString();
+				case rating -> String.valueOf(lastReview.getRating());
+			};
+
+			nextIdAfter = lastReview.getId();
+		}
+
+		return new CursorResponseReviewDto(
+			reviewDtos,
+			nextCursor,
+			nextIdAfter != null ? nextIdAfter.toString() : null,
+			hasNext,
+			totalCount,
+			request.sortBy(),
+			request.sortDirection()
+		);
 	}
 
 	@Transactional
