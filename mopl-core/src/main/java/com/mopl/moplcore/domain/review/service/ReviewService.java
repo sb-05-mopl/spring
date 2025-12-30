@@ -57,6 +57,7 @@ public class ReviewService {
 		return reviewMapper.toDto(saved);
 	}
 
+	@Transactional(readOnly = true)
 	public CursorResponseReviewDto findReviews(ReviewSearchRequest request) {
 		long totalCount = reviewRepository.count(request.contentId());
 
