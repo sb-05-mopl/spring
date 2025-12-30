@@ -7,4 +7,5 @@ import com.mopl.moplcore.domain.content.entity.Content;
 
 public interface ContentRepositoryCustom {
 	List<Content> searchContents(ContentSearchRequest request);
+	Long countContents(ContentSearchRequest request);
 }
