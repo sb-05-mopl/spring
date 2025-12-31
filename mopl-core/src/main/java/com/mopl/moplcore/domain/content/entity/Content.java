@@ -1,6 +1,5 @@
 package com.mopl.moplcore.domain.content.entity;
 
-
 import com.mopl.moplcore.domain.common.entity.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -8,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,17 +15,15 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "contents")
+@Table(name = "contents",
+	uniqueConstraints = @UniqueConstraint(name = "uk_type_source_id", columnNames = {"source_id", "type"})
+)
 public class Content extends BaseEntity {
 	@Column(nullable = false)
 	private String title;
 
 	@Column(columnDefinition = "TEXT")
 	private String description;
-
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
-	private Type type;
 
 	@Column(name = "thumbnail_url")
 	private String thumbnailUrl;
@@ -36,13 +34,21 @@ public class Content extends BaseEntity {
 	@Column(name = "review_count", nullable = false)
 	private int reviewCount;
 
-	public Content(String title, String description, Type type, String thumbnailUrl) {
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private Type type;
+
+	@Column(nullable = false)
+	private long sourceId;
+
+	public Content(String title, String description, Type type, String thumbnailUrl, long sourceId) {
 		this.title = title;
 		this.description = description;
 		this.type = type;
 		this.thumbnailUrl = thumbnailUrl;
 		this.averageRating = 0.0;
 		this.reviewCount = 0;
+		this.sourceId = sourceId;
 	}
 
 	public void update(String title, String description, Type type, String thumbnailUrl) {
@@ -56,4 +62,5 @@ public class Content extends BaseEntity {
 		this.averageRating = averageRating;
 		this.reviewCount = reviewCount;
 	}
+
 }
