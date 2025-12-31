@@ -27,13 +27,13 @@ public class ContentManagementService {
 	private final TagRepository tagRepository;
 
 	@Transactional
-	public ContentDto createContent(ContentCreateRequest request, String thumbnailUrl) {
+	public ContentDto createContent(ContentCreateRequest request) {
 		Content content = Content.builder()
 			.type(request.type())
 			.title(request.title())
 			.description(request.description())
 			.sourceId(request.sourceId())
-			.thumbnailUrl(thumbnailUrl)
+			.thumbnailUrl(request.thumbnailUrl())
 			.build();
 
 		Content savedContent = contentRepository.save(content);
@@ -57,7 +57,7 @@ public class ContentManagementService {
 	}
 
 	@Transactional
-	public ContentDto updateContent(UUID id, ContentUpdateRequest request, String thumbnailUrl) {
+	public ContentDto updateContent(UUID id, ContentUpdateRequest request) {
 		Content content = contentRepository.findById(id)
 			.orElseThrow(() -> new ContentNotFoundException(id));
 
@@ -67,12 +67,13 @@ public class ContentManagementService {
 		if (request.description() != null) {
 			content.updateDescription(request.description());
 		}
-		if (thumbnailUrl != null) {
-			content.updateThumbnailUrl(thumbnailUrl);
+		if (request.thumbnailUrl() != null) {
+			content.updateThumbnailUrl(request.thumbnailUrl());
 		}
 
 		if (request.tags() != null) {
 			contentTagRepository.deleteByContentId(id);
+			contentTagRepository.flush();
 
 			List<ContentTag> contentTags = request.tags().stream()
 				.map(tagName -> {
