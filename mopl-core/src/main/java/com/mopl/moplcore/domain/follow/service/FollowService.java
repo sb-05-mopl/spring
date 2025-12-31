@@ -64,4 +64,14 @@ public class FollowService {
 
 		followRepository.delete(follow);
 	}
+
+	@Transactional(readOnly = true)
+	public boolean isFollowedByMe(UUID followerId, UUID followeeId) {
+		return followRepository.existsByFollowerIdAndFolloweeId(followerId, followeeId);
+	}
+
+	@Transactional(readOnly = true)
+	public long countFollowers(UUID followeeId) {
+		return followRepository.countByFolloweeId(followeeId);
+	}
 }
