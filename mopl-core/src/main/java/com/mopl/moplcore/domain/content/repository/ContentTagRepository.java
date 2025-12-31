@@ -9,4 +9,6 @@ import com.mopl.moplcore.domain.content.entity.ContentTag;
 
 public interface ContentTagRepository extends JpaRepository<ContentTag, UUID> {
 	List<ContentTag> findByContentId(UUID contentId);
+
+	void deleteByContentId(UUID id);
 }
