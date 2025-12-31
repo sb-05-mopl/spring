@@ -1,6 +1,7 @@
 package com.mopl.moplcore.domain.content.service;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,6 +10,7 @@ import com.mopl.moplcore.domain.content.dto.ContentDto;
 import com.mopl.moplcore.domain.content.dto.ContentSearchRequest;
 import com.mopl.moplcore.domain.content.dto.CursorResponseContentDto;
 import com.mopl.moplcore.domain.content.entity.Content;
+import com.mopl.moplcore.domain.content.exception.ContentNotFoundException;
 import com.mopl.moplcore.domain.content.repository.ContentRepository;
 import com.mopl.moplcore.domain.content.repository.ContentTagRepository;
 
@@ -53,6 +55,13 @@ public class ContentSearchService {
 			.sortBy(request.getSortBy().name())
 			.sortDirection(request.getSortDirection().name())
 			.build();
+	}
+
+	public ContentDto getContent(UUID id) {
+		Content content = contentRepository.findById(id)
+			.orElseThrow(() -> new ContentNotFoundException(id));
+
+		return toDto(content);
 	}
 
 	private ContentDto toDto(Content content) {

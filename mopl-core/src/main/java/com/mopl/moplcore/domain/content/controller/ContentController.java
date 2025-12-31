@@ -1,11 +1,16 @@
 package com.mopl.moplcore.domain.content.controller;
 
+import java.rmi.server.UID;
+import java.util.UUID;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mopl.moplcore.domain.content.dto.ContentDto;
 import com.mopl.moplcore.domain.content.dto.ContentSearchRequest;
 import com.mopl.moplcore.domain.content.dto.CursorResponseContentDto;
 import com.mopl.moplcore.domain.content.service.ContentSearchService;
@@ -29,8 +34,12 @@ public class ContentController {
 		return ResponseEntity.ok(response);
 	}
 
-	// @GetMapping("/{contentId}")
-	// public ResponseEntity<ContentDto> getContent(@PathVariable UUID contentId) { }
+	@Operation(summary = "콘텐츠 상세 조회")
+	@GetMapping("/{id}")
+	public ResponseEntity<ContentDto> getContent(@PathVariable UUID id) {
+		ContentDto response = contentSearchService.getContent(id);
+		return ResponseEntity.ok(response);
+	}
 
 	// @PostMapping
 	// public ResponseEntity<ContentDto> createContent(...) { }
