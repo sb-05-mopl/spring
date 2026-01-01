@@ -11,5 +11,7 @@ public interface ReviewRepository extends JpaRepository<Review, UUID>, ReviewRep
 	@Query("SELECT COUNT(r) FROM Review r WHERE r.content.id = :contentId")
 	long count(UUID contentId);
 
+	@Query(value = "SELECT EXISTS(SELECT 1 FROM reviews WHERE author_id = :authorId AND content_id = :contentId)",
+		nativeQuery = true)
 	boolean existsByAuthorIdAndContentId(UUID authorId, UUID contentId);
 }

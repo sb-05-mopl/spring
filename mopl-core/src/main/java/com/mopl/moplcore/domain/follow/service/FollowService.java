@@ -67,11 +67,19 @@ public class FollowService {
 
 	@Transactional(readOnly = true)
 	public boolean isFollowedByMe(UUID followerId, UUID followeeId) {
+		userRepository.findById(followerId)
+			.orElseThrow(() -> new RuntimeException("Follower not found"));
+		userRepository.findById(followeeId)
+			.orElseThrow(() -> new RuntimeException("Followee not found"));
+
 		return followRepository.existsByFollowerIdAndFolloweeId(followerId, followeeId);
 	}
 
 	@Transactional(readOnly = true)
 	public long countFollowers(UUID followeeId) {
+		userRepository.findById(followeeId)
+			.orElseThrow(() -> new RuntimeException("Followee not found"));
+
 		return followRepository.countByFolloweeId(followeeId);
 	}
 }
