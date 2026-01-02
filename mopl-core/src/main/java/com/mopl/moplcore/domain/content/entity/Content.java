@@ -9,6 +9,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -41,6 +42,7 @@ public class Content extends BaseEntity {
 	@Column(nullable = false)
 	private long sourceId;
 
+	@Builder
 	public Content(String title, String description, Type type, String thumbnailUrl, long sourceId) {
 		this.title = title;
 		this.description = description;
@@ -58,9 +60,20 @@ public class Content extends BaseEntity {
 		this.thumbnailUrl = thumbnailUrl;
 	}
 
+	public void updateTitle(String title) {
+		this.title = title;
+	}
+
+	public void updateDescription(String description) {
+		this.description = description;
+	}
+
+	public void updateThumbnailUrl(String thumbnailUrl) {
+		this.thumbnailUrl = thumbnailUrl;
+	}
+
 	public void updateRating(double averageRating, int reviewCount) {
 		this.averageRating = averageRating;
 		this.reviewCount = reviewCount;
 	}
-
 }

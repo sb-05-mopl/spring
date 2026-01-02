@@ -1,6 +1,7 @@
 package com.mopl.moplcore.domain.content.service;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,6 +10,8 @@ import com.mopl.moplcore.domain.content.dto.ContentDto;
 import com.mopl.moplcore.domain.content.dto.ContentSearchRequest;
 import com.mopl.moplcore.domain.content.dto.CursorResponseContentDto;
 import com.mopl.moplcore.domain.content.entity.Content;
+import com.mopl.moplcore.domain.content.entity.Type;
+import com.mopl.moplcore.domain.content.exception.ContentNotFoundException;
 import com.mopl.moplcore.domain.content.repository.ContentRepository;
 import com.mopl.moplcore.domain.content.repository.ContentTagRepository;
 
@@ -18,6 +21,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ContentSearchService {
+
+	private static final String TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
+
 	private final ContentRepository contentRepository;
 	private final ContentTagRepository contentTagRepository;
 
@@ -55,6 +61,13 @@ public class ContentSearchService {
 			.build();
 	}
 
+	public ContentDto getContent(UUID id) {
+		Content content = contentRepository.findById(id)
+			.orElseThrow(() -> new ContentNotFoundException(id));
+
+		return toDto(content);
+	}
+
 	private ContentDto toDto(Content content) {
 		List<String> tags = contentTagRepository
 			.findByContentId(content.getId())
@@ -62,16 +75,33 @@ public class ContentSearchService {
 			.map(ct -> ct.getTag().getName())
 			.toList();
 
+		String fullThumbnailUrl = buildImageUrl(content.getType(), content.getThumbnailUrl());
+
 		return ContentDto.builder()
 			.id(content.getId())
 			.type(content.getType())
 			.title(content.getTitle())
 			.description(content.getDescription())
-			.thumbnailUrl(content.getThumbnailUrl())
+			.thumbnailUrl(fullThumbnailUrl)  // 완성된 URL
 			.tags(tags)
 			.averageRating(content.getAverageRating())
 			.reviewCount(content.getReviewCount())
 			.watcherCount(0)
 			.build();
+	}
+
+	private String buildImageUrl(Type type, String path) {
+		if (path == null) {
+			return null;
+		}
+
+		if (path.startsWith("http://") || path.startsWith("https://")) {
+			return path;
+		}
+
+		return switch (type) {
+			case MOVIE, TV_SERIES -> TMDB_IMAGE_BASE_URL + path;
+			case SPORTS -> path;
+		};
 	}
 }
