@@ -1,6 +1,8 @@
 package com.mopl.moplcore.security.jwt;
 
+import com.mopl.moplcore.domain.user.dto.UserDto;
 import com.mopl.moplcore.domain.user.entity.Role;
+import com.mopl.moplcore.security.MoplUserDetails;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -10,11 +12,13 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import jakarta.servlet.http.Cookie;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,48 +27,58 @@ public class JwtTokenProvider {
   public static final String REFRESH_TOKEN_COOKIE_NAME = "REFRESH_TOKEN";
 
   private final int accessTokenExpirationMs;
+  private final int refreshTokenExpirationMs;
 
   public final JWSSigner accessTokenSigner;
   public final JWSVerifier accessTokenVerifier;
 
+  public final JWSSigner refreshTokenSigner;
+  public final JWSVerifier refreshTokenVerifier;
+
   public JwtTokenProvider(
       @Value("${jwt.access-token.secret}") String accessTokenSecret,
-      @Value("${jwt.access-token.expiration-ms}") long accessTokenExpirationMs
-  ) {
-    this.accessTokenExpirationMs = (int) accessTokenExpirationMs;
+      @Value("${jwt.access-token.expiration-ms}") int accessTokenExpirationMs,
+      @Value("${jwt.refresh-token.secret}") String refreshTokenSecret,
+      @Value("${jwt.refresh-token.expiration-ms}") int refreshTokenExpirationMs
+  ) throws JOSEException {
+    this.accessTokenExpirationMs = accessTokenExpirationMs;
+    this.refreshTokenExpirationMs = refreshTokenExpirationMs;
 
     byte[] accessTokenSecretBytes = accessTokenSecret.getBytes(StandardCharsets.UTF_8);
-    try {
-      this.accessTokenSigner = new MACSigner(accessTokenSecretBytes);
-      this.accessTokenVerifier = new MACVerifier(accessTokenSecretBytes);
-    } catch (JOSEException e) {
-      throw new RuntimeException("JWT 서명/검증 키 초기화에 실패했습니다.", e);
-    }
+    this.accessTokenSigner = new MACSigner(accessTokenSecretBytes);
+    this.accessTokenVerifier = new MACVerifier(accessTokenSecretBytes);
+
+    byte[] refreshTokenSecretBytes = refreshTokenSecret.getBytes(StandardCharsets.UTF_8);
+    this.refreshTokenSigner = new MACSigner(refreshTokenSecretBytes);
+    this.refreshTokenVerifier = new MACVerifier(refreshTokenSecretBytes);
   }
 
-  public String generateAccessToken(UUID userId, Role role) {
-
-    try {
-      return generateToken(userId, role, accessTokenExpirationMs, accessTokenSigner, "access");
-    } catch (JOSEException e) {
-      throw new IllegalStateException("JWT 서명에 실패했습니다." + e.getMessage(), e);
-    }
+  public String generateAccessToken(MoplUserDetails userDetails) throws JOSEException {
+    return generateToken(userDetails, accessTokenExpirationMs, accessTokenSigner, "access");
   }
 
-  public String generateToken(UUID userId, Role role, int expirationMs, JWSSigner signer,
+  public String generateRefreshToken(MoplUserDetails userDetails) throws JOSEException {
+    return generateToken(userDetails, refreshTokenExpirationMs, refreshTokenSigner, "refresh");
+  }
+
+  public String generateToken(MoplUserDetails userDetails, int expirationMs, JWSSigner signer,
       String tokenType) throws JOSEException {
 
     String tokenId = UUID.randomUUID().toString();
+    UserDto user = userDetails.getUserDto();
+
     Date now = new Date();
     Date expiryDate = new Date(now.getTime() + expirationMs);
 
     JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-        .subject(userId.toString())
+        .subject(user.email())
         .jwtID(tokenId)
-        .claim("userId", userId.toString())
+        .claim("userId", user.id().toString())
         .claim("type", tokenType)
-        .claim("role", role.name())
-        .claim("roles", List.of(role.name()))
+        .claim("role", user.role().name())
+        .claim("roles", userDetails.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .collect(Collectors.toList()))
         .issueTime(now)
         .expirationTime(expiryDate)
         .build();
@@ -84,6 +98,10 @@ public class JwtTokenProvider {
     return validateToken(token, accessTokenVerifier, "access");
   }
 
+  public boolean validateRefreshToken(String token) {
+    return validateToken(token, refreshTokenVerifier, "refresh");
+  }
+
   private boolean validateToken(String token, JWSVerifier verifier, String expectedType) {
 
     try {
@@ -94,20 +112,35 @@ public class JwtTokenProvider {
       }
 
       String tokenType = (String) signedJWT.getJWTClaimsSet().getClaim("type");
-      if (!tokenType.equals(expectedType)) {
+      if (!expectedType.equals(tokenType)) {
         return false;
       }
 
       Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-      if (expirationTime == null || expirationTime.before(new Date())) {
-        return false;
-      }
-
-      return true;
+      return expirationTime != null && !expirationTime.before(new Date());
     } catch (Exception e) {
       return false;
     }
   }
+
+  public Cookie generateRefreshTokenCookie(String refreshToken) {
+    Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
+    cookie.setHttpOnly(true);
+    cookie.setSecure(true);
+    cookie.setPath("/");
+    cookie.setMaxAge(refreshTokenExpirationMs / 1000);
+    return cookie;
+  }
+
+  public Cookie generateRefreshTokenExpirationCookie() {
+    Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, "");
+    cookie.setHttpOnly(true);
+    cookie.setSecure(true);
+    cookie.setPath("/");
+    cookie.setMaxAge(0);
+    return cookie;
+  }
+
 
   public String getTokenId(String token) {
     try {
@@ -123,10 +156,7 @@ public class JwtTokenProvider {
       SignedJWT signedJWT = SignedJWT.parse(token);
       String userIdStr = (String) signedJWT.getJWTClaimsSet().getClaim("userId");
       if (userIdStr == null) {
-        userIdStr = signedJWT.getJWTClaimsSet().getSubject();
-      }
-      if (userIdStr == null) {
-        throw new IllegalArgumentException("User Id claim not found in JWT token");
+        throw new IllegalArgumentException("User ID claim not found in JWT token");
       }
       return UUID.fromString(userIdStr);
     } catch (Exception e) {
