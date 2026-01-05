@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mopl.moplcore.security.SpaCsrfTokenRequestHandler;
 import com.mopl.moplcore.security.jwt.JwtAuthenticationFilter;
 import com.mopl.moplcore.security.jwt.JwtLoginSuccessHandler;
+import com.mopl.moplcore.security.jwt.JwtLogoutHandler;
 import com.mopl.moplcore.security.jwt.JwtTokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,12 +28,15 @@ public class SecurityConfig {
   public SecurityFilterChain securityFilterChain(
       HttpSecurity http,
       JwtLoginSuccessHandler jwtLoginSuccessHandler,
-      JwtTokenProvider jwtTokenProvider,
+      JwtLogoutHandler jwtLogoutHandler,
+      JwtAuthenticationFilter jwtAuthenticationFilter,
       ObjectMapper objectMapper
   ) throws Exception {
     http
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+            .requestMatchers("/", "/index.html", "/*.html", "/favicon.ico", "/assets/**").permitAll()
+            .requestMatchers("/error").permitAll()
+            .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
             .requestMatchers("/api/auth/**").permitAll()
             .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users").permitAll()
             .anyRequest().authenticated()
@@ -65,9 +69,9 @@ public class SecurityConfig {
 
         .logout(logout -> logout
             .logoutUrl("/api/auth/sign-out")
+            .addLogoutHandler(jwtLogoutHandler)
             .logoutSuccessHandler(
                 new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
-            .deleteCookies("REFRESH_TOKEN")
         )
         .csrf(csrf -> csrf
             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
@@ -77,10 +81,7 @@ public class SecurityConfig {
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         )
 
-        .addFilterBefore(
-            new JwtAuthenticationFilter(jwtTokenProvider),
-            UsernamePasswordAuthenticationFilter.class
-        )
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
     ;
 
     return http.build();

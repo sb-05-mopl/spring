@@ -2,13 +2,16 @@ package com.mopl.moplcore.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mopl.moplcore.domain.auth.dto.JwtDto;
+import com.mopl.moplcore.domain.auth.dto.JwtInformation;
+import com.mopl.moplcore.global.exception.ErrorResponse;
 import com.mopl.moplcore.security.MoplUserDetails;
-import jakarta.servlet.ServletException;
+import com.nimbusds.jose.JOSEException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -17,28 +20,58 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
 
-  private final JwtTokenProvider jwtTokenProvider;
+  private final JwtTokenProvider tokenProvider;
+  private final JwtRegistry jwtRegistry;
   private final ObjectMapper objectMapper;
-
 
   @Override
   public void onAuthenticationSuccess(
       HttpServletRequest request,
       HttpServletResponse response,
       Authentication authentication
-  ) throws IOException, ServletException {
+  ) throws IOException {
 
-    MoplUserDetails userDetails = (MoplUserDetails) authentication.getPrincipal();
+    response.setCharacterEncoding("UTF-8");
+    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-    String accessToken = jwtTokenProvider.generateAccessToken(
-        userDetails.getUserDto().id(),
-        userDetails.getUserDto().role()
-    );
+    if (authentication.getPrincipal() instanceof MoplUserDetails userDetails) {
+      try {
+        String accessToken = tokenProvider.generateAccessToken(userDetails);
+        String refreshToken = tokenProvider.generateRefreshToken(userDetails);
 
-    JwtDto body = new JwtDto(userDetails.getUserDto(), accessToken);
+        Cookie refreshCookie = tokenProvider.generateRefreshTokenCookie(refreshToken);
+        response.addCookie(refreshCookie);
 
-    response.setStatus(HttpStatus.OK.value());
-    response.setContentType("application/json;charset=UTF-8");
-    objectMapper.writeValue(response.getOutputStream(), body);
+        JwtDto jwtDto = new JwtDto(
+            userDetails.getUserDto(),
+            accessToken
+        );
+
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.getWriter().write(objectMapper.writeValueAsString(jwtDto));
+
+        jwtRegistry.registerJwtInformation(
+            new JwtInformation(
+                userDetails.getUserDto(),
+                accessToken,
+                refreshToken
+            )
+        );
+      } catch (JOSEException e) {
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        ErrorResponse errorResponse = new ErrorResponse(
+            new RuntimeException("Token generation failed"),
+            HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+        );
+        response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+      }
+    } else {
+      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      ErrorResponse errorResponse = new ErrorResponse(
+          new RuntimeException("Authentication failed: Invalid user details"),
+          HttpServletResponse.SC_UNAUTHORIZED
+      );
+      response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+    }
   }
 }
