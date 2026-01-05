@@ -40,3 +40,11 @@ logging:
     root: INFO
     org.hibernate.SQL: DEBUG
     org.springframework.web: DEBUG
+
+jwt:
+  access-token:
+    secret: your-access-token-secret-key-here-make-it-long-and-random
+    expiration-ms: 1800000
+  refresh-token:
+    secret: your-refresh-token-secret-key-here-make-it-long-and-random
+    expiration-ms: 604800000
