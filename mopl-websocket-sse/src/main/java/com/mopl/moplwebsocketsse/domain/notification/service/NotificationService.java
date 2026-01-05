@@ -40,4 +40,21 @@ public class NotificationService {
 		notification.markAsRead();
 		return NotificationDto.from(notification);
 	}
+
+	@Transactional
+	public NotificationDto saveIfAbsentFromEvent(NotificationDto dto) {
+		if (notificationRepository.existsById(dto.id())) {
+			return dto;
+		}
+
+		Notification entity = new Notification(
+			dto.receiverId(),
+			dto.title(),
+			dto.content(),
+			dto.level()
+		);
+		Notification saved = notificationRepository.save(entity);
+
+		return NotificationDto.from(saved);
+	}
 }
