@@ -1,16 +1,17 @@
 package com.mopl.moplwebsocketsse.domain.watch.dto;
 
 import java.util.List;
+import java.util.UUID;
 
 import com.mopl.moplwebsocketsse.domain.common.enums.SortDirection;
 
 public record CursorResponseWatchingSessionDto(
 	List<WatchingSessionDto> data,
 	String nextCursor,
-	String nextIdAfter,
+	UUID nextIdAfter,
 	boolean hasNext,
 	long totalCount,
-	String sortBy,
+	WatchingSessionSortBy sortBy,
 	SortDirection sortDirection
 ) {
 }
