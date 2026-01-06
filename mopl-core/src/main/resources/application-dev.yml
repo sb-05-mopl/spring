@@ -36,6 +36,11 @@ spring:
       host: dev-redis-server
       port: 6379
 
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 10s
+    socket-timeout: 60s
+
 jwt:
   access-token:
     secret: ${JWT_ACCESS_TOKEN_SECRET}
@@ -68,3 +73,5 @@ logging:
     org.hibernate.SQL: INFO
     com.mopl: DEBUG
 
+search:
+  engine: elasticsearch
