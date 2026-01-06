@@ -7,6 +7,7 @@ import com.mopl.moplcore.domain.user.service.UserService;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,20 +26,7 @@ public class UserController {
 
   @PostMapping
   public ResponseEntity<UserDto> singUp(@RequestBody @Valid UserCreateRequest userCreateRequest) {
-    User signUpUser = userService.signUp(userCreateRequest.name(), userCreateRequest.email(),
-        userCreateRequest.password());
-    UserDto userDto = new UserDto(
-        signUpUser.getId(),
-        signUpUser.getCreatedAt(),
-        signUpUser.getEmail(),
-        signUpUser.getName(),
-        signUpUser.getProfileImageUrl(),
-        signUpUser.getRole(),
-        signUpUser.isLocked()
-    );
-    return ResponseEntity
-        .status(HttpStatus.CREATED)
-        .body(userDto);
+    return ResponseEntity.status(HttpStatus.CREATED).body(userService.signUp(userCreateRequest));
   }
 
   @GetMapping("/{userId}")

@@ -1,7 +1,11 @@
 package com.mopl.moplcore.domain.user.service;
 
+import com.mopl.moplcore.domain.user.dto.UserCreateRequest;
 import com.mopl.moplcore.domain.user.dto.UserDto;
 import com.mopl.moplcore.domain.user.entity.User;
+import com.mopl.moplcore.domain.user.exception.DuplicateEmailException;
+import com.mopl.moplcore.domain.user.exception.UserNotFoundException;
+import com.mopl.moplcore.domain.user.mapper.UserMapper;
 import com.mopl.moplcore.domain.user.repository.UserRepository;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,28 +20,24 @@ public class UserService {
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
+  private final UserMapper userMapper;
 
   @Transactional
-  public User signUp(String name, String email, String password) {
-    if (userRepository.existsByEmail(email)) {
-      throw new IllegalArgumentException("Email already exists");
+  public UserDto signUp(UserCreateRequest request) {
+    if (userRepository.existsByEmail(request.email())) {
+      throw DuplicateEmailException.withEmail(request.email());
     }
-    String encodedPassword = passwordEncoder.encode(password);
-    User user = new User(name, email, encodedPassword);
-    return userRepository.save(user);
+    String encodedPassword = passwordEncoder.encode(request.password());
+    User user = new User(request.name(), request.email(), encodedPassword);
+
+    User saved = userRepository.save(user);
+    return userMapper.toDto(saved);
   }
 
   @Transactional(readOnly = true)
   public UserDto findById(UUID userId) {
-    Optional<User> user = userRepository.findById(userId);
-    return new UserDto(
-        user.get().getId(),
-        user.get().getCreatedAt(),
-        user.get().getEmail(),
-        user.get().getName(),
-        user.get().getProfileImageUrl(),
-        user.get().getRole(),
-        user.get().isLocked()
-    );
+    return userRepository.findById(userId)
+        .map(userMapper::toDto)
+        .orElseThrow(() -> UserNotFoundException.withUserId(userId));
   }
 }
