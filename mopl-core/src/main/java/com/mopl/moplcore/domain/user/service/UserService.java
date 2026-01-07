@@ -5,18 +5,25 @@ import com.mopl.moplcore.domain.user.dto.CursorResponseUserDto;
 import com.mopl.moplcore.domain.user.dto.SortBy;
 import com.mopl.moplcore.domain.user.dto.UserCreateRequest;
 import com.mopl.moplcore.domain.user.dto.UserDto;
+import com.mopl.moplcore.domain.user.dto.UserUpdateRequest;
 import com.mopl.moplcore.domain.user.entity.User;
 import com.mopl.moplcore.domain.user.exception.DuplicateEmailException;
+import com.mopl.moplcore.domain.user.exception.ForbiddenUserAccessException;
 import com.mopl.moplcore.domain.user.exception.UserNotFoundException;
 import com.mopl.moplcore.domain.user.mapper.UserMapper;
 import com.mopl.moplcore.domain.user.repository.UserRepository;
+import com.mopl.moplcore.domain.user.storage.ProfileImageStorage;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -24,6 +31,7 @@ public class UserService {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final UserMapper userMapper;
+  private final ProfileImageStorage profileImageStorage;
 
   @Transactional
   public UserDto signUp(UserCreateRequest request) {
@@ -103,5 +111,34 @@ public class UserService {
       case isLocked -> String.valueOf(last.isLocked());
       case createdAt -> last.getCreatedAt().toString();
     };
+  }
+
+  @Transactional
+  public UserDto updateProfile(
+      UUID pathUserId,
+      UUID loginUserId,
+      UserUpdateRequest request,
+      MultipartFile image
+  ) {
+    log.info("pathUserId={}, loginUserId={}", pathUserId, loginUserId);
+
+    if (!pathUserId.equals(loginUserId)) {
+      throw ForbiddenUserAccessException.withIds(loginUserId, pathUserId);
+    }
+
+    return userRepository.findById(pathUserId)
+        .map(user -> {
+          user.updateName(request.name());
+
+          Optional.ofNullable(image)
+              .filter(file -> !file.isEmpty())
+              .map(file -> profileImageStorage.saveProfileImage(pathUserId, file))
+              .map(profileImageStorage::getProfileImageUrl)
+              .ifPresent(user::updateProfileImageUrl);
+
+          return user;
+        })
+        .map(userMapper::toDto)
+        .orElseThrow(() -> UserNotFoundException.withUserId(pathUserId));
   }
 }
