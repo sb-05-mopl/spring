@@ -36,14 +36,35 @@ spring:
       host: dev-redis-server
       port: 6379
 
+jwt:
+  access-token:
+    secret: ${JWT_ACCESS_TOKEN_SECRET}
+    expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION:3600000}
+  refresh-token:
+    secret: ${JWT_REFRESH_TOKEN_SECRET}
+    expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}
+
 management:
   endpoints:
     web:
       exposure:
         include: health, info, metrics, prometheus
 
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY:your-dev-access-key}
+      secret-key: ${AWS_SECRET_KEY:your-dev-secret-key}
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: mopl-images
+    stack:
+      auto: false
+
 logging:
   level:
     root: INFO
     org.hibernate.SQL: INFO
     com.mopl: DEBUG
+

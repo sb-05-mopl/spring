@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -28,6 +29,7 @@ public class ContentTag extends BaseEntity {
 	@JoinColumn(name = "tag_id", nullable = false)
 	private Tag tag;
 
+	@Builder
 	public ContentTag(Content content, Tag tag) {
 		this.content = content;
 		this.tag = tag;
