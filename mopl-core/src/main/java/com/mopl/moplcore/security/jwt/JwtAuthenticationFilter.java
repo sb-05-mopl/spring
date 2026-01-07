@@ -1,58 +1,66 @@
 package com.mopl.moplcore.security.jwt;
 
-import com.mopl.moplcore.domain.user.entity.Role;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+@Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-  private final JwtTokenProvider jwtTokenProvider;
-
+  private final JwtTokenProvider tokenProvider;
+  private final UserDetailsService userDetailsService;
 
   @Override
   protected void doFilterInternal(
-      HttpServletRequest request, HttpServletResponse response,
-      FilterChain filterChain) throws ServletException, IOException {
+      HttpServletRequest request,
+      HttpServletResponse response,
+      FilterChain filterChain
+  ) throws ServletException, IOException {
 
-    try {
-      String header = request.getHeader("Authorization");
-      if (header == null || !header.startsWith("Bearer ")) {
-        filterChain.doFilter(request, response);
-        return;
-      }
+    String token = resolveToken(request);
 
-      String token = header.substring("Bearer ".length());
-
-      if (!jwtTokenProvider.validateAccessToken(token)) {
-        filterChain.doFilter(request, response);
-        return;
-      }
-
-      UUID userId = jwtTokenProvider.getUserId(token);
-      Role role = jwtTokenProvider.getRole(token);
-
-      var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
-      var authentication = new UsernamePasswordAuthenticationToken(userId, null, authorities);
-
-      SecurityContextHolder.getContext().setAuthentication(authentication);
+    if (!StringUtils.hasText(token)) {
       filterChain.doFilter(request, response);
-
-    } catch (Exception e) {
-      SecurityContextHolder.clearContext();
-      filterChain.doFilter(request, response);
-    } finally {
-      SecurityContextHolder.clearContext();
+      return;
     }
+
+    if (!tokenProvider.validateAccessToken(token)) {
+      SecurityContextHolder.clearContext();
+      response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid access token");
+      return;
+    }
+
+    UUID userId = tokenProvider.getUserId(token);
+
+    UserDetails userDetails = userDetailsService.loadUserByUsername(userId.toString());
+
+    var auth = new UsernamePasswordAuthenticationToken(
+        userDetails,
+        null,
+        userDetails.getAuthorities()
+    );
+
+    SecurityContextHolder.getContext().setAuthentication(auth);
+    filterChain.doFilter(request, response);
+  }
+
+  private String resolveToken(HttpServletRequest request) {
+    String bearerToken = request.getHeader("Authorization");
+    if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+      return bearerToken.substring(7);
+    }
+    return null;
   }
 }
