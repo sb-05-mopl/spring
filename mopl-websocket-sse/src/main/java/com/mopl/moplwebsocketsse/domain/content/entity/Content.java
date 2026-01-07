@@ -19,8 +19,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "contents",
 	uniqueConstraints = @UniqueConstraint(name = "uk_type_source_id", columnNames = {"source_id", "type"})
 )
-public class
-Content extends BaseEntity {
+public class Content extends BaseEntity {
 	@Column(nullable = false)
 	private String title;
 
