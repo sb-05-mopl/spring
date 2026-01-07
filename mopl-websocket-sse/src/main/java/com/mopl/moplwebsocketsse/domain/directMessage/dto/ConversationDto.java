@@ -5,7 +5,7 @@ import java.util.UUID;
 import com.mopl.moplwebsocketsse.domain.user.dto.UserSummary;
 
 public record ConversationDto(
-	UUID uuid,
+	UUID id,
 	UserSummary with,
 	DirectMessageDto lastMessage,
 	boolean hasUnread
