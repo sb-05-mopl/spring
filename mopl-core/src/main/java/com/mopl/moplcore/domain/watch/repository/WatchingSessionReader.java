@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class WatchingSessionReader {
-	private static final String CONTENT_WATCHERS_KEY_PREFIX = "watching:content:";
+	private static final String CONTENT_WATCHERS_KEY_PREFIX = "watch:content:";
 
 	private final StringRedisTemplate redisTemplate;
 
