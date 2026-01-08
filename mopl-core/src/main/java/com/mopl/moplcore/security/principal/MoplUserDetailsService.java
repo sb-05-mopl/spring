@@ -15,24 +15,22 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class MoplUserDetailsService implements UserDetailsService {
 
-  private final UserRepository userRepository;
+    private final UserRepository userRepository;
 
-  @Transactional
-  @Override
-  public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    @Transactional
+    @Override
+    public UserDetails loadUserByUsername(String email) {
 
-    User user = userRepository.findByEmail(email).orElseThrow(() -> UserNotFoundException.withEmail(email));
-
-    UserDto dto = new UserDto(
-        user.getId(),
-        user.getCreatedAt(),
-        user.getEmail(),
-        user.getName(),
-        user.getProfileImageUrl(),
-        user.getRole(),
-        user.isLocked()
-    );
-
-    return new MoplUserDetails(dto, user.getPassword());
-  }
+        User user = userRepository.findByEmail(email).orElseThrow(() -> UserNotFoundException.withEmail(email));
+        UserDto dto = new UserDto(
+                user.getId(),
+                user.getCreatedAt(),
+                user.getEmail(),
+                user.getName(),
+                user.getProfileImageUrl(),
+                user.getRole(),
+                user.isLocked()
+        );
+        return new MoplUserDetails(dto, user.getPassword());
+    }
 }
