@@ -41,18 +41,6 @@ spring:
     connection-timeout: 10s
     socket-timeout: 60s
 
-cloud:
-  aws:
-    credentials:
-      access-key: ${AWS_ACCESS_KEY:your-dev-access-key}
-      secret-key: ${AWS_SECRET_KEY:your-dev-secret-key}
-    region:
-      static: ap-northeast-2
-    s3:
-      bucket: mopl-images
-    stack:
-      auto: false
-
 logging:
   level:
     root: INFO

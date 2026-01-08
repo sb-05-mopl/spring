@@ -28,3 +28,5 @@ logging:
     org.hibernate.SQL: DEBUG
     org.springframework.web: DEBUG
 
+search:
+  engine: elasticsearch
