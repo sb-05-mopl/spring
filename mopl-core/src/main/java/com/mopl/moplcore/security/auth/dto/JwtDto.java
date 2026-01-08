@@ -1,4 +1,4 @@
-package com.mopl.moplcore.domain.auth.dto;
+package com.mopl.moplcore.security.auth.dto;
 
 import com.mopl.moplcore.domain.user.dto.UserDto;
 

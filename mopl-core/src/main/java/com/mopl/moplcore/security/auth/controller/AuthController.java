@@ -1,16 +1,14 @@
-package com.mopl.moplcore.domain.auth.controller;
+package com.mopl.moplcore.security.auth.controller;
 
-import com.mopl.moplcore.domain.auth.dto.JwtDto;
-import com.mopl.moplcore.domain.auth.dto.JwtInformation;
-import com.mopl.moplcore.domain.auth.service.AuthService;
+import com.mopl.moplcore.security.auth.dto.JwtDto;
+import com.mopl.moplcore.security.auth.dto.JwtInformation;
+import com.mopl.moplcore.security.auth.service.AuthService;
 import com.mopl.moplcore.domain.user.service.UserService;
-import com.mopl.moplcore.security.jwt.JwtTokenProvider;
+import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.CookieValue;

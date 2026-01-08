@@ -1,10 +1,13 @@
 package com.mopl.moplcore.security.jwt;
 
-import com.mopl.moplcore.domain.auth.dto.JwtInformation;
+import com.mopl.moplcore.security.auth.dto.JwtInformation;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
+import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

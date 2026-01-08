@@ -1,10 +1,12 @@
-package com.mopl.moplcore.security.jwt;
+package com.mopl.moplcore.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mopl.moplcore.domain.auth.dto.JwtDto;
-import com.mopl.moplcore.domain.auth.dto.JwtInformation;
+import com.mopl.moplcore.security.auth.dto.JwtDto;
+import com.mopl.moplcore.security.auth.dto.JwtInformation;
 import com.mopl.moplcore.global.exception.ErrorResponse;
-import com.mopl.moplcore.security.MoplUserDetails;
+import com.mopl.moplcore.security.authentication.MoplUserDetails;
+import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
+import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
 import com.nimbusds.jose.JOSEException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;

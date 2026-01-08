@@ -1,9 +1,9 @@
-package com.mopl.moplcore.domain.auth.service;
+package com.mopl.moplcore.security.auth.service;
 
-import com.mopl.moplcore.domain.auth.dto.JwtInformation;
-import com.mopl.moplcore.security.MoplUserDetails;
-import com.mopl.moplcore.security.jwt.JwtRegistry;
-import com.mopl.moplcore.security.jwt.JwtTokenProvider;
+import com.mopl.moplcore.security.auth.dto.JwtInformation;
+import com.mopl.moplcore.security.authentication.MoplUserDetails;
+import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
+import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
 import com.nimbusds.jose.JOSEException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

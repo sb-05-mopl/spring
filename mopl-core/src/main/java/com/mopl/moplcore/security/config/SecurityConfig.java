@@ -1,11 +1,10 @@
-package com.mopl.moplcore.global.config;
+package com.mopl.moplcore.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mopl.moplcore.security.SpaCsrfTokenRequestHandler;
-import com.mopl.moplcore.security.jwt.JwtAuthenticationFilter;
-import com.mopl.moplcore.security.jwt.JwtLoginSuccessHandler;
-import com.mopl.moplcore.security.jwt.JwtLogoutHandler;
-import com.mopl.moplcore.security.jwt.JwtTokenProvider;
+import com.mopl.moplcore.security.handler.SpaCsrfTokenRequestHandler;
+import com.mopl.moplcore.security.filter.JwtAuthenticationFilter;
+import com.mopl.moplcore.security.handler.JwtLoginSuccessHandler;
+import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;

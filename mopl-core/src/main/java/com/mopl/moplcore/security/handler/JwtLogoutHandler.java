@@ -1,5 +1,7 @@
-package com.mopl.moplcore.security.jwt;
+package com.mopl.moplcore.security.handler;
 
+import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
+import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

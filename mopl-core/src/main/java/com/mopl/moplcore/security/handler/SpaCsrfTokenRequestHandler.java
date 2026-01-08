@@ -1,4 +1,4 @@
-package com.mopl.moplcore.security;
+package com.mopl.moplcore.security.handler;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

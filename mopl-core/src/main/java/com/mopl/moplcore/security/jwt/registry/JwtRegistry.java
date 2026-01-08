@@ -1,7 +1,7 @@
-package com.mopl.moplcore.security.jwt;
+package com.mopl.moplcore.security.jwt.registry;
 
-import com.mopl.moplcore.domain.auth.dto.JwtInformation;
-import java.util.Optional;
+import com.mopl.moplcore.security.auth.dto.JwtInformation;
+
 import java.util.UUID;
 
 public interface JwtRegistry {
