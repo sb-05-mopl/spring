@@ -14,7 +14,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
 
   servlet:
     multipart:
@@ -26,20 +26,11 @@ spring:
     connection-timeout: 10s
     socket-timeout: 60s
 
-init:
-  admin:
-    email: "admin@test.com"
-    password: 1234qwer
-  user:
-    email: "test@test.com"
-    password: 1234qwer
-
-
 logging:
   level:
     root: INFO
-    org.hibernate.SQL: DEBUG
-    org.springframework.web: DEBUG
+    org.hibernate.SQL: INFO
+    org.springframework.web: INFO
 
 search:
   engine: elasticsearch
