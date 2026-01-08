@@ -50,7 +50,7 @@ public class InitService {
 		}
 
 		String encodedPassword = passwordEncoder.encode(adminPassword);
-		User user = new User("테스트 사용자", userPassword, encodedPassword);
+		User user = new User("테스트 사용자", userEmail, encodedPassword);
 
 		userRepository.save(user);
 	}
