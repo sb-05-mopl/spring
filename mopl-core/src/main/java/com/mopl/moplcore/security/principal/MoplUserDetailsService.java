@@ -2,6 +2,7 @@ package com.mopl.moplcore.security.principal;
 
 import com.mopl.moplcore.domain.user.dto.UserDto;
 import com.mopl.moplcore.domain.user.entity.User;
+import com.mopl.moplcore.domain.user.exception.UserNotFoundException;
 import com.mopl.moplcore.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,7 +21,7 @@ public class MoplUserDetailsService implements UserDetailsService {
   @Override
   public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-    User user = userRepository.findByEmail(email).orElseThrow();
+    User user = userRepository.findByEmail(email).orElseThrow(() -> UserNotFoundException.withEmail(email));
 
     UserDto dto = new UserDto(
         user.getId(),

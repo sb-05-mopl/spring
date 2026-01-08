@@ -15,4 +15,12 @@ public class UserNotFoundException extends BaseException {
     exception.addDetail("userId", userId);
     return exception;
   }
+
+  public static UserNotFoundException withEmail(String email){
+    UserNotFoundException exception = new UserNotFoundException();
+    exception.addDetail("email", email);
+    exception.addDetail("message", "invalid email");
+    return exception;
+  }
+
 }
