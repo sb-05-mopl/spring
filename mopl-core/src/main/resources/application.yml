@@ -2,7 +2,7 @@ spring:
   application:
     name: mopl-core
   profiles:
-    active: dev
+    active: ${PROFILE:dev}
   servlet:
     multipart:
       enabled: true
@@ -11,8 +11,22 @@ spring:
 
 jwt:
   access-token:
-    secret: your-access-token-secret-key-here-make-it-long-and-random
-    expiration-ms: 1800000
+    secret: ${JWT_ACCESS_TOKE_KEY:G3yksXYpKcPvNOHv5NbHuqylOuTIYEqGVY6INF2UX8OJRdyUo+rRCJmdq6Th82CGUoBOUv7WgMcxZxBiE0VIcg==}
+    expiration-ms: ${JWT_ACCESS_TOKE_EXPIRCATION_MS:1800000}
   refresh-token:
-    secret: your-refresh-token-secret-key-here-make-it-long-and-random
-    expiration-ms: 604800000
+    secret: ${JWT_REFRESH_TOKEN_KEY:QsMI+9J9Aunm9vWRJbwSG87ICRuasbant8f6A4jxj7Qrq3ohYWuUf5XM1Tb29DHcSW7xVeHZVrw95YFlJkD0Ag==}
+    expiration-ms: ${JWT_REFRESH_TOKE_EXPIRCATION_MS:604800000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, env
+
+  endpoint:
+    health:
+      show-details: always
+
+  health:
+    redis:
+      enabled: false

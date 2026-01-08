@@ -41,20 +41,6 @@ spring:
     connection-timeout: 10s
     socket-timeout: 60s
 
-jwt:
-  access-token:
-    secret: ${JWT_ACCESS_TOKEN_SECRET}
-    expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION:3600000}
-  refresh-token:
-    secret: ${JWT_REFRESH_TOKEN_SECRET}
-    expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health, info, metrics, prometheus
-
 cloud:
   aws:
     credentials:
