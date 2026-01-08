@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class LoginSuccessHandler implements AuthenticationSuccessHandler {
+public class MoplLoginSuccessHandler implements AuthenticationSuccessHandler {
 
 	private final JwtTokenProvider tokenProvider;
 	private final JwtRegistry jwtRegistry;

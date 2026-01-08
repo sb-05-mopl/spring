@@ -12,8 +12,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 import com.mopl.moplcore.security.filter.JwtAuthenticationFilter;
-import com.mopl.moplcore.security.handler.LoginSuccessHandler;
-import com.mopl.moplcore.security.handler.LogoutSuccessHandler;
+import com.mopl.moplcore.security.handler.MoplLoginSuccessHandler;
+import com.mopl.moplcore.security.handler.MoplLogoutSuccessHandler;
 import com.mopl.moplcore.security.handler.SpaCsrfTokenRequestHandler;
 
 @Configuration
@@ -24,8 +24,8 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(
 		HttpSecurity http,
-		LoginSuccessHandler loginSuccessHandler,
-		LogoutSuccessHandler logoutSuccessHandler,
+		MoplLoginSuccessHandler moplLoginSuccessHandler,
+		MoplLogoutSuccessHandler moplLogoutSuccessHandler,
 		JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
 
 		http
@@ -38,12 +38,12 @@ public class SecurityConfig {
 				.loginProcessingUrl("/api/auth/sign-in")
 				.usernameParameter("username")
 				.passwordParameter("password")
-				.successHandler(loginSuccessHandler)
+				.successHandler(moplLoginSuccessHandler)
 			)
 
 			.logout(logout -> logout
 				.logoutUrl("/api/auth/sign-out")
-				.logoutSuccessHandler(logoutSuccessHandler)
+				.logoutSuccessHandler(moplLogoutSuccessHandler)
 			)
 			.csrf(csrf -> csrf
 				.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
