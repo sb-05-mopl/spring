@@ -1,27 +1,24 @@
 package com.mopl.moplcore.security.handler;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mopl.moplcore.security.auth.dto.JwtDto;
-import com.mopl.moplcore.security.auth.dto.JwtInformation;
-import com.mopl.moplcore.global.exception.ErrorResponse;
-import com.mopl.moplcore.security.exception.InvalidCredentialException;
-import com.mopl.moplcore.security.exception.UnexpectedPrincipalException;
-import com.mopl.moplcore.security.principal.MoplUserDetails;
-import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
-import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
-
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
-
-import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mopl.moplcore.security.auth.dto.JwtDto;
+import com.mopl.moplcore.security.auth.dto.JwtInformation;
+import com.mopl.moplcore.security.exception.UnexpectedPrincipalException;
+import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
+import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
+import com.mopl.moplcore.security.principal.MoplUserDetails;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor

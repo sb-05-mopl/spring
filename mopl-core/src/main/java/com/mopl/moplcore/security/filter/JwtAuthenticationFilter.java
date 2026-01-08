@@ -1,5 +1,14 @@
 package com.mopl.moplcore.security.filter;
 
+import java.io.IOException;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
 import com.mopl.moplcore.security.config.SecurityPaths;
 import com.mopl.moplcore.security.exception.InValidAccessTokenException;
 import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
@@ -9,19 +18,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import java.io.IOException;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
 
 @Slf4j
 @Component
@@ -35,16 +33,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final UserDetailsService userDetailsService;
 
 	@Override
-	protected boolean shouldNotFilter(HttpServletRequest request){
+	protected boolean shouldNotFilter(HttpServletRequest request) {
 		String path = request.getRequestURI();
 		String method = request.getMethod();
 
 		return SecurityPaths.isPublicPath(path, method);
 	}
 
-
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+		FilterChain filterChain) throws ServletException, IOException {
 
 		String path = request.getRequestURI();
 		String method = request.getMethod();
@@ -52,7 +50,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		log.info("Request URI: {}", path);
 		log.info("Method: {}", method);
 		String accessToken = request.getHeader(AUTHORIZATION_HEADER).substring(BEARER_PREFIX_LENGTH);
-
 
 		if (!tokenProvider.validateAccessToken(accessToken))
 			throw new InValidAccessTokenException();

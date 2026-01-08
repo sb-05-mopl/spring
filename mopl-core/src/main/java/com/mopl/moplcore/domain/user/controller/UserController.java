@@ -59,7 +59,7 @@ public class UserController {
       @AuthenticationPrincipal MoplUserDetails userDetails
   ) {
     return ResponseEntity.ok(
-        userService.updateProfile(userId, userDetails.getUserDto().id(), request, image)
+        userService.updateProfile(userId, userDetails.getUserDto().getId(), request, image)
     );
   }
 }

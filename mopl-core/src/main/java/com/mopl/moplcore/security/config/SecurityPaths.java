@@ -45,7 +45,6 @@ public class SecurityPaths {
 		OTHER_PUBLIC
 	);
 
-
 	public static boolean isPublicPath(String requestPath) {
 		for (String pattern : PUBLIC_PATHS) {
 			if (PATH_MATCHER.match(pattern, requestPath)) {
@@ -54,7 +53,6 @@ public class SecurityPaths {
 		}
 		return false;
 	}
-
 
 	public static boolean isPublicPath(String requestPath, String method) {
 		if (isPublicPath(requestPath)) {
@@ -72,7 +70,6 @@ public class SecurityPaths {
 		return false;
 	}
 
-
 	private static String[] combineArrays(String[]... arrays) {
 		int totalLength = 0;
 		for (String[] array : arrays) {
@@ -88,6 +85,7 @@ public class SecurityPaths {
 		}
 		return result;
 	}
+
 	private SecurityPaths() {
 	}
 }

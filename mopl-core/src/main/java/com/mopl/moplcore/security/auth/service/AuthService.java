@@ -1,21 +1,16 @@
 package com.mopl.moplcore.security.auth.service;
 
-import com.mopl.moplcore.security.auth.dto.JwtInformation;
-import com.mopl.moplcore.security.exception.InValidAccessTokenException;
-import com.mopl.moplcore.security.principal.MoplUserDetails;
-import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
-import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
-import com.nimbusds.jose.JOSEException;
-
-import jakarta.servlet.http.Cookie;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+
+import com.mopl.moplcore.security.auth.dto.JwtInformation;
+import com.mopl.moplcore.security.exception.InValidAccessTokenException;
+import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
+import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
+import com.mopl.moplcore.security.principal.MoplUserDetails;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service

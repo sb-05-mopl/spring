@@ -1,7 +1,5 @@
 package com.mopl.moplcore.security.jwt;
 
-import com.mopl.moplcore.security.auth.dto.JwtInformation;
-
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -9,14 +7,15 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.springframework.context.annotation.Profile;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import com.mopl.moplcore.security.auth.dto.JwtInformation;
 import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
 import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
 
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 @Profile({"local", "dev"})
 @Component
@@ -112,7 +111,8 @@ public class InMemoryJwtRegistry implements JwtRegistry {
 			Queue<JwtInformation> queue = entry.getValue();
 			queue.removeIf(jwtInformation -> {
 				boolean isExpired =
-					!jwtTokenProvider.validateAccessToken(jwtInformation.getAccessToken()) || !jwtTokenProvider.validateRefreshToken(jwtInformation.getRefreshToken());
+					!jwtTokenProvider.validateAccessToken(jwtInformation.getAccessToken())
+						|| !jwtTokenProvider.validateRefreshToken(jwtInformation.getRefreshToken());
 				if (isExpired) {
 					removeTokenIndex(
 						jwtInformation.getAccessToken(),

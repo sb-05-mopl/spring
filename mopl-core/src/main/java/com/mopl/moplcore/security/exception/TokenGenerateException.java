@@ -5,11 +5,11 @@ import com.mopl.moplcore.global.exception.ErrorCode;
 
 public class TokenGenerateException extends BaseException {
 
-    public TokenGenerateException() {
-        super(ErrorCode.TOKEN_GENERATE_FAIL);
-    }
+	public TokenGenerateException() {
+		super(ErrorCode.TOKEN_GENERATE_FAIL);
+	}
 
-    public TokenGenerateException(Throwable cause) {
-        super(ErrorCode.TOKEN_GENERATE_FAIL, cause);
-    }
+	public TokenGenerateException(Throwable cause) {
+		super(ErrorCode.TOKEN_GENERATE_FAIL, cause);
+	}
 }

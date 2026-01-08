@@ -1,15 +1,5 @@
 package com.mopl.moplcore.security.auth.controller;
 
-import com.mopl.moplcore.security.auth.dto.JwtDto;
-import com.mopl.moplcore.security.auth.dto.JwtInformation;
-import com.mopl.moplcore.security.auth.service.AuthService;
-import com.mopl.moplcore.domain.user.service.UserService;
-import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
-
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.csrf.CsrfToken;
@@ -18,6 +8,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.mopl.moplcore.security.auth.dto.JwtDto;
+import com.mopl.moplcore.security.auth.dto.JwtInformation;
+import com.mopl.moplcore.security.auth.service.AuthService;
+import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
@@ -35,9 +34,9 @@ public class AuthController {
 
 	@PostMapping("/refresh")
 	public ResponseEntity<JwtDto> refresh(
-            @CookieValue("REFRESH_TOKEN") String refreshToken,
-		    HttpServletResponse response
-    ) {
+		@CookieValue("REFRESH_TOKEN") String refreshToken,
+		HttpServletResponse response
+	) {
 
 		JwtInformation jwtInformation = authService.refreshToken(refreshToken);
 		Cookie refreshCookie = jwtTokenProvider.generateRefreshTokenCookie(jwtInformation.getRefreshToken());
