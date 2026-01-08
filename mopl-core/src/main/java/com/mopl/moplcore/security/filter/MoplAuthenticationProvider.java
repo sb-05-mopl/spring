@@ -8,7 +8,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import com.mopl.moplcore.security.exception.InvalidCredentialException;
+import com.mopl.moplcore.security.exception.InValidCredentialException;
+import com.mopl.moplcore.security.exception.LockedUserAccessException;
 import com.mopl.moplcore.security.principal.MoplUserDetails;
 
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,11 @@ public class MoplAuthenticationProvider implements AuthenticationProvider {
 		MoplUserDetails userDetails = (MoplUserDetails)userDetailsService.loadUserByUsername(email);
 
 		if (!passwordEncoder.matches(password, userDetails.getPassword())) {
-			throw new InvalidCredentialException();
+			throw new InValidCredentialException();
+		}
+
+		if(!userDetails.isEnabled()){
+			throw new LockedUserAccessException();
 		}
 
 		userDetails.setPasswordEnable();

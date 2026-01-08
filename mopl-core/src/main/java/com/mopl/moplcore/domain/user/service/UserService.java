@@ -6,6 +6,7 @@ import com.mopl.moplcore.domain.user.dto.SortBy;
 import com.mopl.moplcore.domain.user.dto.UserCreateRequest;
 import com.mopl.moplcore.domain.user.dto.UserDto;
 import com.mopl.moplcore.domain.user.dto.UserUpdateRequest;
+import com.mopl.moplcore.domain.user.entity.Role;
 import com.mopl.moplcore.domain.user.entity.User;
 import com.mopl.moplcore.domain.user.exception.DuplicateEmailException;
 import com.mopl.moplcore.domain.user.exception.ForbiddenUserAccessException;
@@ -108,15 +109,25 @@ public class UserService {
 		);
 	}
 
-	private String toNextCursor(User last, SortBy sortBy) {
-		return switch (sortBy) {
-			case name -> last.getName();
-			case email -> last.getEmail();
-			case role -> last.getRole().name();
-			case isLocked -> String.valueOf(last.isLocked());
-			case createdAt -> last.getCreatedAt().toString();
-		};
+	@Transactional
+	public void updateRole(Role newRole, UUID userId){
+		User user = userRepository.findById(userId).orElseThrow(() -> UserNotFoundException.withUserId(userId));
+		user.updateRole(newRole);
 	}
+
+	@Transactional
+	public void updateLock(boolean locked, UUID userId){
+		User user = userRepository.findById(userId).orElseThrow(() -> UserNotFoundException.withUserId(userId));
+		if (locked) {
+			user.lockUser();
+		} else {
+			user.unlockUser();
+		}
+	}
+
+
+
+
 
 	@Transactional
 	public UserDto updateProfile(
@@ -145,5 +156,15 @@ public class UserService {
 			})
 			.map(userMapper::toDto)
 			.orElseThrow(() -> UserNotFoundException.withUserId(pathUserId));
+	}
+
+	private String toNextCursor(User last, SortBy sortBy) {
+		return switch (sortBy) {
+			case name -> last.getName();
+			case email -> last.getEmail();
+			case role -> last.getRole().name();
+			case isLocked -> String.valueOf(last.isLocked());
+			case createdAt -> last.getCreatedAt().toString();
+		};
 	}
 }

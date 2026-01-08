@@ -2,14 +2,21 @@ package com.mopl.moplcore.domain.user.controller;
 
 import com.mopl.moplcore.domain.user.dto.AdminUserSearchRequest;
 import com.mopl.moplcore.domain.user.dto.CursorResponseUserDto;
+import com.mopl.moplcore.domain.user.dto.UpdateLockRequest;
+import com.mopl.moplcore.domain.user.dto.UpdateRoleRequest;
 import com.mopl.moplcore.domain.user.dto.UserCreateRequest;
 import com.mopl.moplcore.domain.user.dto.UserDto;
 import com.mopl.moplcore.domain.user.dto.UserUpdateRequest;
 import com.mopl.moplcore.domain.user.service.UserService;
+import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
 import com.mopl.moplcore.security.principal.MoplUserDetails;
+
 import jakarta.validation.Valid;
+
 import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -31,36 +38,59 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/users")
 public class UserController {
 
-  private final UserService userService;
+	private final UserService userService;
+	private final JwtRegistry jwtRegistry;
 
-  @PostMapping
-  public ResponseEntity<UserDto> singUp(
-	  @RequestBody @Valid UserCreateRequest dto) {
-    return ResponseEntity.status(HttpStatus.CREATED).body(userService.signUp(dto));
-  }
+	@PostMapping
+	public ResponseEntity<UserDto> singUp(
+		@RequestBody @Valid UserCreateRequest dto) {
+		return ResponseEntity.status(HttpStatus.CREATED).body(userService.signUp(dto));
+	}
 
-  @GetMapping("/{userId}")
-  public ResponseEntity<UserDto> findById(@PathVariable("userId") UUID userId) {
-    return ResponseEntity.ok(userService.findById(userId));
-  }
+	@GetMapping("/{userId}")
+	public ResponseEntity<UserDto> findById(@PathVariable("userId") UUID userId) {
+		return ResponseEntity.ok(userService.findById(userId));
+	}
 
-  @GetMapping
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<CursorResponseUserDto> findAll(
-      @Valid @ModelAttribute AdminUserSearchRequest request
-  ) {
-    return ResponseEntity.ok(userService.findUsers(request));
-  }
+	@GetMapping
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<CursorResponseUserDto> findAll(
+		@Valid @ModelAttribute AdminUserSearchRequest request
+	) {
+		return ResponseEntity.ok(userService.findUsers(request));
+	}
 
-  @PatchMapping(value = "/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  public ResponseEntity<UserDto> updateProfile(
-      @PathVariable UUID userId,
-      @RequestPart("request") @Valid UserUpdateRequest request,
-      @RequestPart(value = "image", required = false) MultipartFile image,
-      @AuthenticationPrincipal MoplUserDetails userDetails
-  ) {
-    return ResponseEntity.ok(
-        userService.updateProfile(userId, userDetails.getUserDto().getId(), request, image)
-    );
-  }
+	@PatchMapping(value = "/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<UserDto> updateProfile(
+		@PathVariable UUID userId,
+		@RequestPart("request") @Valid UserUpdateRequest request,
+		@RequestPart(value = "image", required = false) MultipartFile image,
+		@AuthenticationPrincipal MoplUserDetails userDetails
+	) {
+		return ResponseEntity.ok(
+			userService.updateProfile(userId, userDetails.getUserDto().getId(), request, image)
+		);
+	}
+
+	@PreAuthorize("hasRole('ADMIN')")
+	@PatchMapping(value = "/{userId}/role")
+	public ResponseEntity<Void> updateRole(
+		@PathVariable UUID userId,
+		@RequestBody UpdateRoleRequest dto
+	){
+		userService.updateRole(dto.getRole(), userId);
+		jwtRegistry.invalidateJwtInformationByUserId(userId);
+		return ResponseEntity.ok().build();
+	}
+
+	@PreAuthorize("hasRole('ADMIN')")
+	@PatchMapping(value = "/{userId}/locked")
+	public ResponseEntity<Void> updateLock(
+		@PathVariable UUID userId,
+		@RequestBody UpdateLockRequest dto
+	){
+		userService.updateLock(dto.isLocked(), userId);
+		jwtRegistry.invalidateJwtInformationByUserId(userId);
+		return ResponseEntity.ok().build();
+	}
 }
