@@ -37,6 +37,7 @@ public enum ErrorCode {
 	PLAYLIST_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "플레이리스트 생성 한도를 초과했습니다"),
 
 	INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 일치하지 않습니다"),
+	TOKEN_GENERATE_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "토큰 생성에 실패했습니다"),
 	TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다"),
 
 	INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "토큰이 유효하지 않습니다."),
