@@ -58,6 +58,16 @@ public class UserService {
 			.orElseThrow(() -> UserNotFoundException.withUserId(userId));
 	}
 
+	@Transactional
+	public void updatePassword(UUID userId, String newPassword){
+		User user = userRepository.findById(userId).orElseThrow(() -> UserNotFoundException.withUserId(userId));
+		/**
+		 * 여기에 임시 비밀번호를 제거하는 이벤트가 필요함
+		 */
+		String encode = passwordEncoder.encode(newPassword);
+		user.updatePassword(encode);
+	}
+
 	@Transactional(readOnly = true)
 	public CursorResponseUserDto findUsers(AdminUserSearchRequest req) {
 

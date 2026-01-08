@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.mopl.moplcore.domain.user.dto.AdminUserSearchRequest;
 import com.mopl.moplcore.domain.user.dto.CursorResponseUserDto;
 import com.mopl.moplcore.domain.user.dto.UpdateLockRequest;
+import com.mopl.moplcore.domain.user.dto.UpdatePasswordRequest;
 import com.mopl.moplcore.domain.user.dto.UpdateRoleRequest;
 import com.mopl.moplcore.domain.user.dto.UserCreateRequest;
 import com.mopl.moplcore.domain.user.dto.UserDto;
@@ -69,6 +70,16 @@ public class UserController {
 		return ResponseEntity.ok(
 			userService.updateProfile(userId, userDetails.getUserDto().getId(), request, image)
 		);
+	}
+
+	@PatchMapping(value = "/{userId}/password")
+	public ResponseEntity<Void> updatePassword(
+		@PathVariable UUID userId,
+		@RequestBody UpdatePasswordRequest dto
+	) {
+		userService.updatePassword(userId, dto.getPassword());
+		jwtRegistry.invalidateJwtInformationByUserId(userId);
+		return ResponseEntity.ok().build();
 	}
 
 	@PreAuthorize("hasRole('ADMIN')")
