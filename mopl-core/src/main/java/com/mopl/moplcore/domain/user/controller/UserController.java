@@ -6,7 +6,7 @@ import com.mopl.moplcore.domain.user.dto.UserCreateRequest;
 import com.mopl.moplcore.domain.user.dto.UserDto;
 import com.mopl.moplcore.domain.user.dto.UserUpdateRequest;
 import com.mopl.moplcore.domain.user.service.UserService;
-import com.mopl.moplcore.security.MoplUserDetails;
+import com.mopl.moplcore.security.authentication.MoplUserDetails;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
