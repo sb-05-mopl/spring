@@ -47,8 +47,8 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
 			UUID userId = jwtTokenProvider.getUserId(token);
 			Role role = jwtTokenProvider.getRole(token);
 
-			var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
-			var authentication = new UsernamePasswordAuthenticationToken(userId, null, authorities);
+			List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userId, null, authorities);
 
 			accessor.setUser(authentication);
 
