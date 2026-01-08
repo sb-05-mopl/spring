@@ -130,14 +130,14 @@ public class JwtTokenProvider {
     }
 
     public Cookie generateRefreshTokenCookie(String refreshToken) {
-        return createCookie(refreshToken, refreshTokenExpirationMs / SECONDS_IN_MS);
+        return createRefreshCookie(refreshToken, refreshTokenExpirationMs / SECONDS_IN_MS);
     }
 
     public Cookie generateRefreshTokenExpirationCookie() {
-        return createCookie("", 0);
+        return createRefreshCookie("", 0);
     }
 
-    private Cookie createCookie(String value, int maxAgeSeconds) {
+    private Cookie createRefreshCookie(String value, int maxAgeSeconds) {
         Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, value);
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
@@ -145,6 +145,7 @@ public class JwtTokenProvider {
         cookie.setMaxAge(maxAgeSeconds);
         return cookie;
     }
+
 
     public String getTokenId(String token) {
         return getClaim(token, JWTClaimsSet::getJWTID);
