@@ -4,7 +4,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
-import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
+import com.mopl.moplcore.security.jwt.JwtTokenProvider;
 import com.mopl.moplcore.security.principal.MoplUserDetails;
 
 import jakarta.servlet.http.Cookie;

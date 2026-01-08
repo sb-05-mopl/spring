@@ -34,8 +34,9 @@ public class UserController {
   private final UserService userService;
 
   @PostMapping
-  public ResponseEntity<UserDto> singUp(@RequestBody @Valid UserCreateRequest userCreateRequest) {
-    return ResponseEntity.status(HttpStatus.CREATED).body(userService.signUp(userCreateRequest));
+  public ResponseEntity<UserDto> singUp(
+	  @RequestBody @Valid UserCreateRequest dto) {
+    return ResponseEntity.status(HttpStatus.CREATED).body(userService.signUp(dto));
   }
 
   @GetMapping("/{userId}")

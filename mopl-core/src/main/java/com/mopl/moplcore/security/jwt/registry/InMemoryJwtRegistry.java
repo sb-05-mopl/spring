@@ -1,4 +1,4 @@
-package com.mopl.moplcore.security.jwt;
+package com.mopl.moplcore.security.jwt.registry;
 
 import java.util.Map;
 import java.util.Queue;
@@ -12,8 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.mopl.moplcore.security.auth.dto.JwtInformation;
-import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
-import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
+import com.mopl.moplcore.security.jwt.JwtTokenProvider;
 
 import lombok.RequiredArgsConstructor;
 

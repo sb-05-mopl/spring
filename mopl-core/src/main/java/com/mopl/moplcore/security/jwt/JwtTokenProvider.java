@@ -1,4 +1,4 @@
-package com.mopl.moplcore.security.jwt.registry;
+package com.mopl.moplcore.security.jwt;
 
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;

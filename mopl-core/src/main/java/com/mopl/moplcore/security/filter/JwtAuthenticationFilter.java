@@ -11,7 +11,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.mopl.moplcore.security.config.SecurityPaths;
 import com.mopl.moplcore.security.exception.InValidAccessTokenException;
-import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
+import com.mopl.moplcore.security.jwt.JwtTokenProvider;
 import com.mopl.moplcore.security.principal.MoplUserDetails;
 
 import jakarta.servlet.FilterChain;
