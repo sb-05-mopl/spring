@@ -4,24 +4,19 @@ import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
 import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
 import com.mopl.moplcore.security.principal.MoplUserDetails;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.UUID;
-
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.security.core.Authentication;
-import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class LogoutHandler implements LogoutSuccessHandler {
+public class LogoutSuccessHandler
+	implements org.springframework.security.web.authentication.logout.LogoutSuccessHandler {
 
 	private final JwtTokenProvider tokenProvider;
 	private final JwtRegistry jwtRegistry;
