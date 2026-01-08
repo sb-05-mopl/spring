@@ -161,7 +161,7 @@ public class SmtpEmailService implements EmailService {
             </html>
             """,
 			temporaryPassword,
-			minutesRemaining
+			formattedExpiresAt
 		);
 	}
 }
