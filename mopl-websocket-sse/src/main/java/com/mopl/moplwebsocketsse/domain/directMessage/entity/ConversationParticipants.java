@@ -27,14 +27,14 @@ public class ConversationParticipants extends BaseEntity {
 	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
 
-	private Instant last_read_at;
+	private Instant lastReadAt;
 
-	protected ConversationParticipants(Conversation conversation, User user) {
+	public ConversationParticipants(Conversation conversation, User user) {
 		this.conversation = conversation;
 		this.user = user;
 	}
 
 	public void updateLastReadAt(Instant LastReadAt) {
-		this.last_read_at = LastReadAt;
+		this.lastReadAt = LastReadAt;
 	}
 }

@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @Entity
 @Table(name = "conversations")
 public class Conversation extends BaseEntity {
@@ -20,6 +20,10 @@ public class Conversation extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "last_message_id")
 	private DirectMessage lastMessage;
+
+	public static Conversation create() {
+		return new Conversation();
+	}
 
 	public void updateLastMessage(DirectMessage message) {
 		this.lastMessage = message;
