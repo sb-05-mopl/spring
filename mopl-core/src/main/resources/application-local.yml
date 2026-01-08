@@ -3,10 +3,10 @@ server:
 
 spring:
   datasource:
-    url: jdbc:h2:mem:mopl;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:postgresql://localhost:5432/batch
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: 1234
 
   sql:
     init:
@@ -14,7 +14,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
 
   servlet:
     multipart:
@@ -25,6 +25,15 @@ spring:
     uris: http://localhost:9200
     connection-timeout: 10s
     socket-timeout: 60s
+
+init:
+  admin:
+    email: "admin@test.com"
+    password: 1234qwer
+  user:
+    email: "test@test.com"
+    password: 1234qwer
+
 
 logging:
   level:

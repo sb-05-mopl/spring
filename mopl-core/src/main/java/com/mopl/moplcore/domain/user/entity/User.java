@@ -68,4 +68,9 @@ public class User extends BaseEntity {
 	public void updateRole(Role role) {
 		this.role = role;
 	}
+
+	// 처음 생성자 생성용
+	public void initAdmin(){
+		this.role = Role.ADMIN;
+	}
 }

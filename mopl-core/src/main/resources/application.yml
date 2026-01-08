@@ -42,3 +42,11 @@ cloud:
       bucket: mopl-images
     stack:
       auto: false
+
+init:
+  admin:
+    email: ${INIT_ADMIN_EMAIL}
+    password: ${INIT_ADMIN_PASSWORD}
+  user:
+    email: ${INIT_USER_EMAIL}
+    password: ${INIT_USER_PASSWORD}
