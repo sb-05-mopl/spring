@@ -5,9 +5,11 @@ import com.mopl.moplcore.security.auth.dto.JwtInformation;
 import com.mopl.moplcore.security.auth.service.AuthService;
 import com.mopl.moplcore.domain.user.service.UserService;
 import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
+
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.csrf.CsrfToken;
@@ -22,30 +24,27 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-  private final UserService userService;
-  private final AuthService authService;
-  private final JwtTokenProvider jwtTokenProvider;
+	private final AuthService authService;
+	private final JwtTokenProvider jwtTokenProvider;
 
-  @GetMapping("/csrf-token")
-  public ResponseEntity<Void> getCsrfToken(CsrfToken csrfToken) {
-    csrfToken.getToken();
-    return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-  }
+	@GetMapping("/csrf-token")
+	public ResponseEntity<Void> getCsrfToken(CsrfToken csrfToken) {
+		csrfToken.getToken();
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+	}
 
-  @PostMapping("/refresh")
-  public ResponseEntity<JwtDto> refresh(@CookieValue("REFRESH_TOKEN") String refreshToken,
-      HttpServletResponse response) {
+	@PostMapping("/refresh")
+	public ResponseEntity<JwtDto> refresh(
+            @CookieValue("REFRESH_TOKEN") String refreshToken,
+		    HttpServletResponse response
+    ) {
 
-    JwtInformation jwtInformation = authService.refreshToken(refreshToken);
+		JwtInformation jwtInformation = authService.refreshToken(refreshToken);
+		Cookie refreshCookie = jwtTokenProvider.generateRefreshTokenCookie(jwtInformation.getRefreshToken());
 
-    Cookie refreshCookie = jwtTokenProvider.generateRefreshTokenCookie(
-        jwtInformation.getRefreshToken());
-    response.addCookie(refreshCookie);
+		response.addCookie(refreshCookie);
+		JwtDto body = new JwtDto(jwtInformation.getUserDto(), jwtInformation.getAccessToken());
 
-    JwtDto body = new JwtDto(
-        jwtInformation.getUserDto(),
-        jwtInformation.getAccessToken()
-    );
-    return ResponseEntity.status(HttpStatus.OK).body(body);
-  }
+		return ResponseEntity.status(HttpStatus.OK).body(body);
+	}
 }
