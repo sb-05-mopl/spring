@@ -8,7 +8,18 @@ spring:
       enabled: true
       max-file-size: 10MB
       max-request-size: 10MB
+  mail:
 
+    host: ${SMTP_HOST}
+    port: ${SMTP_PORT}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 jwt:
   access-token:
     secret: ${JWT_ACCESS_TOKE_KEY:G3yksXYpKcPvNOHv5NbHuqylOuTIYEqGVY6INF2UX8OJRdyUo+rRCJmdq6Th82CGUoBOUv7WgMcxZxBiE0VIcg==}
@@ -43,10 +54,13 @@ cloud:
     stack:
       auto: false
 
+
+
 init:
   admin:
-    email: ${INIT_ADMIN_EMAIL}
-    password: ${INIT_ADMIN_PASSWORD}
+    email: ${INIT_ADMIN_EMAIL:admin@mopl.com}
+    password: ${INIT_ADMIN_PASSWORD:1234qwer}
   user:
-    email: ${INIT_USER_EMAIL}
-    password: ${INIT_USER_PASSWORD}
+    email: ${INIT_USER_EMAIL:test@mopl.com}
+    password: ${INIT_USER_PASSWORD:1234qwer}
+
