@@ -1,7 +1,5 @@
 package com.mopl.moplcore.domain.user.listener;
 
-import java.time.Instant;
-
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -21,12 +19,12 @@ public class UserListener {
 	private final EmailService emailService;
 
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-	public void sendEmail(SendEmailPasswordEvent event){
+	public void sendEmail(SendEmailPasswordEvent event) {
 		emailService.sendTemporaryPassword(event.getToEmail(), event.getTempPassword(), event.getBaseTime());
 	}
 
-	@TransactionalEventListener(phase=TransactionPhase.AFTER_COMMIT)
-	public void removeTempPassword(RemoveTempPasswordEvent event){
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	public void removeTempPassword(RemoveTempPasswordEvent event) {
 		userRegistry.removeTempPassword(event.getUserId());
 	}
 }

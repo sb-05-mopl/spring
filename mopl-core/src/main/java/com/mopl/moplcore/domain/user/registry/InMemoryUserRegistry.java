@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 @Profile({"dev", "local"})
 @Component
 @RequiredArgsConstructor
-public class InMemoryUserRegistry implements UserRegistry{
+public class InMemoryUserRegistry implements UserRegistry {
 
 	private final Map<UUID, String> data = new ConcurrentHashMap<>();
 	private final PasswordEncoder passwordEncoder;

@@ -132,7 +132,7 @@ public class SmtpEmailService implements EmailService {
                     
                     <div class="info-box">
                         <p class="expires-info">⏰ 만료 시간: %s</p>
-                        <p style="margin: 5px 0 0 0;">(%d분 후 만료)</p>
+                        <p style="margin: 5px 0 0 0;">(3분 후 만료)</p>
                     </div>
                     
                     <h3>사용 방법</h3>
@@ -161,7 +161,6 @@ public class SmtpEmailService implements EmailService {
             </html>
             """,
 			temporaryPassword,
-			formattedExpiresAt,
 			minutesRemaining
 		);
 	}

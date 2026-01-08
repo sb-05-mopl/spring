@@ -11,8 +11,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mopl.moplcore.security.auth.dto.JwtDto;
 import com.mopl.moplcore.security.auth.dto.JwtInformation;
 import com.mopl.moplcore.security.exception.UnexpectedPrincipalException;
-import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
 import com.mopl.moplcore.security.jwt.JwtTokenProvider;
+import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
 import com.mopl.moplcore.security.principal.MoplUserDetails;
 
 import jakarta.servlet.http.Cookie;

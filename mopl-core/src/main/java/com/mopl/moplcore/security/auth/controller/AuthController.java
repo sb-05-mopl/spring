@@ -2,7 +2,6 @@ package com.mopl.moplcore.security.auth.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,7 +15,6 @@ import com.mopl.moplcore.security.auth.dto.JwtInformation;
 import com.mopl.moplcore.security.auth.dto.ResetPasswordRequest;
 import com.mopl.moplcore.security.auth.service.AuthService;
 import com.mopl.moplcore.security.jwt.JwtTokenProvider;
-import com.mopl.moplcore.security.principal.MoplUserDetails;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -53,7 +51,7 @@ public class AuthController {
 	@PostMapping("/reset-password")
 	public ResponseEntity<Void> resetPassword(
 		@RequestBody ResetPasswordRequest dto
-	){
+	) {
 		authService.resetPassword(dto.getEmail());
 		return ResponseEntity.ok().build();
 	}

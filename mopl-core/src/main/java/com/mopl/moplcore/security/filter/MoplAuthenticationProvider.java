@@ -35,12 +35,12 @@ public class MoplAuthenticationProvider implements AuthenticationProvider {
 		MoplUserDetails userDetails = (MoplUserDetails)userDetailsService.loadUserByUsername(email);
 		UUID id = userDetails.getUserDto().getId();
 
-		if(userRegistry.existById(id)){
+		if (userRegistry.existById(id)) {
 			if (!passwordEncoder.matches(password, userRegistry.getEncodedPassword(id))) {
 				throw new InValidCredentialException();
 			}
 			userRegistry.removeTempPassword(id);
-		}else{
+		} else {
 			if (!passwordEncoder.matches(password, userDetails.getPassword())) {
 				throw new InValidCredentialException();
 			}
