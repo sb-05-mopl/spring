@@ -4,6 +4,7 @@ import com.mopl.moplcore.domain.user.dto.UserDto;
 import com.mopl.moplcore.domain.user.entity.Role;
 import com.mopl.moplcore.global.exception.ErrorResponse;
 import com.mopl.moplcore.security.exception.TokenGenerateException;
+import com.mopl.moplcore.security.jwt.token.TokenType;
 import com.mopl.moplcore.security.principal.MoplUserDetails;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -15,7 +16,9 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import jakarta.servlet.http.Cookie;
+
 import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -28,168 +31,157 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtTokenProvider {
 
-  public static final String REFRESH_TOKEN_COOKIE_NAME = "REFRESH_TOKEN";
+    public static final String REFRESH_TOKEN_COOKIE_NAME = "REFRESH_TOKEN";
+    private static final int SECONDS_IN_MS = 1000;
 
-  private final int accessTokenExpirationMs;
-  private final int refreshTokenExpirationMs;
+    private final int accessTokenExpirationMs;
+    private final int refreshTokenExpirationMs;
 
-  public final JWSSigner accessTokenSigner;
-  public final JWSVerifier accessTokenVerifier;
+    private final JWSSigner accessTokenSigner;
+    private final JWSVerifier accessTokenVerifier;
 
-  public final JWSSigner refreshTokenSigner;
-  public final JWSVerifier refreshTokenVerifier;
+    private final JWSSigner refreshTokenSigner;
+    private final JWSVerifier refreshTokenVerifier;
 
-  public JwtTokenProvider(
-      @Value("${jwt.access-token.secret}") String accessTokenSecret,
-      @Value("${jwt.access-token.expiration-ms}") int accessTokenExpirationMs,
-      @Value("${jwt.refresh-token.secret}") String refreshTokenSecret,
-      @Value("${jwt.refresh-token.expiration-ms}") int refreshTokenExpirationMs
-  ) throws JOSEException
-  {
-    this.accessTokenExpirationMs = accessTokenExpirationMs;
-    this.refreshTokenExpirationMs = refreshTokenExpirationMs;
+    public JwtTokenProvider(
+            @Value("${jwt.access-token.secret}") String accessTokenSecret,
+            @Value("${jwt.access-token.expiration-ms}") int accessTokenExpirationMs,
+            @Value("${jwt.refresh-token.secret}") String refreshTokenSecret,
+            @Value("${jwt.refresh-token.expiration-ms}") int refreshTokenExpirationMs
+    ) throws JOSEException {
+        this.accessTokenExpirationMs = accessTokenExpirationMs;
+        this.refreshTokenExpirationMs = refreshTokenExpirationMs;
 
-    byte[] accessTokenSecretBytes = accessTokenSecret.getBytes(StandardCharsets.UTF_8);
-    this.accessTokenSigner = new MACSigner(accessTokenSecretBytes);
-    this.accessTokenVerifier = new MACVerifier(accessTokenSecretBytes);
+        byte[] accessTokenSecretBytes = accessTokenSecret.getBytes(StandardCharsets.UTF_8);
+        this.accessTokenSigner = new MACSigner(accessTokenSecretBytes);
+        this.accessTokenVerifier = new MACVerifier(accessTokenSecretBytes);
 
-    byte[] refreshTokenSecretBytes = refreshTokenSecret.getBytes(StandardCharsets.UTF_8);
-    this.refreshTokenSigner = new MACSigner(refreshTokenSecretBytes);
-    this.refreshTokenVerifier = new MACVerifier(refreshTokenSecretBytes);
-  }
-
-  public String generateAccessToken(MoplUserDetails userDetails)  {
-    return generateToken(userDetails, accessTokenExpirationMs, accessTokenSigner, "access");
-  }
-
-  public String generateRefreshToken(MoplUserDetails userDetails){
-    return generateToken(userDetails, refreshTokenExpirationMs, refreshTokenSigner, "refresh");
-  }
-
-  public String generateToken(MoplUserDetails userDetails, int expirationMs, JWSSigner signer, String tokenType) {
-    try{
-      String tokenId = UUID.randomUUID().toString();
-      UserDto user = userDetails.getUserDto();
-
-      Date now = new Date();
-      Date expiryDate = new Date(now.getTime() + expirationMs);
-
-      JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-              .subject(user.email())
-              .jwtID(tokenId)
-              .claim("userId", user.id().toString())
-              .claim("type", tokenType)
-              .claim("role", user.role().name())
-              .claim("roles", userDetails.getAuthorities().stream()
-                      .map(GrantedAuthority::getAuthority)
-                      .collect(Collectors.toList()))
-              .issueTime(now)
-              .expirationTime(expiryDate)
-              .build();
-
-      SignedJWT signedJWT = new SignedJWT(
-              new JWSHeader(JWSAlgorithm.HS256),
-              claimsSet
-      );
-
-      signedJWT.sign(signer);
-      String token = signedJWT.serialize();
-      return token;
-    }catch (JOSEException e){
-      throw new TokenGenerateException(e);
+        byte[] refreshTokenSecretBytes = refreshTokenSecret.getBytes(StandardCharsets.UTF_8);
+        this.refreshTokenSigner = new MACSigner(refreshTokenSecretBytes);
+        this.refreshTokenVerifier = new MACVerifier(refreshTokenSecretBytes);
     }
 
-  }
-
-  public boolean validateAccessToken(String token) {
-    return validateToken(token, accessTokenVerifier, "access");
-  }
-
-  public boolean validateRefreshToken(String token) {
-    return validateToken(token, refreshTokenVerifier, "refresh");
-  }
-
-  private boolean validateToken(String token, JWSVerifier verifier, String expectedType) {
-
-    try {
-      SignedJWT signedJWT = SignedJWT.parse(token);
-
-      if (!signedJWT.verify(verifier)) {
-        return false;
-      }
-
-      String tokenType = (String) signedJWT.getJWTClaimsSet().getClaim("type");
-      if (!expectedType.equals(tokenType)) {
-        return false;
-      }
-
-      Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-      return expirationTime != null && !expirationTime.before(new Date());
-    } catch (Exception e) {
-      return false;
+    public String generateAccessToken(MoplUserDetails userDetails) {
+        return generateToken(userDetails, accessTokenExpirationMs, accessTokenSigner, TokenType.ACCESS);
     }
-  }
 
-  public Cookie generateRefreshTokenCookie(String refreshToken) {
-    Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
-    cookie.setHttpOnly(true);
-    cookie.setSecure(true);
-    cookie.setPath("/");
-    cookie.setMaxAge(refreshTokenExpirationMs / 1000);
-    return cookie;
-  }
-
-  public Cookie generateRefreshTokenExpirationCookie() {
-    Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, "");
-    cookie.setHttpOnly(true);
-    cookie.setSecure(true);
-    cookie.setPath("/");
-    cookie.setMaxAge(0);
-    return cookie;
-  }
-
-
-  public String getTokenId(String token) {
-    try {
-      SignedJWT signedJWT = SignedJWT.parse(token);
-      return signedJWT.getJWTClaimsSet().getJWTID();
-    } catch (Exception e) {
-      throw new IllegalArgumentException("Invalid JWT token", e);
+    public String generateRefreshToken(MoplUserDetails userDetails) {
+        return generateToken(userDetails, refreshTokenExpirationMs, refreshTokenSigner, TokenType.REFRESH);
     }
-  }
 
-  public UUID getUserId(String token) {
-    try {
-      SignedJWT signedJWT = SignedJWT.parse(token);
-      String userIdStr = (String) signedJWT.getJWTClaimsSet().getClaim("userId");
-      if (userIdStr == null) {
-        throw new IllegalArgumentException("User ID claim not found in JWT token");
-      }
-      return UUID.fromString(userIdStr);
-    } catch (Exception e) {
-      throw new IllegalArgumentException("Invalid JWT token", e);
-    }
-  }
+    private String generateToken(MoplUserDetails userDetails, int expirationMs, JWSSigner signer, TokenType tokenType) {
+        try {
+            String tokenId = UUID.randomUUID().toString();
+            UserDto user = userDetails.getUserDto();
 
-  public Role getRole(String token) {
-    try {
-      SignedJWT signedJWT = SignedJWT.parse(token);
-      String roleStr = (String) signedJWT.getJWTClaimsSet().getClaim("role");
-      if (roleStr == null) {
-        throw new IllegalArgumentException("Role claim not found in JWT token");
-      }
-      return Role.valueOf(roleStr);
-    } catch (Exception e) {
-      throw new IllegalArgumentException("Invalid JWT token", e);
-    }
-  }
+            Date now = new Date();
+            Date expiryDate = new Date(now.getTime() + expirationMs);
 
-  public String getSubject(String token) {
-    try {
-      SignedJWT signedJWT = SignedJWT.parse(token);
-      return signedJWT.getJWTClaimsSet().getSubject();
-    } catch (Exception e) {
-      throw new IllegalArgumentException("Invalid JWT token", e);
+            JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+                    .subject(user.getEmail())
+                    .jwtID(tokenId)
+                    .claim("userId", user.getId().toString())
+                    .claim("type", tokenType.getValue())
+                    .claim("roles", userDetails.getAuthorities().stream()
+                            .map(GrantedAuthority::getAuthority)
+                            .collect(Collectors.toList()))
+                    .issueTime(now)
+                    .expirationTime(expiryDate)
+                    .build();
+
+            SignedJWT signedJWT = new SignedJWT(
+                    new JWSHeader(JWSAlgorithm.HS256),
+                    claimsSet
+            );
+
+            signedJWT.sign(signer);
+            return signedJWT.serialize();
+        } catch (JOSEException e) {
+            throw new TokenGenerateException(e);
+        }
     }
-  }
+
+    public boolean validateAccessToken(String token) {
+        return validateToken(token, accessTokenVerifier, TokenType.ACCESS);
+    }
+
+    public boolean validateRefreshToken(String token) {
+        return validateToken(token, refreshTokenVerifier, TokenType.REFRESH);
+    }
+
+    private boolean validateToken(String token, JWSVerifier verifier, TokenType expectedType) {
+        try {
+            SignedJWT signedJWT = SignedJWT.parse(token);
+
+            if (!signedJWT.verify(verifier)) {
+                return false;
+            }
+
+            String tokenType = (String) signedJWT.getJWTClaimsSet().getClaim("type");
+            if (!expectedType.getValue().equals(tokenType)) {
+                return false;
+            }
+
+            Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+            return expirationTime != null && !expirationTime.before(new Date());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Cookie generateRefreshTokenCookie(String refreshToken) {
+        return createCookie(refreshToken, refreshTokenExpirationMs / SECONDS_IN_MS);
+    }
+
+    public Cookie generateRefreshTokenExpirationCookie() {
+        return createCookie("", 0);
+    }
+
+    private Cookie createCookie(String value, int maxAgeSeconds) {
+        Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, value);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(maxAgeSeconds);
+        return cookie;
+    }
+
+    public String getTokenId(String token) {
+        return getClaim(token, JWTClaimsSet::getJWTID);
+    }
+
+    public UUID getUserId(String token) {
+        String userIdStr = getClaim(token, claims -> (String) claims.getClaim("userId"));
+        if (userIdStr == null) {
+            throw new IllegalArgumentException("User ID claim not found in JWT token");
+        }
+        return UUID.fromString(userIdStr);
+    }
+
+    public Role getRole(String token) {
+        String roleStr = getClaim(token, claims -> (String) claims.getClaim("role"));
+        if (roleStr == null) {
+            throw new IllegalArgumentException("Role claim not found in JWT token");
+        }
+        return Role.valueOf(roleStr);
+    }
+
+    public String getSubject(String token) {
+        return getClaim(token, JWTClaimsSet::getSubject);
+    }
+
+    private <T> T getClaim(String token, ClaimExtractor<T> extractor) {
+        try {
+            SignedJWT signedJWT = SignedJWT.parse(token);
+            JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
+            return extractor.extract(claims);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Invalid JWT token", e);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ClaimExtractor<T> {
+        T extract(JWTClaimsSet claims) throws ParseException;
+    }
 }
