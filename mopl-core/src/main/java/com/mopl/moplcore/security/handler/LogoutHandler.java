@@ -2,41 +2,38 @@ package com.mopl.moplcore.security.handler;
 
 import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
 import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
+import com.mopl.moplcore.security.principal.MoplUserDetails;
+
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class LogoutHandler implements org.springframework.security.web.authentication.logout.LogoutHandler {
+public class LogoutHandler implements LogoutSuccessHandler {
 
-  private final JwtTokenProvider tokenProvider;
-  private final JwtRegistry jwtRegistry;
+	private final JwtTokenProvider tokenProvider;
+	private final JwtRegistry jwtRegistry;
 
+	@Override
+	public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response,
+		Authentication authentication) {
+		Cookie cookie = tokenProvider.generateRefreshTokenExpirationCookie();
+		MoplUserDetails userDetails = (MoplUserDetails)authentication.getPrincipal();
 
-  @Override
-  public void logout(HttpServletRequest request, HttpServletResponse response,
-      Authentication authentication) {
+		jwtRegistry.invalidateJwtInformationByUserId(userDetails.getUserDto().getId());
+		response.addCookie(cookie);
 
-    Cookie refreshTokenExpirationCookie = tokenProvider.generateRefreshTokenExpirationCookie();
-
-    response.addCookie(refreshTokenExpirationCookie);
-
-    Cookie[] cookies = request.getCookies();
-    if (cookies == null) return;
-
-    Arrays.stream(cookies)
-        .filter(cookie -> cookie.getName().equals(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME))
-        .findFirst()
-        .ifPresent(cookie -> {
-          String refreshToken = cookie.getValue();
-          UUID userId = tokenProvider.getUserId(refreshToken);
-          jwtRegistry.invalidateJwtInformationByUserId(userId);
-        });
-  }
+	}
 }
