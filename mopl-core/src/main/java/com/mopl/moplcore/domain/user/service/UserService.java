@@ -21,6 +21,7 @@ import com.mopl.moplcore.domain.user.exception.DuplicateEmailException;
 import com.mopl.moplcore.domain.user.exception.ForbiddenUserAccessException;
 import com.mopl.moplcore.domain.user.exception.UserNotFoundException;
 import com.mopl.moplcore.domain.user.mapper.UserMapper;
+import com.mopl.moplcore.domain.user.registry.UserRegistry;
 import com.mopl.moplcore.domain.user.repository.UserRepository;
 import com.mopl.moplcore.domain.user.storage.ProfileImageStorage;
 
@@ -36,6 +37,7 @@ public class UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final UserMapper userMapper;
 	private final ProfileImageStorage profileImageStorage;
+	private final UserRegistry userRegistry;
 
 	@Transactional
 	public UserDto signUp(UserCreateRequest dto) {
@@ -59,12 +61,11 @@ public class UserService {
 	}
 
 	@Transactional
-	public void updatePassword(UUID userId, String newPassword){
+	public void updatePassword(UUID userId, String newPassword) {
 		User user = userRepository.findById(userId).orElseThrow(() -> UserNotFoundException.withUserId(userId));
-		/**
-		 * 여기에 임시 비밀번호를 제거하는 이벤트가 필요함
-		 */
 		String encode = passwordEncoder.encode(newPassword);
+
+		userRegistry.removeTempPassword(user.getId());
 		user.updatePassword(encode);
 	}
 

@@ -2,17 +2,21 @@ package com.mopl.moplcore.security.auth.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mopl.moplcore.security.auth.dto.JwtDto;
 import com.mopl.moplcore.security.auth.dto.JwtInformation;
+import com.mopl.moplcore.security.auth.dto.ResetPasswordRequest;
 import com.mopl.moplcore.security.auth.service.AuthService;
 import com.mopl.moplcore.security.jwt.JwtTokenProvider;
+import com.mopl.moplcore.security.principal.MoplUserDetails;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -37,7 +41,6 @@ public class AuthController {
 		@CookieValue("REFRESH_TOKEN") String refreshToken,
 		HttpServletResponse response
 	) {
-
 		JwtInformation jwtInformation = authService.refreshToken(refreshToken);
 		Cookie refreshCookie = jwtTokenProvider.generateRefreshTokenCookie(jwtInformation.getRefreshToken());
 
@@ -45,5 +48,13 @@ public class AuthController {
 		JwtDto body = new JwtDto(jwtInformation.getUserDto(), jwtInformation.getAccessToken());
 
 		return ResponseEntity.status(HttpStatus.OK).body(body);
+	}
+
+	@PostMapping("/reset-password")
+	public ResponseEntity<Void> resetPassword(
+		@RequestBody ResetPasswordRequest dto
+	){
+		authService.resetPassword(dto.getEmail());
+		return ResponseEntity.ok().build();
 	}
 }
