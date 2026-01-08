@@ -17,4 +17,11 @@ public class ForbiddenUserAccessException extends BaseException {
 		ex.addDetail("targetUserId", targetUserId);
 		return ex;
 	}
+
+	public static ForbiddenUserAccessException withIds(UUID userId, String email) {
+		ForbiddenUserAccessException ex = new ForbiddenUserAccessException();
+		ex.addDetail("userId", userId);
+		ex.addDetail("email", email);
+		return ex;
+	}
 }
