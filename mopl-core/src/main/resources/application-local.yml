@@ -21,6 +21,10 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 10s
+    socket-timeout: 60s
 
 logging:
   level:
