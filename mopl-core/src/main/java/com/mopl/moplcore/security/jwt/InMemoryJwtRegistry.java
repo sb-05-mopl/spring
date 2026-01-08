@@ -28,7 +28,7 @@ public class InMemoryJwtRegistry implements JwtRegistry {
 	private final Set<String> accessTokenIndexes = ConcurrentHashMap.newKeySet();
 	private final Set<String> refreshTokenIndexes = ConcurrentHashMap.newKeySet();
 
-	private final int maxActiveJwtCount;
+	private final int maxActiveJwtCount = 1;
 	private final JwtTokenProvider jwtTokenProvider;
 
 	@Override
