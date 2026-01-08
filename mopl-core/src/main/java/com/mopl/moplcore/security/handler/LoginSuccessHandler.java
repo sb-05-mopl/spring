@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mopl.moplcore.security.auth.dto.JwtDto;
 import com.mopl.moplcore.security.auth.dto.JwtInformation;
 import com.mopl.moplcore.global.exception.ErrorResponse;
-import com.mopl.moplcore.security.authentication.MoplUserDetails;
+import com.mopl.moplcore.security.principal.MoplUserDetails;
 import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
 import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
 import com.nimbusds.jose.JOSEException;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
+public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
   private final JwtTokenProvider tokenProvider;
   private final JwtRegistry jwtRegistry;

@@ -1,9 +1,8 @@
-package com.mopl.moplcore.security.authentication;
+package com.mopl.moplcore.security.principal;
 
 import com.mopl.moplcore.domain.user.dto.UserDto;
 import com.mopl.moplcore.domain.user.entity.User;
 import com.mopl.moplcore.domain.user.repository.UserRepository;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -19,16 +18,9 @@ public class MoplUserDetailsService implements UserDetailsService {
 
   @Transactional
   @Override
-  public UserDetails loadUserByUsername(String emailOrUserId) throws UsernameNotFoundException {
-    // jwt 인증에서는 userId를 username 자리에 전달
-    User user;
+  public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-    try {
-      UUID userId = UUID.fromString(emailOrUserId);
-      user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException(emailOrUserId));
-    } catch (IllegalArgumentException notUuid) {
-      user = userRepository.findByEmail(emailOrUserId).orElseThrow(() -> new UsernameNotFoundException(emailOrUserId));
-    }
+    User user = userRepository.findByEmail(email).orElseThrow();
 
     UserDto dto = new UserDto(
         user.getId(),

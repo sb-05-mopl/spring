@@ -2,7 +2,7 @@ package com.mopl.moplcore.security.jwt.registry;
 
 import com.mopl.moplcore.domain.user.dto.UserDto;
 import com.mopl.moplcore.domain.user.entity.Role;
-import com.mopl.moplcore.security.authentication.MoplUserDetails;
+import com.mopl.moplcore.security.principal.MoplUserDetails;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;

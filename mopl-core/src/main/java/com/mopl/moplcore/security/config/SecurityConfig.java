@@ -3,7 +3,7 @@ package com.mopl.moplcore.security.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mopl.moplcore.security.handler.SpaCsrfTokenRequestHandler;
 import com.mopl.moplcore.security.filter.JwtAuthenticationFilter;
-import com.mopl.moplcore.security.handler.JwtLoginSuccessHandler;
+import com.mopl.moplcore.security.handler.LoginSuccessHandler;
 import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,7 +28,7 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(
       HttpSecurity http,
-      JwtLoginSuccessHandler jwtLoginSuccessHandler,
+      LoginSuccessHandler loginSuccessHandler,
       JwtTokenProvider jwtTokenProvider,
       ObjectMapper objectMapper,
       JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
@@ -61,7 +61,7 @@ public class SecurityConfig {
             .loginProcessingUrl("/api/auth/sign-in")
             .usernameParameter("username")
             .passwordParameter("password")
-            .successHandler(jwtLoginSuccessHandler)
+            .successHandler(loginSuccessHandler)
             .failureHandler((request, response, exception) -> {
               response.setStatus(401);
               response.setContentType("application/json;charset=UTF-8");

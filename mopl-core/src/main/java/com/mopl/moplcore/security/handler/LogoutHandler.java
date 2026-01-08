@@ -9,12 +9,11 @@ import java.util.Arrays;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class JwtLogoutHandler implements LogoutHandler {
+public class LogoutHandler implements org.springframework.security.web.authentication.logout.LogoutHandler {
 
   private final JwtTokenProvider tokenProvider;
   private final JwtRegistry jwtRegistry;

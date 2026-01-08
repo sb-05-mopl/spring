@@ -1,7 +1,7 @@
 package com.mopl.moplcore.security.auth.service;
 
 import com.mopl.moplcore.security.auth.dto.JwtInformation;
-import com.mopl.moplcore.security.authentication.MoplUserDetails;
+import com.mopl.moplcore.security.principal.MoplUserDetails;
 import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
 import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
 import com.nimbusds.jose.JOSEException;

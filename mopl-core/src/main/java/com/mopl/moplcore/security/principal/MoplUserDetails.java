@@ -1,4 +1,4 @@
-package com.mopl.moplcore.security.authentication;
+package com.mopl.moplcore.security.principal;
 
 import com.mopl.moplcore.domain.user.dto.UserDto;
 import java.util.Collection;
