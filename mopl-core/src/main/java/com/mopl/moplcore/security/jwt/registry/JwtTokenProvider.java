@@ -2,6 +2,8 @@ package com.mopl.moplcore.security.jwt.registry;
 
 import com.mopl.moplcore.domain.user.dto.UserDto;
 import com.mopl.moplcore.domain.user.entity.Role;
+import com.mopl.moplcore.global.exception.ErrorResponse;
+import com.mopl.moplcore.security.exception.TokenGenerateException;
 import com.mopl.moplcore.security.principal.MoplUserDetails;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -17,6 +19,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
@@ -40,7 +44,8 @@ public class JwtTokenProvider {
       @Value("${jwt.access-token.expiration-ms}") int accessTokenExpirationMs,
       @Value("${jwt.refresh-token.secret}") String refreshTokenSecret,
       @Value("${jwt.refresh-token.expiration-ms}") int refreshTokenExpirationMs
-  ) throws JOSEException {
+  ) throws JOSEException
+  {
     this.accessTokenExpirationMs = accessTokenExpirationMs;
     this.refreshTokenExpirationMs = refreshTokenExpirationMs;
 
@@ -53,45 +58,47 @@ public class JwtTokenProvider {
     this.refreshTokenVerifier = new MACVerifier(refreshTokenSecretBytes);
   }
 
-  public String generateAccessToken(MoplUserDetails userDetails) throws JOSEException {
+  public String generateAccessToken(MoplUserDetails userDetails)  {
     return generateToken(userDetails, accessTokenExpirationMs, accessTokenSigner, "access");
   }
 
-  public String generateRefreshToken(MoplUserDetails userDetails) throws JOSEException {
+  public String generateRefreshToken(MoplUserDetails userDetails){
     return generateToken(userDetails, refreshTokenExpirationMs, refreshTokenSigner, "refresh");
   }
 
-  public String generateToken(MoplUserDetails userDetails, int expirationMs, JWSSigner signer,
-      String tokenType) throws JOSEException {
+  public String generateToken(MoplUserDetails userDetails, int expirationMs, JWSSigner signer, String tokenType) {
+    try{
+      String tokenId = UUID.randomUUID().toString();
+      UserDto user = userDetails.getUserDto();
 
-    String tokenId = UUID.randomUUID().toString();
-    UserDto user = userDetails.getUserDto();
+      Date now = new Date();
+      Date expiryDate = new Date(now.getTime() + expirationMs);
 
-    Date now = new Date();
-    Date expiryDate = new Date(now.getTime() + expirationMs);
+      JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+              .subject(user.email())
+              .jwtID(tokenId)
+              .claim("userId", user.id().toString())
+              .claim("type", tokenType)
+              .claim("role", user.role().name())
+              .claim("roles", userDetails.getAuthorities().stream()
+                      .map(GrantedAuthority::getAuthority)
+                      .collect(Collectors.toList()))
+              .issueTime(now)
+              .expirationTime(expiryDate)
+              .build();
 
-    JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-        .subject(user.email())
-        .jwtID(tokenId)
-        .claim("userId", user.id().toString())
-        .claim("type", tokenType)
-        .claim("role", user.role().name())
-        .claim("roles", userDetails.getAuthorities().stream()
-            .map(GrantedAuthority::getAuthority)
-            .collect(Collectors.toList()))
-        .issueTime(now)
-        .expirationTime(expiryDate)
-        .build();
+      SignedJWT signedJWT = new SignedJWT(
+              new JWSHeader(JWSAlgorithm.HS256),
+              claimsSet
+      );
 
-    SignedJWT signedJWT = new SignedJWT(
-        new JWSHeader(JWSAlgorithm.HS256),
-        claimsSet
-    );
+      signedJWT.sign(signer);
+      String token = signedJWT.serialize();
+      return token;
+    }catch (JOSEException e){
+      throw new TokenGenerateException(e);
+    }
 
-    signedJWT.sign(signer);
-    String token = signedJWT.serialize();
-
-    return token;
   }
 
   public boolean validateAccessToken(String token) {
