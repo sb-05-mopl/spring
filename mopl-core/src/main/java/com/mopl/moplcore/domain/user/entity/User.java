@@ -1,6 +1,5 @@
 package com.mopl.moplcore.domain.user.entity;
 
-
 import com.mopl.moplcore.domain.common.entity.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -70,7 +69,7 @@ public class User extends BaseEntity {
 	}
 
 	// 처음 생성자 생성용
-	public void initAdmin(){
+	public void initAdmin() {
 		this.role = Role.ADMIN;
 	}
 }

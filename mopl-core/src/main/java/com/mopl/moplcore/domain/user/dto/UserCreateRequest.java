@@ -6,16 +6,15 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class UserCreateRequest{
+public class UserCreateRequest {
 
 	@NotBlank
-    String name;
+	String name;
 
 	@NotBlank
-    String email;
+	String email;
 
-    @NotBlank
-    String password;
-
+	@NotBlank
+	String password;
 
 }

@@ -1,10 +1,10 @@
 package com.mopl.moplcore.domain.user.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
-public record UserUpdateRequest(
-    @NotBlank
-    String name
-) {
-
+@Data
+@AllArgsConstructor
+public class UserUpdateRequest {
+	String name;
 }

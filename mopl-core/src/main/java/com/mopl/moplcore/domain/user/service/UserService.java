@@ -1,5 +1,14 @@
 package com.mopl.moplcore.domain.user.service;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.mopl.moplcore.domain.user.dto.AdminUserSearchRequest;
 import com.mopl.moplcore.domain.user.dto.CursorResponseUserDto;
 import com.mopl.moplcore.domain.user.dto.SortBy;
@@ -15,17 +24,8 @@ import com.mopl.moplcore.domain.user.mapper.UserMapper;
 import com.mopl.moplcore.domain.user.repository.UserRepository;
 import com.mopl.moplcore.domain.user.storage.ProfileImageStorage;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -110,13 +110,13 @@ public class UserService {
 	}
 
 	@Transactional
-	public void updateRole(Role newRole, UUID userId){
+	public void updateRole(Role newRole, UUID userId) {
 		User user = userRepository.findById(userId).orElseThrow(() -> UserNotFoundException.withUserId(userId));
 		user.updateRole(newRole);
 	}
 
 	@Transactional
-	public void updateLock(boolean locked, UUID userId){
+	public void updateLock(boolean locked, UUID userId) {
 		User user = userRepository.findById(userId).orElseThrow(() -> UserNotFoundException.withUserId(userId));
 		if (locked) {
 			user.lockUser();
@@ -125,15 +125,11 @@ public class UserService {
 		}
 	}
 
-
-
-
-
 	@Transactional
 	public UserDto updateProfile(
 		UUID pathUserId,
 		UUID loginUserId,
-		UserUpdateRequest request,
+		UserUpdateRequest dto,
 		MultipartFile image
 	) {
 		log.info("pathUserId={}, loginUserId={}", pathUserId, loginUserId);
@@ -144,7 +140,7 @@ public class UserService {
 
 		return userRepository.findById(pathUserId)
 			.map(user -> {
-				user.updateName(request.name());
+				user.updateName(dto.getName());
 
 				Optional.ofNullable(image)
 					.filter(file -> !file.isEmpty())

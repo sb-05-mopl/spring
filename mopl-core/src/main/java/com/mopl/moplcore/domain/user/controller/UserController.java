@@ -1,21 +1,6 @@
 package com.mopl.moplcore.domain.user.controller;
 
-import com.mopl.moplcore.domain.user.dto.AdminUserSearchRequest;
-import com.mopl.moplcore.domain.user.dto.CursorResponseUserDto;
-import com.mopl.moplcore.domain.user.dto.UpdateLockRequest;
-import com.mopl.moplcore.domain.user.dto.UpdateRoleRequest;
-import com.mopl.moplcore.domain.user.dto.UserCreateRequest;
-import com.mopl.moplcore.domain.user.dto.UserDto;
-import com.mopl.moplcore.domain.user.dto.UserUpdateRequest;
-import com.mopl.moplcore.domain.user.service.UserService;
-import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
-import com.mopl.moplcore.security.principal.MoplUserDetails;
-
-import jakarta.validation.Valid;
-
 import java.util.UUID;
-
-import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -32,6 +17,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.mopl.moplcore.domain.user.dto.AdminUserSearchRequest;
+import com.mopl.moplcore.domain.user.dto.CursorResponseUserDto;
+import com.mopl.moplcore.domain.user.dto.UpdateLockRequest;
+import com.mopl.moplcore.domain.user.dto.UpdateRoleRequest;
+import com.mopl.moplcore.domain.user.dto.UserCreateRequest;
+import com.mopl.moplcore.domain.user.dto.UserDto;
+import com.mopl.moplcore.domain.user.dto.UserUpdateRequest;
+import com.mopl.moplcore.domain.user.service.UserService;
+import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
+import com.mopl.moplcore.security.principal.MoplUserDetails;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
@@ -77,7 +76,7 @@ public class UserController {
 	public ResponseEntity<Void> updateRole(
 		@PathVariable UUID userId,
 		@RequestBody UpdateRoleRequest dto
-	){
+	) {
 		userService.updateRole(dto.getRole(), userId);
 		jwtRegistry.invalidateJwtInformationByUserId(userId);
 		return ResponseEntity.ok().build();
@@ -88,7 +87,7 @@ public class UserController {
 	public ResponseEntity<Void> updateLock(
 		@PathVariable UUID userId,
 		@RequestBody UpdateLockRequest dto
-	){
+	) {
 		userService.updateLock(dto.isLocked(), userId);
 		jwtRegistry.invalidateJwtInformationByUserId(userId);
 		return ResponseEntity.ok().build();

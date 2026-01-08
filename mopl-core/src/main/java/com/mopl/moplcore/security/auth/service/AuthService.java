@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import com.mopl.moplcore.security.auth.dto.JwtInformation;
 import com.mopl.moplcore.security.exception.InValidAccessTokenException;
 import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
-import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
+import com.mopl.moplcore.security.jwt.JwtTokenProvider;
 import com.mopl.moplcore.security.principal.MoplUserDetails;
 
 import lombok.RequiredArgsConstructor;

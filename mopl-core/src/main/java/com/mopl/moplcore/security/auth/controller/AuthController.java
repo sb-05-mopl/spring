@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.mopl.moplcore.security.auth.dto.JwtDto;
 import com.mopl.moplcore.security.auth.dto.JwtInformation;
 import com.mopl.moplcore.security.auth.service.AuthService;
-import com.mopl.moplcore.security.jwt.registry.JwtTokenProvider;
+import com.mopl.moplcore.security.jwt.JwtTokenProvider;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
