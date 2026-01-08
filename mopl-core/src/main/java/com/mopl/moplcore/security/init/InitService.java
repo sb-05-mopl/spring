@@ -2,7 +2,6 @@ package com.mopl.moplcore.security.init;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,7 +48,7 @@ public class InitService {
 			return;
 		}
 
-		String encodedPassword = passwordEncoder.encode(adminPassword);
+		String encodedPassword = passwordEncoder.encode(userPassword);
 		User user = new User("테스트 사용자", userEmail, encodedPassword);
 
 		userRepository.save(user);
