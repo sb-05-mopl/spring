@@ -16,6 +16,11 @@ spring:
     hibernate:
       ddl-auto: create
 
+  data:
+    redis:
+      host: dev-redis-server
+      port: 6379
+
   servlet:
     multipart:
       max-file-size: 10MB
