@@ -14,6 +14,8 @@ import com.mopl.moplcore.domain.content.repository.TagRepository;
 import com.mopl.moplcore.global.service.S3Service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ContentManagementService {
@@ -31,6 +34,7 @@ public class ContentManagementService {
 	private final ContentTagRepository contentTagRepository;
 	private final TagRepository tagRepository;
 	private final S3Service s3Service;
+	private final ContentSyncService contentSyncService;
 
 	@Transactional
 	public ContentDto createContent(ContentCreateRequest request, MultipartFile thumbnail) {
@@ -63,6 +67,13 @@ public class ContentManagementService {
 				})
 				.toList();
 			contentTagRepository.saveAll(contentTags);
+		}
+
+		try {
+			contentSyncService.syncContent(savedContent.getId());
+			log.info("Content 생성 및 Elasticsearch 동기화 성공: id={}", savedContent.getId());
+		} catch (Exception e) {
+			log.error("Elasticsearch 동기화 실패: id={}", savedContent.getId(), e);
 		}
 
 		return toDto(savedContent);
@@ -118,6 +129,13 @@ public class ContentManagementService {
 			contentTagRepository.saveAll(contentTags);
 		}
 
+		try {
+			contentSyncService.syncContent(id);
+			log.info("Content 업데이트 및 Elasticsearch 동기화 성공: id={}", id);
+		} catch (Exception e) {
+			log.error("Elasticsearch 동기화 실패: id={}", id, e);
+		}
+
 		return toDto(content);
 	}
 
@@ -132,6 +150,13 @@ public class ContentManagementService {
 		}
 
 		contentRepository.delete(content);
+
+		try {
+			contentSyncService.deleteContent(id);
+			log.info("Elasticsearch에서 Content 삭제 성공: id={}", id);
+		} catch (Exception e) {
+			log.error("Elasticsearch에서 Content 삭제 실패: id={}", id, e);
+		}
 	}
 
 	private ContentDto toDto(Content content) {
