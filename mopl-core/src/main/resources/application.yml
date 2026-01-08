@@ -9,3 +9,10 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
+jwt:
+  access-token:
+    secret: your-access-token-secret-key-here-make-it-long-and-random
+    expiration-ms: 1800000
+  refresh-token:
+    secret: your-refresh-token-secret-key-here-make-it-long-and-random
+    expiration-ms: 604800000
