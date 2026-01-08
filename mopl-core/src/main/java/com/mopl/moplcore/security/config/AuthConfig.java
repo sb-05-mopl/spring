@@ -3,12 +3,21 @@ package com.mopl.moplcore.security.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.mopl.moplcore.security.filter.MoplAuthenticationProvider;
+
 @Configuration
 public class AuthConfig {
+
+	@Bean
+	public AuthenticationManager authenticationManager(MoplAuthenticationProvider authenticationProvider){
+		return new ProviderManager(authenticationProvider);
+	}
 
     @Bean
     @Profile({"local","dev"})
