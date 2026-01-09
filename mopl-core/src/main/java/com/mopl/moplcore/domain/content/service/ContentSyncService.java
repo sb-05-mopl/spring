@@ -89,10 +89,10 @@ public class ContentSyncService {
 			contentSearchRepository.findById(contentId.toString()).ifPresent(document -> {
 				document.setWatcherCount(watcherCount);
 				contentSearchRepository.save(document);
-				log.debug("Updated watcherCount for content {}: {}", contentId, watcherCount);
+				log.debug("content의 업데이트 된 watcherCount {}: {}", contentId, watcherCount);
 			});
 		} catch (Exception e) {
-			log.error("Failed to update watcherCount for content {}", contentId, e);
+			log.error("watcherCount 업데이트 실패 {}", contentId, e);
 		}
 	}
 }

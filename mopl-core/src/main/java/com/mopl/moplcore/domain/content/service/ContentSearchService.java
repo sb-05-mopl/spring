@@ -41,8 +41,14 @@ public class ContentSearchService {
 	private final ContentRepository contentRepository;
 	private final ElasticsearchOperations elasticsearchOperations;
 	private final WatchingSessionReader watchingSessionReader;
+	private final WatcherCountSyncService watcherCountSyncService;
 
 	public CursorResponseContentDto searchContents(ContentSearchRequest request) {
+
+		if (request.getSortBy() == ContentSearchRequest.SortBy.watcherCount) {
+			watcherCountSyncService.syncWatcherCountsAsync();
+		}
+
 		Criteria criteria = buildCriteria(request);
 
 		Sort sort = buildSort(request);

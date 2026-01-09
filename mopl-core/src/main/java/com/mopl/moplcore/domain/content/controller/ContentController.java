@@ -1,6 +1,5 @@
 package com.mopl.moplcore.domain.content.controller;
 
-import java.rmi.server.UID;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -55,40 +54,32 @@ public class ContentController {
 
 	@Operation(summary = "[어드민] 콘텐츠 생성(URL만)")
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ContentDto> createContent(
-		@RequestBody @Valid ContentCreateRequest request
-	) {
+	public ResponseEntity<ContentDto> createContent(@RequestBody @Valid ContentCreateRequest request) {
 		ContentDto response = contentManagementService.createContent(request, null);
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
 	@Operation(summary = "[어드민] 콘텐츠 생성(파일 업로드)")
 	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<ContentDto> createContentWithFile(
-		@RequestPart("request") @Valid ContentCreateRequest request,
-		@RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail
-	) {
+	public ResponseEntity<ContentDto> createContentWithFile(@RequestPart("request") @Valid ContentCreateRequest request,
+		@RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail) {
 		ContentDto response = contentManagementService.createContent(request, thumbnail);
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
 	@Operation(summary = "[어드민] 콘텐츠 수정 (URL만)")
 	@PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ContentDto> updateContent(
-		@PathVariable UUID id,
-		@RequestBody @Valid ContentUpdateRequest request
-	) {
+	public ResponseEntity<ContentDto> updateContent(@PathVariable UUID id,
+		@RequestBody @Valid ContentUpdateRequest request) {
 		ContentDto response = contentManagementService.updateContent(id, request, null);
 		return ResponseEntity.ok(response);
 	}
 
 	@Operation(summary = "[어드민] 콘텐츠 수정 (파일 업로드)")
 	@PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<ContentDto> updateContentWithFile(
-		@PathVariable UUID id,
+	public ResponseEntity<ContentDto> updateContentWithFile(@PathVariable UUID id,
 		@RequestPart("request") @Valid ContentUpdateRequest request,
-		@RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail
-	) {
+		@RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail) {
 		ContentDto response = contentManagementService.updateContent(id, request, thumbnail);
 		return ResponseEntity.ok(response);
 	}
