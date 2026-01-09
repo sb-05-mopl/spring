@@ -16,7 +16,8 @@ import com.mopl.moplcore.security.jwt.JwtTokenProvider;
 
 import lombok.RequiredArgsConstructor;
 
-@Profile({"local", "dev"})
+@Profile("none")
+@Deprecated
 @Component
 @RequiredArgsConstructor
 public class InMemoryJwtRegistry implements JwtRegistry {
