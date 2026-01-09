@@ -2,6 +2,8 @@ package com.mopl.moplcore.domain.user.event;
 
 import java.time.Instant;
 
+import org.springframework.context.ApplicationEventPublisher;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
