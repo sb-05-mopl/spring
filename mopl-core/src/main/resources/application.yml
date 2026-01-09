@@ -50,7 +50,7 @@ cloud:
     region:
       static: ap-northeast-2
     s3:
-      bucket: mopl-images
+      bucket: ${AWS_BUCKET_NAME:mopl-images}
     stack:
       auto: false
 
