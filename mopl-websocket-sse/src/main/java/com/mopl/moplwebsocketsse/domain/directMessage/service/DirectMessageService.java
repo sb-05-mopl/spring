@@ -162,20 +162,9 @@ public class DirectMessageService {
 			throw new NotConversationParticipantException();
 		}
 
-		DirectMessage dm = directMessageRepository.findById(directMessageId)
-			.orElseThrow(() -> new IllegalArgumentException("DirectMessage not found: " + directMessageId));
+		directMessageRepository.markAllAsReadInConversation(conversationId, requesterId);
 
-		if (!dm.getConversation().getId().equals(conversationId)) {
-			throw new IllegalArgumentException("Message does not belong to conversation");
-		}
-
-		if (dm.getSender().getId().equals(requesterId)) {
-			return;
-		}
-
-		dm.markAsRead();
-		directMessageRepository.save(dm);
-
-		log.debug("[DirectMessageService] Message marked as read. dmId={}, readerId={}", directMessageId, requesterId);
+		log.debug("[DirectMessageService] message read. conversationId={}, readerId={}",
+			conversationId, requesterId);
 	}
 }

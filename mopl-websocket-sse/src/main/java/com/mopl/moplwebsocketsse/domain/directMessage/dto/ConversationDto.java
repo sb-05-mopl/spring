@@ -7,7 +7,7 @@ import com.mopl.moplwebsocketsse.domain.user.dto.UserSummary;
 public record ConversationDto(
 	UUID id,
 	UserSummary with,
-	DirectMessageDto lastMessage,
+	DirectMessageDto lastestMessage,
 	boolean hasUnread
 ) {
 }
