@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 @Slf4j
@@ -39,13 +40,6 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 	}
 
-	@ExceptionHandler(Exception.class)
-	public ResponseEntity<ErrorResponse> handleException(Exception e) {
-		log.error("[Exception] Unexpected error", e);
-		ErrorResponse response = new ErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR.value());
-		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-	}
-
 	@ExceptionHandler(MissingServletRequestPartException.class)
 	public ResponseEntity<ErrorResponse> handleMissingPart(MissingServletRequestPartException e) {
 		ErrorResponse response = new ErrorResponse(e, HttpStatus.BAD_REQUEST.value());
@@ -57,5 +51,17 @@ public class GlobalExceptionHandler {
 			HttpMediaTypeNotSupportedException e) {
 		ErrorResponse response = new ErrorResponse(e, HttpStatus.UNSUPPORTED_MEDIA_TYPE.value());
 		return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(response);
+	}
+
+	@ExceptionHandler(NoResourceFoundException.class)
+	public ResponseEntity<Void> handleNoResourceFound(NoResourceFoundException e) {
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+	}
+
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<ErrorResponse> handleException(Exception e) {
+		log.error("[Exception] Unexpected error", e);
+		ErrorResponse response = new ErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR.value());
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 	}
 }
