@@ -17,7 +17,10 @@ import com.mopl.moplwebsocketsse.domain.directMessage.dto.ConversationCreateRequ
 import com.mopl.moplwebsocketsse.domain.directMessage.dto.ConversationDto;
 import com.mopl.moplwebsocketsse.domain.directMessage.dto.ConversationSearchRequest;
 import com.mopl.moplwebsocketsse.domain.directMessage.dto.CursorResponseConversationDto;
+import com.mopl.moplwebsocketsse.domain.directMessage.dto.CursorResponseDirectMessageDto;
+import com.mopl.moplwebsocketsse.domain.directMessage.dto.DirectMessageSearchRequest;
 import com.mopl.moplwebsocketsse.domain.directMessage.service.ConversationService;
+import com.mopl.moplwebsocketsse.domain.directMessage.service.DirectMessageService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 public class ConversationController {
 
 	private final ConversationService conversationService;
+	private final DirectMessageService directMessageService;
 
 	@PostMapping
 	public ResponseEntity<ConversationDto> create(
@@ -67,5 +71,27 @@ public class ConversationController {
 		ConversationDto response = conversationService.findConversationWith(requesterId, userId);
 
 		return ResponseEntity.ok(response);
+	}
+
+	@GetMapping("/{conversationId}/direct-messages")
+	public ResponseEntity<CursorResponseDirectMessageDto> findDirectMessages(
+		@PathVariable UUID conversationId,
+		@Valid DirectMessageSearchRequest request,
+		@AuthenticationPrincipal UUID requesterId
+	) {
+		CursorResponseDirectMessageDto response = directMessageService.findMessages(conversationId, requesterId, request);
+
+		return ResponseEntity.ok(response);
+	}
+
+	@PostMapping("/{conversationId}/direct-messages/{directMessageId}/read")
+	public ResponseEntity<Void> markAsRead(
+		@PathVariable UUID conversationId,
+		@PathVariable UUID directMessageId,
+		@AuthenticationPrincipal UUID requesterId
+	) {
+		directMessageService.markAsRead(conversationId, directMessageId, requesterId);
+
+		return ResponseEntity.ok().build();
 	}
 }

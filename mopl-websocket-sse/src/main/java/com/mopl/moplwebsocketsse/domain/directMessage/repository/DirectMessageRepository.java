@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import com.mopl.moplwebsocketsse.domain.directMessage.entity.DirectMessage;
 
-public interface DirectMessageRepository extends JpaRepository<DirectMessage, UUID> {
+public interface DirectMessageRepository extends JpaRepository<DirectMessage, UUID>, DirectMessageRepositoryCustom {
 	@Query("""
     SELECT dm.conversation.id FROM DirectMessage dm
     WHERE dm.conversation.id IN :conversationIds

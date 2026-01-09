@@ -1,13 +1,17 @@
 package com.mopl.moplwebsocketsse.domain.directMessage.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mopl.moplwebsocketsse.domain.directMessage.dto.CursorResponseDirectMessageDto;
 import com.mopl.moplwebsocketsse.domain.directMessage.dto.DirectMessageDto;
+import com.mopl.moplwebsocketsse.domain.directMessage.dto.DirectMessageSearchRequest;
 import com.mopl.moplwebsocketsse.domain.directMessage.entity.Conversation;
 import com.mopl.moplwebsocketsse.domain.directMessage.entity.ConversationParticipants;
 import com.mopl.moplwebsocketsse.domain.directMessage.entity.DirectMessage;
@@ -83,5 +87,95 @@ public class DirectMessageService {
 			conversationId, senderId, receiver.getId());
 
 		return dto;
+	}
+
+	@Transactional(readOnly = true)
+	public CursorResponseDirectMessageDto findMessages(
+		UUID conversationId,
+		UUID requesterId,
+		DirectMessageSearchRequest request
+	) {
+		boolean isParticipant = participantsRepository.existsByConversationIdAndUserId(conversationId, requesterId);
+		if (!isParticipant) {
+			throw new NotConversationParticipantException();
+		}
+
+		List<ConversationParticipants> participants =
+			participantsRepository.findByConversationIdWithUser(conversationId);
+
+		Map<UUID, User> userMap = participants.stream()
+			.collect(Collectors.toMap(cp -> cp.getUser().getId(), ConversationParticipants::getUser));
+
+		long totalCount = directMessageRepository.countByConversationId(conversationId);
+
+		List<DirectMessage> messages = directMessageRepository.findByConversationIdWithCursor(
+			conversationId,
+			request.cursor(),
+			request.idAfter(),
+			request.limit(),
+			request.sortDirection().name()
+		);
+
+		boolean hasNext = messages.size() > request.limit();
+		List<DirectMessage> messagesLimit = hasNext ? messages.subList(0, request.limit()) : messages;
+
+		List<DirectMessageDto> messageDtos = messagesLimit.stream()
+			.map(dm -> {
+				User sender = userMap.get(dm.getSender().getId());
+				User receiver = userMap.values().stream()
+					.filter(u -> !u.getId().equals(dm.getSender().getId()))
+					.findFirst()
+					.orElseThrow(() -> new IllegalStateException("Receiver not found"));
+
+				return conversationMapper.toDirectMessageDto(
+					dm,
+					new UserSummary(sender.getId(), sender.getName(), sender.getProfileImageUrl()),
+					new UserSummary(receiver.getId(), receiver.getName(), receiver.getProfileImageUrl())
+				);
+			})
+			.toList();
+
+		String nextCursor = null;
+		UUID nextIdAfter = null;
+
+		if (hasNext) {
+			DirectMessage lastMessage = messagesLimit.getLast();
+			nextCursor = lastMessage.getCreatedAt().toString();
+			nextIdAfter = lastMessage.getId();
+		}
+
+		return new CursorResponseDirectMessageDto(
+			messageDtos,
+			nextCursor,
+			nextIdAfter != null ? nextIdAfter.toString() : null,
+			hasNext,
+			totalCount,
+			"createdAt",
+			request.sortDirection()
+		);
+	}
+
+	@Transactional
+	public void markAsRead(UUID conversationId, UUID directMessageId, UUID requesterId) {
+		boolean isParticipant = participantsRepository.existsByConversationIdAndUserId(conversationId, requesterId);
+		if (!isParticipant) {
+			throw new NotConversationParticipantException();
+		}
+
+		DirectMessage dm = directMessageRepository.findById(directMessageId)
+			.orElseThrow(() -> new IllegalArgumentException("DirectMessage not found: " + directMessageId));
+
+		if (!dm.getConversation().getId().equals(conversationId)) {
+			throw new IllegalArgumentException("Message does not belong to conversation");
+		}
+
+		if (dm.getSender().getId().equals(requesterId)) {
+			return;
+		}
+
+		dm.markAsRead();
+		directMessageRepository.save(dm);
+
+		log.debug("[DirectMessageService] Message marked as read. dmId={}, readerId={}", directMessageId, requesterId);
 	}
 }
