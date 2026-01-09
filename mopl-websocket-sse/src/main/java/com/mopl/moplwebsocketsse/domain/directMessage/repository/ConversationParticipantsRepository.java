@@ -21,6 +21,13 @@ public interface ConversationParticipantsRepository extends JpaRepository<Conver
 	@Query("""
     SELECT cp FROM ConversationParticipants cp
     JOIN FETCH cp.user
+    WHERE cp.conversation.id = :conversationId
+    """)
+	List<ConversationParticipants> findByConversationIdWithUser(UUID conversationId);
+
+	@Query("""
+    SELECT cp FROM ConversationParticipants cp
+    JOIN FETCH cp.user
     WHERE cp.conversation.id IN :conversationIds
     """)
 	List<ConversationParticipants> findByConversationIdInWithUser(List<UUID> conversationIds);
