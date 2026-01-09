@@ -5,14 +5,17 @@ import java.util.UUID;
 
 import com.mopl.moplwebsocketsse.domain.user.entity.Role;
 
-public record UserDto(
-	UUID id,
-	Instant createdAt,
-	String email,
-	String name,
-	String profileImageUrl,
-	Role role,
-	boolean locked
-) {
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
+@Data
+@AllArgsConstructor
+public class UserDto {
+	UUID id;
+	Instant createdAt;
+	String email;
+	String name;
+	String profileImageUrl;
+	Role role;
+	boolean locked;
 }

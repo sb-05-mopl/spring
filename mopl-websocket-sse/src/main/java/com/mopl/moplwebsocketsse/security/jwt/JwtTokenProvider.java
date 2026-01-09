@@ -1,6 +1,7 @@
 package com.mopl.moplwebsocketsse.security.jwt;
 
 import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.UUID;
 
@@ -11,6 +12,7 @@ import com.mopl.moplwebsocketsse.domain.user.entity.Role;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.MACVerifier;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
 @Component
@@ -69,5 +71,23 @@ public class JwtTokenProvider {
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Invalid JWT token", e);
 		}
+	}
+
+	public String getSubject(String token) {
+		return getClaim(token, JWTClaimsSet::getSubject);
+	}
+
+	private <T> T getClaim(String token, ClaimExtractor<T> extractor) {
+		try {
+			SignedJWT signedJWT = SignedJWT.parse(token);
+			JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
+			return extractor.extract(claims);
+		} catch (ParseException e) {
+			throw new IllegalArgumentException("Invalid JWT token", e);
+		}
+	}
+	@FunctionalInterface
+	private interface ClaimExtractor<T> {
+		T extract(JWTClaimsSet claims) throws ParseException;
 	}
 }
