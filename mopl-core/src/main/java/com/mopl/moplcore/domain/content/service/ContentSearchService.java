@@ -25,6 +25,7 @@ import com.mopl.moplcore.domain.content.entity.Type;
 import com.mopl.moplcore.domain.content.exception.ContentNotFoundException;
 import com.mopl.moplcore.domain.content.repository.ContentRepository;
 import com.mopl.moplcore.domain.content.repository.ContentSearchRepository;
+import com.mopl.moplcore.domain.watch.repository.WatchingSessionReader;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,19 +40,17 @@ public class ContentSearchService {
 	private final ContentSearchRepository contentSearchRepository;
 	private final ContentRepository contentRepository;
 	private final ElasticsearchOperations elasticsearchOperations;
+	private final WatchingSessionReader watchingSessionReader;
 
 	public CursorResponseContentDto searchContents(ContentSearchRequest request) {
 		Criteria criteria = buildCriteria(request);
 
 		Sort sort = buildSort(request);
 
-		Query query = new CriteriaQuery(criteria)
-			.setPageable(PageRequest.of(0, request.getLimit() + 1, sort));
+		Query query = new CriteriaQuery(criteria).setPageable(PageRequest.of(0, request.getLimit() + 1, sort));
 		SearchHits<ContentDocument> searchHits = elasticsearchOperations.search(query, ContentDocument.class);
 
-		List<ContentDocument> documents = searchHits.getSearchHits().stream()
-			.map(SearchHit::getContent)
-			.toList();
+		List<ContentDocument> documents = searchHits.getSearchHits().stream().map(SearchHit::getContent).toList();
 
 		long totalCount = elasticsearchOperations.count(new CriteriaQuery(criteria), ContentDocument.class);
 
@@ -60,37 +59,29 @@ public class ContentSearchService {
 			documents = documents.subList(0, request.getLimit());
 		}
 
-		List<ContentDto> contentDtos = documents.stream()
-			.map(this::toDto)
-			.toList();
+		List<ContentDto> contentDtos = documents.stream().map(this::toDto).toList();
 
 		String nextCursor = null;
 		if (hasNext && !documents.isEmpty()) {
 			ContentDocument lastDoc = documents.get(documents.size() - 1);
-			Instant instant = lastDoc.getCreatedAt()
-				.atStartOfDay(ZoneId.systemDefault())
-				.toInstant();
-			nextCursor = CursorResponseContentDto.encodeCursor(
-				UUID.fromString(lastDoc.getId()),
-				instant
-			);
+			Instant instant = lastDoc.getCreatedAt().atStartOfDay(ZoneId.systemDefault()).toInstant();
+			nextCursor = CursorResponseContentDto.encodeCursor(UUID.fromString(lastDoc.getId()), instant);
 		}
 
 		return CursorResponseContentDto.builder()
 			.data(contentDtos)
 			.nextCursor(nextCursor)
-			.nextIdAfter(hasNext && !documents.isEmpty() ?
-				UUID.fromString(documents.get(documents.size() - 1).getId()) : null)
+			.nextIdAfter(
+				hasNext && !documents.isEmpty() ? UUID.fromString(documents.get(documents.size() - 1).getId()) : null)
 			.hasNext(hasNext)
-			.totalCount((int) totalCount)
+			.totalCount((int)totalCount)
 			.sortBy(request.getSortBy().name())
 			.sortDirection(request.getSortDirection().name())
 			.build();
 	}
 
 	public ContentDto getContent(UUID id) {
-		Content content = contentRepository.findById(id)
-			.orElseThrow(() -> new ContentNotFoundException(id));
+		Content content = contentRepository.findById(id).orElseThrow(() -> new ContentNotFoundException(id));
 
 		return toDto(content);
 	}
@@ -114,16 +105,12 @@ public class ContentSearchService {
 
 		if (request.getCursor() != null && !request.getCursor().isBlank()) {
 			try {
-				CursorResponseContentDto.Cursor cursor =
-					CursorResponseContentDto.decodeCursor(request.getCursor());
+				CursorResponseContentDto.Cursor cursor = CursorResponseContentDto.decodeCursor(request.getCursor());
 
-				java.time.LocalDate cursorDate = java.time.LocalDate.ofInstant(
-					cursor.createdAt(),
-					ZoneId.systemDefault()
-				);
+				java.time.LocalDate cursorDate = java.time.LocalDate.ofInstant(cursor.createdAt(),
+					ZoneId.systemDefault());
 
-				boolean isAsc = request.getSortDirection() ==
-					ContentSearchRequest.SortDirection.ASCENDING;
+				boolean isAsc = request.getSortDirection() == ContentSearchRequest.SortDirection.ASCENDING;
 
 				if (request.getSortBy() == ContentSearchRequest.SortBy.createdAt) {
 					if (isAsc) {
@@ -163,6 +150,9 @@ public class ContentSearchService {
 	private ContentDto toDto(ContentDocument document) {
 		String fullThumbnailUrl = buildImageUrl(document.getType(), document.getThumbnailUrl());
 
+		UUID contentId = UUID.fromString(document.getId());
+		long watcherCount = watchingSessionReader.countByContentId(contentId);
+
 		return ContentDto.builder()
 			.id(UUID.fromString(document.getId()))
 			.type(document.getType())
@@ -172,11 +162,14 @@ public class ContentSearchService {
 			.tags(document.getTags() != null ? document.getTags() : List.of())
 			.averageRating(document.getAverageRating() != null ? document.getAverageRating() : 0.0)
 			.reviewCount(document.getReviewCount() != null ? document.getReviewCount() : 0)
-			.watcherCount(document.getWatcherCount() != null ? document.getWatcherCount() : 0L)
+			.watcherCount(watcherCount)
 			.build();
 	}
 
 	private ContentDto toDto(Content content) {
+
+		long watcherCount = watchingSessionReader.countByContentId(content.getId());
+
 		return ContentDto.builder()
 			.id(content.getId())
 			.type(content.getType())
@@ -186,7 +179,7 @@ public class ContentSearchService {
 			.tags(List.of())
 			.averageRating(content.getAverageRating())
 			.reviewCount(content.getReviewCount())
-			.watcherCount(0)
+			.watcherCount(watcherCount)
 			.build();
 	}
 
