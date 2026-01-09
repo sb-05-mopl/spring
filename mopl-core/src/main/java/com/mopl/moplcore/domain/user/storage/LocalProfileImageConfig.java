@@ -7,12 +7,14 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile("local")
+@Profile({"dev","local"})
 public class LocalProfileImageConfig implements ProfileImageConfig {
 
 	private final Path uploadRoot;
 
-	public LocalProfileImageConfig(@Value("${app.upload-dir:uploads}") Path uploadRoot) {
+	public LocalProfileImageConfig(
+		@Value("${app.upload-dir:/uploads}") Path uploadRoot
+	) {
 		this.uploadRoot = uploadRoot;
 	}
 
