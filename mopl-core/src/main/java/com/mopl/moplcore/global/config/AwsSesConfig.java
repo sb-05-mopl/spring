@@ -11,7 +11,7 @@ import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
 
 @Deprecated
-@Profile("prod")
+@Profile("none")
 @Configuration
 public class AwsSesConfig {
 	@Value("${cloud.aws.creadentials.access-key}")
