@@ -25,14 +25,16 @@ public class NotificationService {
 	@Transactional(readOnly = true)
 	public CursorResponseNotificationDto<NotificationDto> findNotifications(
 		UUID me,
-		boolean unreadOnly,
 		String cursor,
 		UUID idAfter,
 		int limit,
 		NotificationSortBy sortBy,
 		NotificationSortDirection sortDirection
 	) {
-		if (sortBy != NotificationSortBy.CREATED_AT) {
+		if (me == null) {
+			throw new AccessDeniedException("사용자 ID가 없어 접근이 거부되었습니다. : " + me);
+		}
+		if (sortBy != NotificationSortBy.createdAt) {
 			throw new IllegalArgumentException("지원되지 않는 정렬 방식입니다 : " + sortBy);
 		}
 		if (sortDirection == null) {
@@ -42,7 +44,7 @@ public class NotificationService {
 		int size = Math.min(Math.max(limit, 1), 100);
 
 		List<Notification> fetched = notificationRepository.findByReceiverIdWithCursor(
-			me, unreadOnly, cursor, idAfter, size, sortBy, sortDirection
+			me, cursor, idAfter, size, sortBy, sortDirection
 		);
 
 		boolean hasNext = fetched.size() > size;
@@ -58,9 +60,7 @@ public class NotificationService {
 			nextIdAfter = last.getId();
 		}
 
-		long totalCount = unreadOnly
-			? notificationRepository.countByReceiverIdAndReadAtIsNull(me)
-			: notificationRepository.countByReceiverId(me);
+		long totalCount = notificationRepository.countByReceiverId(me);
 
 		return new CursorResponseNotificationDto<>(
 			data,
@@ -74,16 +74,16 @@ public class NotificationService {
 	}
 
 	@Transactional
-	public NotificationDto markAsRead(UUID me, UUID notificationId) {
-		Notification notification = notificationRepository.findById(notificationId)
-			.orElseThrow(() -> new IllegalArgumentException("Notification not found : " + notificationId));
-
-		if (!notification.getReceiverId().equals(me)) {
-			throw new AccessDeniedException("You are not allowed to read this notification : " + notificationId);
+	public void deleteNotification(UUID me, UUID notificationId) {
+		if (me == null) {
+			throw new AccessDeniedException("사용자 ID가 존재하지 않아 접근이 거부되었습니다.");
 		}
 
-		notification.markAsRead();
-		return NotificationDto.from(notification);
+		long deleted = notificationRepository.deleteByIdAndReceiverId(notificationId, me);
+
+		if (deleted == 0) {
+			throw new IllegalArgumentException("Notification not found : " + notificationId);
+		}
 	}
 
 	@Transactional

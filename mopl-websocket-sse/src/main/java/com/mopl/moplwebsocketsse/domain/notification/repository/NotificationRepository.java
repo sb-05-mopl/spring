@@ -11,5 +11,5 @@ public interface NotificationRepository
 
 	long countByReceiverId(UUID receiverId);
 
-	long countByReceiverIdAndReadAtIsNull(UUID receiverId);
+	long deleteByIdAndReceiverId(UUID receiverId, UUID id);
 }
