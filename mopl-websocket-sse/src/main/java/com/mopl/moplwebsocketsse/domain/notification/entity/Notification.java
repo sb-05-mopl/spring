@@ -33,6 +33,7 @@ public class Notification extends BaseEntity {
 	@Column(nullable = false)
 	private NotificationLevel level;
 
+	// ERD에 존재하지만 필요성에 의문이 드는 항목
 	@Column(name = "read_at")
 	private Instant readAt;
 
@@ -44,6 +45,7 @@ public class Notification extends BaseEntity {
 		this.readAt = null;
 	}
 
+	// readAt이 필요 없어 삭제 결정되면 하단 메서드들은 모두 삭제
 	public boolean isRead() {
 		return readAt != null;
 	}

@@ -11,7 +11,6 @@ public interface NotificationRepositoryCustom {
 
 	List<Notification> findByReceiverIdWithCursor(
 		UUID receiverId,
-		boolean unreadOnly,
 		String cursor,
 		UUID idAfter,
 		int limit,

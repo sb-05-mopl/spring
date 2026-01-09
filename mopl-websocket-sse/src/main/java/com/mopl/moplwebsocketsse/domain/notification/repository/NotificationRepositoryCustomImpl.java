@@ -26,7 +26,6 @@ public class NotificationRepositoryCustomImpl implements NotificationRepositoryC
 	@Override
 	public List<Notification> findByReceiverIdWithCursor(
 		UUID receiverId,
-		boolean unreadOnly,
 		String cursor,
 		UUID idAfter,
 		int limit,
@@ -37,7 +36,6 @@ public class NotificationRepositoryCustomImpl implements NotificationRepositoryC
 			.selectFrom(notification)
 			.where(
 				receiverIdEq(receiverId),
-				unreadOnlyCondition(unreadOnly),
 				cursorCondition(cursor, idAfter, sortBy, sortDirection)
 			)
 			.orderBy(orderSpecifier(sortBy, sortDirection))
@@ -46,11 +44,10 @@ public class NotificationRepositoryCustomImpl implements NotificationRepositoryC
 	}
 
 	private BooleanExpression receiverIdEq(UUID receiverId) {
-		return receiverId != null ? notification.receiverId.eq(receiverId) : null;
-	}
-
-	private BooleanExpression unreadOnlyCondition(boolean unreadOnly) {
-		return unreadOnly ? notification.readAt.isNull() : null;
+		if (receiverId == null) {
+			throw new IllegalArgumentException("receiverId is null");
+		}
+		return notification.receiverId.eq(receiverId);
 	}
 
 	private BooleanExpression cursorCondition(
@@ -67,7 +64,7 @@ public class NotificationRepositoryCustomImpl implements NotificationRepositoryC
 		boolean isDesc = (sortDirection == NotificationSortDirection.DESCENDING);
 
 		return switch (sortBy) {
-			case CREATED_AT -> isDesc
+			case createdAt -> isDesc
 				? notification.createdAt.lt(cursorTime)
 				.or(notification.createdAt.eq(cursorTime).and(notification.id.lt(idAfter)))
 				: notification.createdAt.gt(cursorTime)
@@ -82,7 +79,7 @@ public class NotificationRepositoryCustomImpl implements NotificationRepositoryC
 		boolean isDesc = (sortDirection == NotificationSortDirection.DESCENDING);
 
 		return switch (sortBy) {
-			case CREATED_AT -> new OrderSpecifier[] {
+			case createdAt -> new OrderSpecifier[] {
 				isDesc ? notification.createdAt.desc() : notification.createdAt.asc(),
 				isDesc ? notification.id.desc() : notification.id.asc()
 			};
