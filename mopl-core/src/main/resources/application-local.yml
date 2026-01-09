@@ -14,11 +14,11 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: validate
 
   data:
     redis:
-      host: dev-redis-server
+      host: localhost
       port: 6379
 
   servlet:
