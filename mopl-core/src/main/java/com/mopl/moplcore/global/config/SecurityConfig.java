@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -22,16 +23,17 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain securityFilterChain(
       HttpSecurity http,
       JwtLoginSuccessHandler jwtLoginSuccessHandler,
-      JwtLogoutHandler jwtLogoutHandler,
-      JwtAuthenticationFilter jwtAuthenticationFilter,
-      ObjectMapper objectMapper
-  ) throws Exception {
+      JwtTokenProvider jwtTokenProvider,
+      ObjectMapper objectMapper,
+      JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+
     http
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/", "/index.html", "/*.html", "/favicon.ico", "/assets/**").permitAll()
@@ -39,6 +41,8 @@ public class SecurityConfig {
             .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
             .requestMatchers("/api/auth/**").permitAll()
             .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users").permitAll()
+            .requestMatchers("/uploads/**").permitAll()
+            .requestMatchers("/**").permitAll()
             .anyRequest().authenticated()
         )
         .exceptionHandling(ex -> ex
