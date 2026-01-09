@@ -49,7 +49,7 @@ public class InitService {
 			return;
 		}
 
-		String encodedPassword = passwordEncoder.encode(adminPassword);
+		String encodedPassword = passwordEncoder.encode(userPassword);
 		User user = new User("테스트 사용자", userEmail, encodedPassword);
 
 		userRepository.save(user);
