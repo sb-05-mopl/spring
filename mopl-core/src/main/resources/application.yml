@@ -9,7 +9,6 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
   mail:
-
     host: ${SMTP_HOST}
     port: ${SMTP_PORT}
     username: ${SMTP_USERNAME}
@@ -21,12 +20,13 @@ spring:
           starttls:
             enable: true
 jwt:
+  max-active: 1
   access-token:
     secret: ${JWT_ACCESS_TOKE_KEY:G3yksXYpKcPvNOHv5NbHuqylOuTIYEqGVY6INF2UX8OJRdyUo+rRCJmdq6Th82CGUoBOUv7WgMcxZxBiE0VIcg==}
-    expiration-ms: ${JWT_ACCESS_TOKE_EXPIRCATION_MS:1800000}
+    expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRCATION_MS}
   refresh-token:
     secret: ${JWT_REFRESH_TOKEN_KEY:QsMI+9J9Aunm9vWRJbwSG87ICRuasbant8f6A4jxj7Qrq3ohYWuUf5XM1Tb29DHcSW7xVeHZVrw95YFlJkD0Ag==}
-    expiration-ms: ${JWT_REFRESH_TOKE_EXPIRCATION_MS:604800000}
+    expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRCATION_MS}
 
 management:
   endpoints:
@@ -50,7 +50,7 @@ cloud:
     region:
       static: ap-northeast-2
     s3:
-      bucket: mopl-images
+      bucket: ${AWS_BUCKET_NAME:mopl-images}
     stack:
       auto: false
 
