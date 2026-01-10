@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
-// 레디스 대용
-@Profile({"dev", "local"})
+@Deprecated
+@Profile("none")
 @Component
 @RequiredArgsConstructor
 public class InMemoryUserRegistry implements UserRegistry {
