@@ -14,7 +14,10 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import com.mopl.moplcore.security.filter.JwtAuthenticationFilter;
 import com.mopl.moplcore.security.handler.MoplLoginSuccessHandler;
 import com.mopl.moplcore.security.handler.MoplLogoutSuccessHandler;
+import com.mopl.moplcore.security.handler.MoplOAuth2SuccessHandler;
 import com.mopl.moplcore.security.handler.SpaCsrfTokenRequestHandler;
+import com.mopl.moplcore.security.oauth.MoplOAuth2UserService;
+import com.mopl.moplcore.security.oauth.MoplOidcUserService;
 
 @Configuration
 @EnableWebSecurity
@@ -26,7 +29,11 @@ public class SecurityConfig {
 		HttpSecurity http,
 		MoplLoginSuccessHandler moplLoginSuccessHandler,
 		MoplLogoutSuccessHandler moplLogoutSuccessHandler,
-		JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+		JwtAuthenticationFilter jwtAuthenticationFilter,
+		MoplOAuth2UserService oAuth2UserService,
+		MoplOidcUserService oidcUserService,
+		MoplOAuth2SuccessHandler moplOAuth2SuccessHandler
+	) throws Exception {
 
 		http
 			.authorizeHttpRequests(auth -> auth
@@ -40,7 +47,6 @@ public class SecurityConfig {
 				.passwordParameter("password")
 				.successHandler(moplLoginSuccessHandler)
 			)
-
 			.logout(logout -> logout
 				.logoutUrl("/api/auth/sign-out")
 				.logoutSuccessHandler(moplLogoutSuccessHandler)
@@ -52,7 +58,14 @@ public class SecurityConfig {
 			.sessionManagement(session -> session
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 			)
-
+			.oauth2Login(
+				login -> login
+					.userInfoEndpoint(info -> info
+						.userService(oAuth2UserService)
+						.oidcUserService(oidcUserService)
+					)
+					.successHandler(moplOAuth2SuccessHandler)
+			)
 			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 		;
 
