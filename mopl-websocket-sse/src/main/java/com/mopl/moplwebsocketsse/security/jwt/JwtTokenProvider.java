@@ -35,7 +35,7 @@ public class JwtTokenProvider {
 				return false;
 			}
 
-			String tokenType = (String) signedJWT.getJWTClaimsSet().getClaim("type");
+			String tokenType = (String)signedJWT.getJWTClaimsSet().getClaim("type");
 			if (!"access".equals(tokenType)) {
 				return false;
 			}
@@ -50,7 +50,7 @@ public class JwtTokenProvider {
 	public UUID getUserId(String token) {
 		try {
 			SignedJWT signedJWT = SignedJWT.parse(token);
-			String userIdStr = (String) signedJWT.getJWTClaimsSet().getClaim("userId");
+			String userIdStr = (String)signedJWT.getJWTClaimsSet().getClaim("userId");
 			if (userIdStr == null) {
 				throw new IllegalArgumentException("User ID claim not found in JWT token");
 			}
@@ -63,11 +63,17 @@ public class JwtTokenProvider {
 	public Role getRole(String token) {
 		try {
 			SignedJWT signedJWT = SignedJWT.parse(token);
-			String roleStr = (String) signedJWT.getJWTClaimsSet().getClaim("role");
-			if (roleStr == null) {
-				throw new IllegalArgumentException("Role claim not found in JWT token");
+
+			Object rolesObj = signedJWT.getJWTClaimsSet().getClaim("roles");
+			if (rolesObj instanceof java.util.List<?> rolesList && !rolesList.isEmpty()) {
+				String roleStr = (String)rolesList.get(0);
+				if (roleStr.startsWith("ROLE_")) {
+					roleStr = roleStr.substring(5);
+				}
+				return Role.valueOf(roleStr);
 			}
-			return Role.valueOf(roleStr);
+
+			throw new IllegalArgumentException("Role claim not found in JWT token");
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Invalid JWT token", e);
 		}
@@ -86,6 +92,7 @@ public class JwtTokenProvider {
 			throw new IllegalArgumentException("Invalid JWT token", e);
 		}
 	}
+
 	@FunctionalInterface
 	private interface ClaimExtractor<T> {
 		T extract(JWTClaimsSet claims) throws ParseException;
