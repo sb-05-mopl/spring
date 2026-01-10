@@ -35,6 +35,10 @@ public class MoplAuthenticationProvider implements AuthenticationProvider {
 		MoplUserDetails userDetails = (MoplUserDetails)userDetailsService.loadUserByUsername(email);
 		UUID id = userDetails.getUserDto().getId();
 
+		if (!userDetails.isEnabled()) {
+			throw new LockedUserAccessException();
+		}
+
 		if (userRegistry.existById(id)) {
 			if (!passwordEncoder.matches(password, userRegistry.getEncodedPassword(id))) {
 				throw new InValidCredentialException();
@@ -44,9 +48,6 @@ public class MoplAuthenticationProvider implements AuthenticationProvider {
 			if (!passwordEncoder.matches(password, userDetails.getPassword())) {
 				throw new InValidCredentialException();
 			}
-		}
-		if (!userDetails.isEnabled()) {
-			throw new LockedUserAccessException();
 		}
 
 		userDetails.setPasswordEnable();

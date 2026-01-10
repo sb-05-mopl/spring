@@ -23,18 +23,22 @@ public class SecurityPaths {
 	};
 
 	private static final String[] AUTH_ENDPOINTS = {
-		"/api/auth/**"
+		"/api/auth/**",
+		"/oauth2/**",
+		"/login/**"
 	};
 
 	private static final String[] OTHER_PUBLIC = {
 		"/error",
 		"/uploads/**",
-		"/.well-known/**"
+		"/.well-known/**",
+		"/default-ui.css"
 	};
 
 	public static class MethodSpecific {
 		public static final String[] POST_ONLY = {
-			"/api/users"
+			"/api/users",
+			"/api/auth/refresh"
 		};
 	}
 
