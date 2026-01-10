@@ -45,6 +45,7 @@ public enum ErrorCode {
 	INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "엑세스 토큰이 유효하지 않습니다."),
 	INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "리프레시 토큰이 유효하지 않습니다."),
 
+	UNSUPPORTED_OAUTH_ACCESS(HttpStatus.UNAUTHORIZED, "지원하지 않은 OAuth입니다."),
 
 	WEBSOCKET_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "WebSocket 오류");
 
