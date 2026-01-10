@@ -62,6 +62,8 @@ public class ReviewService {
 
 		Review saved = reviewRepository.save(review);
 
+		updateContentRating(content);
+
 		return reviewMapper.toDto(saved);
 	}
 
@@ -121,6 +123,8 @@ public class ReviewService {
 
 		review.update(request.text(), request.rating());
 
+		updateContentRating(review.getContent());
+
 		return reviewMapper.toDto(review);
 	}
 
@@ -133,6 +137,14 @@ public class ReviewService {
 			throw new ForbiddenReviewAccessException();
 		}
 
+		Content content = review.getContent();
 		reviewRepository.delete(review);
+		updateContentRating(content);
+	}
+
+	private void updateContentRating(Content content) {
+		Double avgRating = reviewRepository.calculateAverageRating(content.getId());
+		int count = reviewRepository.countByContentId(content.getId());
+		content.updateRating(avgRating != null ? avgRating : 0.0, count);
 	}
 }
