@@ -11,6 +11,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import com.mopl.moplcore.domain.user.dto.UserDto;
+import com.mopl.moplcore.domain.user.dto.UserResponse;
 import com.mopl.moplcore.domain.user.entity.Role;
 import com.mopl.moplcore.security.exception.TokenGenerateException;
 import com.mopl.moplcore.security.jwt.token.TokenType;

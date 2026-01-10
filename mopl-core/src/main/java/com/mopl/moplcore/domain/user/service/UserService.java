@@ -13,7 +13,7 @@ import com.mopl.moplcore.domain.user.dto.AdminUserSearchRequest;
 import com.mopl.moplcore.domain.user.dto.CursorResponseUserDto;
 import com.mopl.moplcore.domain.user.dto.SortBy;
 import com.mopl.moplcore.domain.user.dto.UserCreateRequest;
-import com.mopl.moplcore.domain.user.dto.UserDto;
+import com.mopl.moplcore.domain.user.dto.UserResponse;
 import com.mopl.moplcore.domain.user.dto.UserUpdateRequest;
 import com.mopl.moplcore.domain.user.entity.Role;
 import com.mopl.moplcore.domain.user.entity.User;
@@ -40,7 +40,7 @@ public class UserService {
 	private final UserRegistry userRegistry;
 
 	@Transactional
-	public UserDto signUp(UserCreateRequest dto) {
+	public UserResponse signUp(UserCreateRequest dto) {
 
 		if (userRepository.existsByEmail(dto.getEmail())) {
 			throw DuplicateEmailException.withEmail(dto.getEmail());
@@ -54,7 +54,7 @@ public class UserService {
 	}
 
 	@Transactional(readOnly = true)
-	public UserDto findById(UUID userId) {
+	public UserResponse findById(UUID userId) {
 		return userRepository.findById(userId)
 			.map(userMapper::toDto)
 			.orElseThrow(() -> UserNotFoundException.withUserId(userId));
@@ -88,7 +88,7 @@ public class UserService {
 		boolean hasNext = rowsPlusOne.size() > req.limit();
 		List<User> rows = hasNext ? rowsPlusOne.subList(0, req.limit()) : rowsPlusOne;
 
-		List<UserDto> data = rows.stream()
+		List<UserResponse> data = rows.stream()
 			.map(userMapper::toDto)
 			.toList();
 
@@ -137,7 +137,7 @@ public class UserService {
 	}
 
 	@Transactional
-	public UserDto updateProfile(
+	public UserResponse updateProfile(
 		UUID pathUserId,
 		UUID loginUserId,
 		UserUpdateRequest dto,

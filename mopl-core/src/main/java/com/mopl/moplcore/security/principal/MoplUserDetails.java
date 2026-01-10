@@ -8,6 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.mopl.moplcore.domain.user.dto.UserDto;
+import com.mopl.moplcore.domain.user.entity.AuthProvider;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -48,6 +49,10 @@ public class MoplUserDetails implements UserDetails {
 
 	public void setPasswordEnable() {
 		this.password = null;
+	}
+
+	public AuthProvider getAuthProvider(){
+		return this.userDto.getProvider();
 	}
 
 }

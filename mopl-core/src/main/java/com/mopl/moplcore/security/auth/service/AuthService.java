@@ -9,8 +9,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mopl.moplcore.domain.user.entity.AuthProvider;
 import com.mopl.moplcore.domain.user.entity.User;
 import com.mopl.moplcore.domain.user.event.SendEmailPasswordEvent;
+import com.mopl.moplcore.domain.user.exception.AuthPasswordException;
 import com.mopl.moplcore.domain.user.exception.UserNotFoundException;
 import com.mopl.moplcore.domain.user.registry.UserRegistry;
 import com.mopl.moplcore.domain.user.repository.UserRepository;
@@ -62,6 +64,9 @@ public class AuthService {
 	@Transactional
 	public void resetPassword(String toEmail) {
 		User user = userRepository.findByEmail(toEmail).orElseThrow(() -> UserNotFoundException.withEmail(toEmail));
+		if(user.getProvider() == AuthProvider.LOCAL){
+			throw new AuthPasswordException();
+		}
 
 		user.updatePassword(passwordEncoder.encode(UUID.randomUUID().toString().substring(0, 10)));
 		String tempPassword = userRegistry.setTempPassword(user.getId());

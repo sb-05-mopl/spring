@@ -24,7 +24,7 @@ import com.mopl.moplcore.domain.user.dto.UpdateLockRequest;
 import com.mopl.moplcore.domain.user.dto.UpdatePasswordRequest;
 import com.mopl.moplcore.domain.user.dto.UpdateRoleRequest;
 import com.mopl.moplcore.domain.user.dto.UserCreateRequest;
-import com.mopl.moplcore.domain.user.dto.UserDto;
+import com.mopl.moplcore.domain.user.dto.UserResponse;
 import com.mopl.moplcore.domain.user.dto.UserUpdateRequest;
 import com.mopl.moplcore.domain.user.service.UserService;
 import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
@@ -42,13 +42,13 @@ public class UserController {
 	private final JwtRegistry jwtRegistry;
 
 	@PostMapping
-	public ResponseEntity<UserDto> singUp(
+	public ResponseEntity<UserResponse> singUp(
 		@RequestBody @Valid UserCreateRequest dto) {
 		return ResponseEntity.status(HttpStatus.CREATED).body(userService.signUp(dto));
 	}
 
 	@GetMapping("/{userId}")
-	public ResponseEntity<UserDto> findById(@PathVariable("userId") UUID userId) {
+	public ResponseEntity<UserResponse> findById(@PathVariable("userId") UUID userId) {
 		return ResponseEntity.ok(userService.findById(userId));
 	}
 
@@ -61,7 +61,7 @@ public class UserController {
 	}
 
 	@PatchMapping(value = "/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<UserDto> updateProfile(
+	public ResponseEntity<UserResponse> updateProfile(
 		@PathVariable UUID userId,
 		@RequestPart("request") @Valid UserUpdateRequest request,
 		@RequestPart(value = "image", required = false) MultipartFile image,

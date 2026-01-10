@@ -30,7 +30,8 @@ public class MoplUserDetailsService implements UserDetailsService {
 			user.getName(),
 			user.getProfileImageUrl(),
 			user.getRole(),
-			user.isLocked()
+			user.isLocked(),
+			user.getProvider()
 		);
 		return new MoplUserDetails(dto, user.getPassword());
 	}
