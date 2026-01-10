@@ -21,6 +21,7 @@ import com.mopl.moplwebsocketsse.domain.directMessage.dto.CursorResponseDirectMe
 import com.mopl.moplwebsocketsse.domain.directMessage.dto.DirectMessageSearchRequest;
 import com.mopl.moplwebsocketsse.domain.directMessage.service.ConversationService;
 import com.mopl.moplwebsocketsse.domain.directMessage.service.DirectMessageService;
+import com.mopl.moplwebsocketsse.security.principal.MoplUserDetails;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,8 +37,9 @@ public class ConversationController {
 	@PostMapping
 	public ResponseEntity<ConversationDto> create(
 		@RequestBody @Valid ConversationCreateRequest request,
-		@AuthenticationPrincipal UUID requesterId
+		@AuthenticationPrincipal MoplUserDetails userDetails
 	) {
+		UUID requesterId = userDetails.getUserDto().getId();
 		ConversationDto response = conversationService.createConversation(requesterId, request.withUserId());
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -46,8 +48,9 @@ public class ConversationController {
 	@GetMapping
 	public ResponseEntity<CursorResponseConversationDto> findConversations(
 		@Valid ConversationSearchRequest request,
-		@AuthenticationPrincipal UUID requesterId
+		@AuthenticationPrincipal MoplUserDetails userDetails
 	) {
+		UUID requesterId = userDetails.getUserDto().getId();
 		CursorResponseConversationDto response = conversationService.findConversations(requesterId, request);
 
 		return ResponseEntity.ok(response);
@@ -56,8 +59,9 @@ public class ConversationController {
 	@GetMapping("/{conversationId}")
 	public ResponseEntity<ConversationDto> findConversation(
 		@PathVariable UUID conversationId,
-		@AuthenticationPrincipal UUID requesterId
+		@AuthenticationPrincipal MoplUserDetails userDetails
 	) {
+		UUID requesterId = userDetails.getUserDto().getId();
 		ConversationDto response = conversationService.findConversation(conversationId, requesterId);
 
 		return ResponseEntity.ok(response);
@@ -66,8 +70,9 @@ public class ConversationController {
 	@GetMapping("/with")
 	public ResponseEntity<ConversationDto> findConversationWith(
 		@RequestParam UUID userId,
-		@AuthenticationPrincipal UUID requesterId
+		@AuthenticationPrincipal MoplUserDetails userDetails
 	) {
+		UUID requesterId = userDetails.getUserDto().getId();
 		ConversationDto response = conversationService.findConversationWith(requesterId, userId);
 
 		return ResponseEntity.ok(response);
@@ -77,9 +82,11 @@ public class ConversationController {
 	public ResponseEntity<CursorResponseDirectMessageDto> findDirectMessages(
 		@PathVariable UUID conversationId,
 		@Valid DirectMessageSearchRequest request,
-		@AuthenticationPrincipal UUID requesterId
+		@AuthenticationPrincipal MoplUserDetails userDetails
 	) {
-		CursorResponseDirectMessageDto response = directMessageService.findMessages(conversationId, requesterId, request);
+		UUID requesterId = userDetails.getUserDto().getId();
+		CursorResponseDirectMessageDto response = directMessageService.findMessages(conversationId, requesterId,
+			request);
 
 		return ResponseEntity.ok(response);
 	}
@@ -88,8 +95,9 @@ public class ConversationController {
 	public ResponseEntity<Void> markAsRead(
 		@PathVariable UUID conversationId,
 		@PathVariable UUID directMessageId,
-		@AuthenticationPrincipal UUID requesterId
+		@AuthenticationPrincipal MoplUserDetails userDetails
 	) {
+		UUID requesterId = userDetails.getUserDto().getId();
 		directMessageService.markAsRead(conversationId, directMessageId, requesterId);
 
 		return ResponseEntity.ok().build();

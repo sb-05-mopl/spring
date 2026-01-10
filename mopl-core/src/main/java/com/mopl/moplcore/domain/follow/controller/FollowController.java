@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.mopl.moplcore.domain.follow.dto.FollowDto;
 import com.mopl.moplcore.domain.follow.dto.FollowRequest;
 import com.mopl.moplcore.domain.follow.service.FollowService;
+import com.mopl.moplcore.security.principal.MoplUserDetails;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +32,9 @@ public class FollowController {
 	@PostMapping
 	public ResponseEntity<FollowDto> createFollow(
 		@RequestBody @Valid FollowRequest request,
-		@AuthenticationPrincipal UUID followerId
+		@AuthenticationPrincipal MoplUserDetails userDetails
 	) {
+		UUID followerId = userDetails.getUserDto().getId();
 		FollowDto response = followService.create(request, followerId);
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -41,8 +43,9 @@ public class FollowController {
 	@DeleteMapping("/{followId}")
 	public ResponseEntity<Void> cancelFollow(
 		@PathVariable UUID followId,
-		@AuthenticationPrincipal UUID followerId
+		@AuthenticationPrincipal MoplUserDetails userDetails
 	) {
+		UUID followerId = userDetails.getUserDto().getId();
 		followService.cancel(followId, followerId);
 
 		return ResponseEntity.noContent().build();
@@ -51,8 +54,9 @@ public class FollowController {
 	@GetMapping("/followed-by-me")
 	public ResponseEntity<Boolean> isFollowedByMe(
 		@RequestParam UUID followeeId,
-		@AuthenticationPrincipal UUID followerId
+		@AuthenticationPrincipal MoplUserDetails userDetails
 	) {
+		UUID followerId = userDetails.getUserDto().getId();
 		boolean isFollowed = followService.isFollowedByMe(followerId, followeeId);
 
 		return ResponseEntity.ok(isFollowed);
