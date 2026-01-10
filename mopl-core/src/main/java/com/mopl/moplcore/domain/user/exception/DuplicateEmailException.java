@@ -5,13 +5,13 @@ import com.mopl.moplcore.global.exception.ErrorCode;
 
 public class DuplicateEmailException extends BaseException {
 
-  public DuplicateEmailException() {
-    super(ErrorCode.DUPLICATE_EMAIL);
-  }
+	public DuplicateEmailException() {
+		super(ErrorCode.DUPLICATE_EMAIL);
+	}
 
-  public static DuplicateEmailException withEmail(String email) {
-    DuplicateEmailException exception = new DuplicateEmailException();
-    exception.addDetail("email", email);
-    return exception;
-  }
+	public static DuplicateEmailException withEmail(String email) {
+		DuplicateEmailException exception = new DuplicateEmailException();
+		exception.addDetail("email", email);
+		return exception;
+	}
 }
