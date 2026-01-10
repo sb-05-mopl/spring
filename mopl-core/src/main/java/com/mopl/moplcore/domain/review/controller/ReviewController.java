@@ -20,6 +20,7 @@ import com.mopl.moplcore.domain.review.dto.ReviewDto;
 import com.mopl.moplcore.domain.review.dto.ReviewSearchRequest;
 import com.mopl.moplcore.domain.review.dto.ReviewUpdateRequest;
 import com.mopl.moplcore.domain.review.service.ReviewService;
+import com.mopl.moplcore.security.principal.MoplUserDetails;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,8 +34,9 @@ public class ReviewController {
 	@PostMapping
 	public ResponseEntity<ReviewDto> create(
 		@RequestBody @Valid ReviewCreateRequest request,
-		@AuthenticationPrincipal UUID authorId
+		@AuthenticationPrincipal MoplUserDetails userDetails
 	) {
+		UUID authorId = userDetails.getUserDto().getId();
 		ReviewDto response = reviewService.create(request, authorId);
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -51,8 +53,9 @@ public class ReviewController {
 	public ResponseEntity<ReviewDto> update(
 		@PathVariable UUID reviewId,
 		@RequestBody @Valid ReviewUpdateRequest request,
-		@AuthenticationPrincipal UUID authorId
+		@AuthenticationPrincipal MoplUserDetails userDetails
 	) {
+		UUID authorId = userDetails.getUserDto().getId();
 		ReviewDto response = reviewService.update(reviewId, request, authorId);
 
 		return ResponseEntity.ok(response);
@@ -61,8 +64,9 @@ public class ReviewController {
 	@DeleteMapping("/{reviewId}")
 	public ResponseEntity<Void> delete(
 		@PathVariable UUID reviewId,
-		@AuthenticationPrincipal UUID authorId
+		@AuthenticationPrincipal MoplUserDetails userDetails
 	) {
+		UUID authorId = userDetails.getUserDto().getId();
 		reviewService.delete(reviewId, authorId);
 
 		return ResponseEntity.noContent().build();
