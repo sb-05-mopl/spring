@@ -20,7 +20,7 @@ import com.mopl.moplcore.domain.review.dto.ReviewDto;
 import com.mopl.moplcore.domain.review.dto.ReviewSearchRequest;
 import com.mopl.moplcore.domain.review.dto.ReviewUpdateRequest;
 import com.mopl.moplcore.domain.review.service.ReviewService;
-import com.mopl.moplcore.security.principal.MoplUserDetails;
+import com.mopl.moplcore.security.core.principal.MoplUserDetails;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

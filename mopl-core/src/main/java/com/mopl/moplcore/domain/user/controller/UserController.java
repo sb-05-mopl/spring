@@ -27,8 +27,8 @@ import com.mopl.moplcore.domain.user.dto.UserCreateRequest;
 import com.mopl.moplcore.domain.user.dto.UserResponse;
 import com.mopl.moplcore.domain.user.dto.UserUpdateRequest;
 import com.mopl.moplcore.domain.user.service.UserService;
-import com.mopl.moplcore.security.jwt.registry.JwtRegistry;
-import com.mopl.moplcore.security.principal.MoplUserDetails;
+import com.mopl.moplcore.security.authentication.jwt.registry.JwtRegistry;
+import com.mopl.moplcore.security.core.principal.MoplUserDetails;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
