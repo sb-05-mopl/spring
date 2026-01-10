@@ -1,15 +1,18 @@
-package com.mopl.moplwebsocketsse.global.config;
+package com.mopl.moplwebsocketsse.security.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
-import com.mopl.moplwebsocketsse.security.jwt.JwtAuthenticationFilter;
+import com.mopl.moplwebsocketsse.security.filter.JwtAuthenticationFilter;
+import com.mopl.moplwebsocketsse.security.handler.SpaCsrfTokenRequestHandler;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,15 +27,17 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
-			.csrf(csrf -> csrf.disable())
-			.formLogin(form -> form.disable())
-			.httpBasic(basic -> basic.disable())
-			.logout(logout -> logout.disable())
-			.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/actuator/**").permitAll()
-				.requestMatchers("/ws/**").permitAll()
+				.requestMatchers(SecurityPaths.PUBLIC_PATHS).permitAll()
 				.anyRequest().authenticated()
+			)
+			.csrf(csrf -> csrf
+				.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+				.csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler()))
+			.formLogin(AbstractHttpConfigurer::disable)
+			.logout(AbstractHttpConfigurer::disable)
+			.sessionManagement(session -> session
+				.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 			)
 			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

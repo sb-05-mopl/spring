@@ -19,7 +19,7 @@ import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Deprecated
-@Profile("prod")
+@Profile("none")
 @Service
 @RequiredArgsConstructor
 public class AwsSesEmailService implements EmailService{

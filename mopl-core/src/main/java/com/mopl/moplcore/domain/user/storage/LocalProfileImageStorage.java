@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 @Component
-@Profile("local")
+@Profile({"dev", "local"})
 public class LocalProfileImageStorage implements ProfileImageStorage {
 
 	private static final String PROFILE_DIR_NAME = "profiles";
