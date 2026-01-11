@@ -35,11 +35,29 @@ public class WatchingSessionRepository {
 	private static final String SESSION_PREFIX = "session:";
 	private static final String USER_WATCHING_PREFIX = "watch:user:";
 	private static final int SESSION_TTL_SECONDS = 60;
+	private static final int FETCH_MULTIPLIER = 3;
 
 	public void save(WatchingSession session) {
 		String contentKey = CONTENT_WATCHERS_PREFIX + session.getContentId();
 		String sessionKey = SESSION_PREFIX + session.getId();
 		String userKey = USER_WATCHING_PREFIX + session.getWatcherId();
+
+		String oldSessionId = stringRedisTemplate.opsForValue().get(userKey);
+		if (oldSessionId != null) {
+			String oldSessionKey = SESSION_PREFIX + oldSessionId;
+			String oldContentId = (String) stringRedisTemplate.opsForHash().get(oldSessionKey, "contentId");
+
+			if (oldContentId != null) {
+				stringRedisTemplate.opsForZSet().remove(
+					CONTENT_WATCHERS_PREFIX + oldContentId,
+					oldSessionId
+				);
+			}
+			stringRedisTemplate.delete(oldSessionKey);
+
+			log.debug("[WatchingSession] Cleaned up old session. oldSessionId={}, oldContentId={}",
+				oldSessionId, oldContentId);
+		}
 
 		stringRedisTemplate.execute(new SessionCallback<List<Object>>() {
 			@Override
@@ -101,8 +119,11 @@ public class WatchingSessionRepository {
 
 	/**
 	 * 특정 콘텐츠의 시청 세션 목록 조회
+	 * - 유령 데이터 대비 limit * 3 조회 후 유효 데이터만 반환
+	 * - 반복 없이 1회 조회
+	 *
 	 * @param cursor 커서 (createdAt timestamp, null이면 처음부터)
-	 * @param limit 조회 개수 (hasNext 판단을 위해 limit+1 조회)
+	 * @param limit 요청 개수
 	 */
 	public List<WatchingSession> findSessionsByContentId(
 		UUID contentId,
@@ -114,164 +135,159 @@ public class WatchingSessionRepository {
 	) {
 		String contentKey = CONTENT_WATCHERS_PREFIX + contentId;
 
-		List<WatchingSession> result = new ArrayList<>();
-		Double currentCursor = cursor;
-		String currentIdAfterStr = idAfter != null ? idAfter.toString() : null;
+		int fetchSize = limit * FETCH_MULTIPLIER;
 
-		int targetCount = limit + 1;
-		int batchSize = 100;
-		int maxIterations = 10;
+		// 1. ZSET에서 조회
+		Set<ZSetOperations.TypedTuple<String>> tupleSet;
 
-		for (int i = 0; i < maxIterations && result.size() < targetCount; i++) {
-
-			// 1. ZSET에서 배치 조회
-			Set<ZSetOperations.TypedTuple<String>> tupleSet;
-
-			if (direction == SortDirection.ASCENDING) {
-				double minScore = currentCursor != null ? currentCursor : Double.NEGATIVE_INFINITY;
-				tupleSet = stringRedisTemplate.opsForZSet().rangeByScoreWithScores(
-					contentKey, minScore, Double.POSITIVE_INFINITY, 0, batchSize
-				);
-			} else {
-				double maxScore = currentCursor != null ? currentCursor : Double.POSITIVE_INFINITY;
-				tupleSet = stringRedisTemplate.opsForZSet().reverseRangeByScoreWithScores(
-					contentKey, Double.NEGATIVE_INFINITY, maxScore, 0, batchSize
-				);
-			}
-
-			if (tupleSet == null || tupleSet.isEmpty()) {
-				break;
-			}
-
-			// Set → List 변환 (순서 유지, 마지막 접근 용이)
-			List<ZSetOperations.TypedTuple<String>> tuples = new ArrayList<>(tupleSet);
-
-			// 2. 커서 + 타이브레이커 필터링
-			final Double filterCursor = currentCursor;
-			final String filterIdAfter = currentIdAfterStr;
-
-			List<ZSetOperations.TypedTuple<String>> filteredTuples = tuples.stream()
-				.filter(tuple -> {
-					if (filterCursor == null)
-						return true;
-
-					Double score = tuple.getScore();
-					String sessionId = tuple.getValue();
-
-					if (score == null || sessionId == null)
-						return false;
-
-					int scoreCompare = Double.compare(score, filterCursor);
-
-					if (direction == SortDirection.ASCENDING) {
-						if (scoreCompare > 0)
-							return true;
-						if (scoreCompare == 0 && filterIdAfter != null) {
-							return sessionId.compareTo(filterIdAfter) > 0;
-						}
-						return false;
-					} else {
-						if (scoreCompare < 0)
-							return true;
-						if (scoreCompare == 0 && filterIdAfter != null) {
-							return sessionId.compareTo(filterIdAfter) < 0;
-						}
-						return false;
-					}
-				})
-				.toList();
-
-			ZSetOperations.TypedTuple<String> lastTuple = tuples.getLast();
-			currentCursor = lastTuple.getScore();
-			currentIdAfterStr = lastTuple.getValue();
-
-			// 필터링 후 비어있으면 다음 반복
-			if (filteredTuples.isEmpty()) {
-				// 원본도 batchSize보다 적으면 더 이상 없음
-				if (tuples.size() < batchSize) {
-					break;
-				}
-				continue;
-			}
-
-			List<String> sessionIds = filteredTuples.stream()
-				.map(ZSetOperations.TypedTuple::getValue)
-				.toList();
-
-			// 3. 존재 여부 확인 (Pipeline)
-			List<Object> existsResults = stringRedisTemplate.executePipelined(
-				new SessionCallback<Object>() {
-					@Override
-					public Object execute(RedisOperations operations) {
-						for (String sessionId : sessionIds) {
-							operations.hasKey(SESSION_PREFIX + sessionId);
-						}
-						return null;
-					}
-				}
+		if (direction == SortDirection.ASCENDING) {
+			double minScore = cursor != null ? cursor : Double.NEGATIVE_INFINITY;
+			tupleSet = stringRedisTemplate.opsForZSet().rangeByScoreWithScores(
+				contentKey, minScore, Double.POSITIVE_INFINITY, 0, fetchSize
 			);
+		} else {
+			double maxScore = cursor != null ? cursor : Double.POSITIVE_INFINITY;
+			tupleSet = stringRedisTemplate.opsForZSet().reverseRangeByScoreWithScores(
+				contentKey, Double.NEGATIVE_INFINITY, maxScore, 0, fetchSize
+			);
+		}
 
-			// 4. 존재하는 것과 유령 분리
-			List<String> existingIds = new ArrayList<>();
-			List<String> ghostIds = new ArrayList<>();
+		if (tupleSet == null || tupleSet.isEmpty()) {
+			return Collections.emptyList();
+		}
 
-			for (int j = 0; j < sessionIds.size(); j++) {
-				if (Boolean.TRUE.equals(existsResults.get(j))) {
-					existingIds.add(sessionIds.get(j));
+		// Set → List 변환
+		List<ZSetOperations.TypedTuple<String>> tuples = new ArrayList<>(tupleSet);
+
+		// 2. 커서 + 타이브레이커 필터링
+		final Double filterCursor = cursor;
+		final String filterIdAfter = idAfter != null ? idAfter.toString() : null;
+
+		List<ZSetOperations.TypedTuple<String>> filteredTuples = tuples.stream()
+			.filter(tuple -> {
+				if (filterCursor == null)
+					return true;
+
+				Double score = tuple.getScore();
+				String sessionId = tuple.getValue();
+
+				if (score == null || sessionId == null)
+					return false;
+
+				int scoreCompare = Double.compare(score, filterCursor);
+
+				if (direction == SortDirection.ASCENDING) {
+					if (scoreCompare > 0)
+						return true;
+					if (scoreCompare == 0 && filterIdAfter != null) {
+						return sessionId.compareTo(filterIdAfter) > 0;
+					}
+					return false;
 				} else {
-					ghostIds.add(sessionIds.get(j));
+					if (scoreCompare < 0)
+						return true;
+					if (scoreCompare == 0 && filterIdAfter != null) {
+						return sessionId.compareTo(filterIdAfter) < 0;
+					}
+					return false;
+				}
+			})
+			.toList();
+
+		if (filteredTuples.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		List<String> sessionIds = filteredTuples.stream()
+			.map(ZSetOperations.TypedTuple::getValue)
+			.toList();
+
+		// 3. 존재 여부 확인 (Pipeline)
+		List<Object> existsResults = stringRedisTemplate.executePipelined(
+			new SessionCallback<Object>() {
+				@Override
+				public Object execute(RedisOperations operations) {
+					for (String sessionId : sessionIds) {
+						operations.hasKey(SESSION_PREFIX + sessionId);
+					}
+					return null;
 				}
 			}
+		);
 
-			// 5. 유령 제거
-			if (!ghostIds.isEmpty()) {
-				stringRedisTemplate.opsForZSet().remove(contentKey, ghostIds.toArray());
-			}
+		// 4. 존재하는 것과 유령 분리
+		List<String> existingIds = new ArrayList<>();
+		List<String> ghostIds = new ArrayList<>();
 
-			// 6. 세션 상세 조회
-			if (!existingIds.isEmpty()) {
-				List<Object> hashResults = stringRedisTemplate.executePipelined(
-					new SessionCallback<Object>() {
-						@Override
-						public Object execute(RedisOperations operations) {
-							for (String sessionId : existingIds) {
-								operations.opsForHash().entries(SESSION_PREFIX + sessionId);
-							}
-							return null;
-						}
-					}
-				);
-
-				// 7. WatchingSession 변환 & 누적
-				for (int j = 0; j < existingIds.size() && result.size() < targetCount; j++) {
-					String sessionId = existingIds.get(j);
-					@SuppressWarnings("unchecked")
-					Map<Object, Object> hash = (Map<Object, Object>)hashResults.get(j);
-
-					String hashUserId = (String)hash.get("userId");
-					String hashContentId = (String)hash.get("contentId");
-					String hashCreatedAt = (String)hash.get("createdAt");
-
-					if (hash.isEmpty() || hashUserId == null || hashContentId == null || hashCreatedAt == null) {
-						continue;
-					}
-
-					result.add(WatchingSession.builder()
-						.id(UUID.fromString(sessionId))
-						.watcherId(UUID.fromString(hashUserId))
-						.contentId(UUID.fromString(hashContentId))
-						.createdAt(Instant.ofEpochMilli(Long.parseLong(hashCreatedAt)))
-						.build());
-				}
-			}
-
-			// 8. 원본 조회 결과가 batchSize보다 적으면 더 이상 없음
-			if (tuples.size() < batchSize) {
-				break;
+		for (int i = 0; i < sessionIds.size(); i++) {
+			if (Boolean.TRUE.equals(existsResults.get(i))) {
+				existingIds.add(sessionIds.get(i));
+			} else {
+				ghostIds.add(sessionIds.get(i));
 			}
 		}
 
+		// 5. 유령 제거
+		if (!ghostIds.isEmpty()) {
+			stringRedisTemplate.opsForZSet().remove(contentKey, ghostIds.toArray());
+		}
+
+		// 6. 유효 세션이 없으면 빈 리스트 반환
+		if (existingIds.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		// 7. 세션 상세 조회 (Pipeline)
+		List<Object> hashResults = stringRedisTemplate.executePipelined(
+			new SessionCallback<Object>() {
+				@Override
+				public Object execute(RedisOperations operations) {
+					for (String sessionId : existingIds) {
+						operations.opsForHash().entries(SESSION_PREFIX + sessionId);
+					}
+					return null;
+				}
+			}
+		);
+
+		// 8. WatchingSession 변환
+		List<WatchingSession> result = new ArrayList<>();
+		for (int i = 0; i < existingIds.size(); i++) {
+			String sessionId = existingIds.get(i);
+			Map<Object, Object> hash = (Map<Object, Object>)hashResults.get(i);
+
+			String hashUserId = (String)hash.get("userId");
+			String hashContentId = (String)hash.get("contentId");
+			String hashCreatedAt = (String)hash.get("createdAt");
+
+			if (hash.isEmpty() || hashUserId == null || hashContentId == null || hashCreatedAt == null) {
+				continue;
+			}
+
+			result.add(WatchingSession.builder()
+				.id(UUID.fromString(sessionId))
+				.watcherId(UUID.fromString(hashUserId))
+				.contentId(UUID.fromString(hashContentId))
+				.createdAt(Instant.ofEpochMilli(Long.parseLong(hashCreatedAt)))
+				.build());
+		}
+
 		return result;
+	}
+
+	public boolean hasMoreAfter(UUID contentId, double score, SortDirection direction) {
+		String contentKey = CONTENT_WATCHERS_PREFIX + contentId;
+
+		Long count;
+		if (direction == SortDirection.ASCENDING) {
+			count = stringRedisTemplate.opsForZSet()
+				.count(contentKey, score + 0.001, Double.POSITIVE_INFINITY);
+		} else {
+			count = stringRedisTemplate.opsForZSet()
+				.count(contentKey, Double.NEGATIVE_INFINITY, score - 0.001);
+		}
+
+		return count != null && count > 0;
 	}
 
 	public WatchingSession findSessionByWatcherId(UUID watcherId) {
@@ -338,7 +354,6 @@ public class WatchingSessionRepository {
 		return count != null ? count : 0L;
 	}
 
-	// 레디스에 Session TTL 갱신
 	public boolean refreshSessionTtl(UUID sessionId, UUID watcherId) {
 		Boolean sessionAlive = stringRedisTemplate.expire(
 			SESSION_PREFIX + sessionId,

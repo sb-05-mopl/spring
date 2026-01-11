@@ -85,9 +85,8 @@ public class WatchingSessionService {
 		UUID contentId,
 		WatchingSessionSearchRequest request
 	) {
-		// cursor를 Double로 변환 (createdAt timestamp)
 		Double cursor = request.cursor() != null ? Double.parseDouble(request.cursor()) : null;
-		UUID idAfterStr = request.idAfter();
+		UUID idAfter = request.idAfter();
 		int limit = request.limit();
 		WatchingSessionSortBy sortBy = request.sortBy();
 		SortDirection sortDirection = request.sortDirection();
@@ -96,22 +95,46 @@ public class WatchingSessionService {
 		List<WatchingSession> sessions = watchingSessionRepository.findSessionsByContentId(
 			contentId,
 			cursor,
-			idAfterStr,
+			idAfter,
 			limit,
 			sortBy,
 			sortDirection
 		);
 
-		// hasNext 판단 (Repository에서 limit+1 조회했으므로)
-		boolean hasNext = sessions.size() > limit;
-		List<WatchingSession> actualSessions = hasNext ? sessions.subList(0, (int)limit) : sessions;
+		boolean hasNext;
+		String nextCursor = null;
+		UUID nextIdAfter = null;
+		List<WatchingSession> actualSessions;
 
+		if (sessions.size() > limit) {
+			// limit+1번째가 있음 → hasNext = true
+			hasNext = true;
+			actualSessions = sessions.subList(0, limit);
+			WatchingSession lastSession = actualSessions.getLast();
+			nextCursor = String.valueOf(lastSession.getCreatedAt().toEpochMilli());
+			nextIdAfter = lastSession.getId();
+		} else {
+			// limit+1번째가 없음 → ZCOUNT로 확인
+			actualSessions = sessions;
+			if (!sessions.isEmpty()) {
+				WatchingSession lastSession = sessions.getLast();
+				double lastScore = lastSession.getCreatedAt().toEpochMilli();
+				hasNext = watchingSessionRepository.hasMoreAfter(contentId, lastScore, sortDirection);
+				if (hasNext) {
+					nextCursor = String.valueOf(lastSession.getCreatedAt().toEpochMilli());
+					nextIdAfter = lastSession.getId();
+				}
+			} else {
+				hasNext = false;
+			}
+		}
+
+		// DTO 변환
 		List<WatchingSessionDto> dtos = new ArrayList<>();
 		for (WatchingSession session : actualSessions) {
 			UserSummary userSummary = getUserSummary(session.getWatcherId());
 
-			// watcherNameLike 필터링
-			// API 명세서에는 NameLike가 있는데 Redis는 Like를 처리할 수없어서 임시로
+			// watcherNameLike 필터링 (Redis는 Like 처리 불가하여 임시로 애플리케이션에서 처리)
 			if (watcherNameLike != null && !userSummary.name().contains(watcherNameLike)) {
 				continue;
 			}
@@ -125,14 +148,6 @@ public class WatchingSessionService {
 				contentSummary
 			);
 			dtos.add(dto);
-		}
-
-		String nextCursor = null;
-		UUID nextIdAfter = null;
-		if (hasNext && !actualSessions.isEmpty()) {
-			WatchingSession lastSession = actualSessions.getLast();
-			nextCursor = String.valueOf(lastSession.getCreatedAt().toEpochMilli());
-			nextIdAfter = lastSession.getId();
 		}
 
 		long totalCount = watchingSessionRepository.countWatchersByContentId(contentId);

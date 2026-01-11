@@ -61,16 +61,20 @@ public class WatchingSessionEventListener {
 		WatchingSession watchingSession = new WatchingSession(userId, contentId);
 
 		wsRepository.save(watchingSession);
+
+		log.info("[WatchingSessionEventListener] SUBSCRIBE Before registry. wsId={}, subId={}, watchingId={}",
+			wsSessionId, subscriptionId, watchingSession.getId());
+
 		wsRegistry.register(wsSessionId, subscriptionId, watchingSession.getId(), userId, contentId);
 
-		log.info("[SUBSCRIBE] wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
+		log.info("[WatchingSessionEventListener] SUBSCRIBE After registry. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
 			wsSessionId, subscriptionId, watchingSession.getId(), userId, contentId);
 
 		try {
 			WatchingSessionChange message = wsService.createJoinMessage(watchingSession);
 			broadcastToWatchers(contentId, message);
 		} catch (Exception e) {
-			log.error("Failed to broadcast JOIN. sessionId={}", watchingSession.getId(), e);
+			log.error("[WatchingSessionEventListener] Failed to broadcast JOIN. sessionId={}", watchingSession.getId(), e);
 		}
 	}
 
@@ -78,12 +82,14 @@ public class WatchingSessionEventListener {
 	public void handleSessionUnsubscribe(SessionUnsubscribeEvent event) {
 		StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
 
+		String wsSessionId = accessor.getSessionId();
 		String subscriptionId = accessor.getSubscriptionId();
-		if (subscriptionId == null) {
+
+		if (wsSessionId == null || subscriptionId == null) {
 			return;
 		}
 
-		SessionMapping mapping = wsRegistry.removeBySubscriptionId(subscriptionId);
+		SessionMapping mapping = wsRegistry.removeBySubscriptionId(wsSessionId, subscriptionId);
 
 		if (mapping == null) {
 			return;
@@ -96,13 +102,13 @@ public class WatchingSessionEventListener {
 			);
 			broadcastToWatchers(mapping.contentId(), message);
 		} catch (Exception e) {
-			log.error("Failed to broadcast LEAVE. sessionId={}", mapping.watchingSessionId(), e);
+			log.error("[WatchingSessionEventListener] Failed to broadcast LEAVE. sessionId={}", mapping.watchingSessionId(), e);
 		}
 
 		wsRepository.delete(mapping.watchingSessionId(), mapping.contentId(), mapping.userId());
 
-		log.info("[UNSUBSCRIBE] subId={}, watchingId={}, userId={}, contentId={}",
-			subscriptionId, mapping.watchingSessionId(), mapping.userId(), mapping.contentId());
+		log.info("[WatchingSessionEventListener] UNSUBSCRIBE. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
+			wsSessionId, subscriptionId, mapping.watchingSessionId(), mapping.userId(), mapping.contentId());
 	}
 
 	@EventListener
@@ -117,7 +123,7 @@ public class WatchingSessionEventListener {
 		List<SessionMapping> mappings = wsRegistry.removeAllByWsSessionId(wsSessionId);
 
 		if (mappings.isEmpty()) {
-			log.debug("No mappings found on DISCONNECT. wsId={}", wsSessionId);
+			log.debug("[WatchingSessionEventListener] No mappings found on DISCONNECT. wsId={}", wsSessionId);
 			return;
 		}
 
@@ -129,12 +135,12 @@ public class WatchingSessionEventListener {
 				);
 				broadcastToWatchers(mapping.contentId(), message);
 			} catch (Exception e) {
-				log.error("Failed to broadcast LEAVE. sessionId={}", mapping.watchingSessionId(), e);
+				log.error("[WatchingSessionEventListener] Failed to broadcast LEAVE. sessionId={}", mapping.watchingSessionId(), e);
 			}
 
 			wsRepository.delete(mapping.watchingSessionId(), mapping.contentId(), mapping.userId());
 
-			log.info("[DISCONNECT] wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
+			log.info("[WatchingSessionEventListener] DISCONNECT. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
 				wsSessionId, mapping.subscriptionId(), mapping.watchingSessionId(),
 				mapping.userId(), mapping.contentId());
 		}
@@ -159,7 +165,7 @@ public class WatchingSessionEventListener {
 		try {
 			return UUID.fromString(contentId);
 		} catch (IllegalArgumentException e) {
-			log.debug("Failed to parse contentId. destination={}", destination, e);
+			log.debug("[WatchingSessionEventListener] Failed to parse contentId. destination={}", destination, e);
 			return null;
 		}
 	}
@@ -177,7 +183,7 @@ public class WatchingSessionEventListener {
 	private void broadcastToWatchers(UUID contentId, WatchingSessionChange message) {
 		String destination = "/sub/contents/" + contentId + "/watch";
 		messagingTemplate.convertAndSend(destination, message);
-		log.debug("Broadcasted {} to {}. watcherCount={}",
+		log.debug("[WatchingSessionEventListener] Broadcasted {} to {}. watcherCount={}",
 			message.type(), destination, message.watcherCount());
 	}
 }

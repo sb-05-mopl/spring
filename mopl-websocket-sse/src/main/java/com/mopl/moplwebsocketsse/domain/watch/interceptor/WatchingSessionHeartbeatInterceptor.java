@@ -38,21 +38,27 @@ public class WatchingSessionHeartbeatInterceptor implements ChannelInterceptor {
 			return;
 
 		List<SessionMapping> mappings = registry.getAllByWsSessionId(wsSessionId);
-		if (mappings.isEmpty())
+
+		log.debug("[WatchingSessionHeartbeatInterceptor] HEARTBEAT. wsId={}, mappingsCount={}", wsSessionId, mappings.size());
+
+		if (mappings.isEmpty()) {
+			log.warn("[WatchingSessionHeartbeatInterceptor] No mappings found! wsId={}", wsSessionId);
 			return;
+		}
 
 		for (SessionMapping mapping : mappings) {
 			try {
 				boolean alive = repository.refreshSessionTtl(mapping.watchingSessionId(), mapping.userId());
 
 				if (!alive) {
-					registry.removeBySubscriptionId(mapping.subscriptionId());
+					log.warn("[WatchingSessionHeartbeatInterceptor] Session not alive, removing. wsId={}, subId={}, watchingId={}",
+						wsSessionId, mapping.subscriptionId(), mapping.watchingSessionId());
+					registry.removeBySubscriptionId(mapping.webSocketSessionId(), mapping.subscriptionId());
 				}
 			} catch (Exception e) {
-				log.warn("[WatchingSession-HeartBeat] Redis 세션 갱신 실패. subId={}",
-					mapping.subscriptionId(), e);
+				log.warn("[WatchingSessionHeartbeatInterceptor] Redis 세션 갱신 실패. wsId={}, subId={}",
+					wsSessionId, mapping.subscriptionId(), e);
 			}
 		}
 	}
-
 }

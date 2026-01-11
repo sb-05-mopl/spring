@@ -26,68 +26,74 @@ public class WatchingSessionRegistry {
 	private final Map<String, SessionMapping> subscriptionMappings = new ConcurrentHashMap<>();
 	private final Map<String, Set<String>> wsToSubscriptions = new ConcurrentHashMap<>();
 
+	private String makeKey(String wsSessionId, String subscriptionId) {
+		return wsSessionId + ":" + subscriptionId;
+	}
+
 	public void register(String wsSessionId, String subscriptionId,
 		UUID watchingSessionId, UUID userId, UUID contentId) {
 		SessionMapping mapping = new SessionMapping(
 			wsSessionId, subscriptionId, watchingSessionId, userId, contentId
 		);
 
-		subscriptionMappings.put(subscriptionId, mapping);
+		String key = makeKey(wsSessionId, subscriptionId);
+		subscriptionMappings.put(key, mapping);
 		wsToSubscriptions.computeIfAbsent(wsSessionId, k -> ConcurrentHashMap.newKeySet())
-			.add(subscriptionId);
+			.add(key);
 
-		log.debug("Registered. wsId={}, subId={}, watchingId={}",
-			wsSessionId, subscriptionId, watchingSessionId);
+		log.debug("[WatchingSessionRegistry] Registered. wsId={}, subId={}, key={}, watchingId={}",
+			wsSessionId, subscriptionId, key, watchingSessionId);
 	}
 
-	public SessionMapping removeBySubscriptionId(String subscriptionId) {
-		SessionMapping mapping = subscriptionMappings.remove(subscriptionId);
+	public SessionMapping removeBySubscriptionId(String wsSessionId, String subscriptionId) {
+		String key = makeKey(wsSessionId, subscriptionId);
+		SessionMapping mapping = subscriptionMappings.remove(key);
 
 		if (mapping != null) {
 			Set<String> subs = wsToSubscriptions.get(mapping.webSocketSessionId());
 			if (subs != null) {
-				subs.remove(subscriptionId);
+				subs.remove(key);
 			}
-			log.debug("Removed by subId. subId={}, watchingId={}",
-				subscriptionId, mapping.watchingSessionId());
+			log.debug("[WatchingSessionRegistry] Removed by key. key={}, watchingId={}",
+				key, mapping.watchingSessionId());
 		}
 
 		return mapping;
 	}
 
 	public List<SessionMapping> removeAllByWsSessionId(String wsSessionId) {
-		Set<String> subscriptionIds = wsToSubscriptions.remove(wsSessionId);
+		Set<String> keys = wsToSubscriptions.remove(wsSessionId);
 
-		if (subscriptionIds == null || subscriptionIds.isEmpty()) {
+		if (keys == null || keys.isEmpty()) {
 			return Collections.emptyList();
 		}
 
 		List<SessionMapping> mappings = new ArrayList<>();
-		for (String subId : subscriptionIds) {
-			SessionMapping mapping = subscriptionMappings.remove(subId);
+		for (String key : keys) {
+			SessionMapping mapping = subscriptionMappings.remove(key);
 			if (mapping != null) {
 				mappings.add(mapping);
 			}
 		}
 
-		log.debug("Removed all by wsId. wsId={}, count={}", wsSessionId, mappings.size());
+		log.debug("[WatchingSessionRegistry] Removed all by wsId. wsId={}, count={}", wsSessionId, mappings.size());
 		return mappings;
 	}
 
-	public SessionMapping getBySubscriptionId(String subscriptionId) {
-		return subscriptionMappings.get(subscriptionId);
+	public SessionMapping getBySubscriptionId(String wsSessionId, String subscriptionId) {
+		return subscriptionMappings.get(makeKey(wsSessionId, subscriptionId));
 	}
 
 	public List<SessionMapping> getAllByWsSessionId(String wsSessionId) {
-		Set<String> subscriptionIds = wsToSubscriptions.get(wsSessionId);
+		Set<String> keys = wsToSubscriptions.get(wsSessionId);
 
-		if (subscriptionIds == null || subscriptionIds.isEmpty()) {
+		if (keys == null || keys.isEmpty()) {
 			return Collections.emptyList();
 		}
 
 		List<SessionMapping> mappings = new ArrayList<>();
-		for (String subId : subscriptionIds) {
-			SessionMapping mapping = subscriptionMappings.get(subId);
+		for (String key : keys) {
+			SessionMapping mapping = subscriptionMappings.get(key);
 			if (mapping != null) {
 				mappings.add(mapping);
 			}
@@ -101,6 +107,8 @@ public class WatchingSessionRegistry {
 		if (subscriptionMappings.isEmpty())
 			return;
 
+		log.debug("[WatchingSessionRegistry] Cleanup started. size={}", subscriptionMappings.size());
+
 		List<Map.Entry<String, SessionMapping>> entries =
 			new ArrayList<>(subscriptionMappings.entrySet());
 
@@ -110,18 +118,24 @@ public class WatchingSessionRegistry {
 
 		List<Boolean> existsList = repository.existsSessions(sessionIds);
 
+		int removedCount = 0;
 		for (int i = 0; i < entries.size(); i++) {
 			boolean exists = (i < existsList.size()) && Boolean.TRUE.equals(existsList.get(i));
 			if (!exists) {
-				String subId = entries.get(i).getKey();
-				SessionMapping mapping = subscriptionMappings.remove(subId);
+				String key = entries.get(i).getKey();
+				SessionMapping mapping = subscriptionMappings.remove(key);
 				if (mapping != null) {
 					Set<String> subs = wsToSubscriptions.get(mapping.webSocketSessionId());
 					if (subs != null) {
-						subs.remove(subId);
+						subs.remove(key);
 					}
+					removedCount++;
 				}
 			}
+		}
+
+		if (removedCount > 0) {
+			log.info("[WatchingSessionRegistry] Cleanup completed. removed={}", removedCount);
 		}
 	}
 }
