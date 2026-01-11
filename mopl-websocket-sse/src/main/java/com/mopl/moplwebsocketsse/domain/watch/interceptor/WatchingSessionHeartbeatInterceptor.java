@@ -39,8 +39,6 @@ public class WatchingSessionHeartbeatInterceptor implements ChannelInterceptor {
 
 		List<SessionMapping> mappings = registry.getAllByWsSessionId(wsSessionId);
 
-		log.debug("[WatchingSessionHeartbeatInterceptor] HEARTBEAT. wsId={}, mappingsCount={}", wsSessionId, mappings.size());
-
 		if (mappings.isEmpty()) {
 			log.warn("[WatchingSessionHeartbeatInterceptor] No mappings found! wsId={}", wsSessionId);
 			return;
