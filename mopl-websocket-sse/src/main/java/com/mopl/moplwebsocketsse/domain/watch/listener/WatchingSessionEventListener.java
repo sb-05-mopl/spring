@@ -61,13 +61,9 @@ public class WatchingSessionEventListener {
 		WatchingSession watchingSession = new WatchingSession(userId, contentId);
 
 		wsRepository.save(watchingSession);
-
-		log.info("[WatchingSessionEventListener] SUBSCRIBE Before registry. wsId={}, subId={}, watchingId={}",
-			wsSessionId, subscriptionId, watchingSession.getId());
-
 		wsRegistry.register(wsSessionId, subscriptionId, watchingSession.getId(), userId, contentId);
 
-		log.info("[WatchingSessionEventListener] SUBSCRIBE After registry. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
+		log.debug("[WatchingSessionEventListener] SUBSCRIBE After registry. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
 			wsSessionId, subscriptionId, watchingSession.getId(), userId, contentId);
 
 		try {
@@ -107,7 +103,7 @@ public class WatchingSessionEventListener {
 
 		wsRepository.delete(mapping.watchingSessionId(), mapping.contentId(), mapping.userId());
 
-		log.info("[WatchingSessionEventListener] UNSUBSCRIBE. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
+		log.debug("[WatchingSessionEventListener] UNSUBSCRIBE. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
 			wsSessionId, subscriptionId, mapping.watchingSessionId(), mapping.userId(), mapping.contentId());
 	}
 
@@ -140,7 +136,7 @@ public class WatchingSessionEventListener {
 
 			wsRepository.delete(mapping.watchingSessionId(), mapping.contentId(), mapping.userId());
 
-			log.info("[WatchingSessionEventListener] DISCONNECT. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
+			log.debug("[WatchingSessionEventListener] DISCONNECT. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
 				wsSessionId, mapping.subscriptionId(), mapping.watchingSessionId(),
 				mapping.userId(), mapping.contentId());
 		}
