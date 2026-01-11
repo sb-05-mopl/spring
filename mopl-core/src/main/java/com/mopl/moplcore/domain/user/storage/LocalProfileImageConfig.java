@@ -7,7 +7,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile({"dev","local"})
+@Deprecated
+@Profile({"none"})
 public class LocalProfileImageConfig implements ProfileImageConfig {
 
 	private final Path uploadRoot;

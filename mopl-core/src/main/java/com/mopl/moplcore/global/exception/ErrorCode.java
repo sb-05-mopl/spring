@@ -17,6 +17,7 @@ public enum ErrorCode {
 	DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 존재하는 이메일입니다"),
 	ACCOUNT_LOCKED(HttpStatus.FORBIDDEN, "계정이 잠겨있습니다"),
 	FORBIDDEN_USER_ACCESS(HttpStatus.FORBIDDEN, "본인의 정보만 변경할 수 있습니다"),
+	AUTH_PASSWORD_CHANGE(HttpStatus.FORBIDDEN, "OAuth 사용자는 비밀번호를 변경할 수 없습니다."),
 
 	CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "콘텐츠를 찾을 수 없습니다"),
 
@@ -44,6 +45,7 @@ public enum ErrorCode {
 	INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "엑세스 토큰이 유효하지 않습니다."),
 	INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "리프레시 토큰이 유효하지 않습니다."),
 
+	UNSUPPORTED_OAUTH_ACCESS(HttpStatus.UNAUTHORIZED, "지원하지 않은 OAuth입니다."),
 
 	WEBSOCKET_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "WebSocket 오류");
 

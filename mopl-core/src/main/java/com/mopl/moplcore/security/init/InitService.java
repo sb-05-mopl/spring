@@ -2,10 +2,10 @@ package com.mopl.moplcore.security.init;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mopl.moplcore.domain.user.entity.AuthProvider;
 import com.mopl.moplcore.domain.user.entity.User;
 import com.mopl.moplcore.domain.user.repository.UserRepository;
 
@@ -32,7 +32,7 @@ public class InitService {
 
 	@Transactional
 	public void initAdmin() {
-		if (userRepository.existsByEmail(adminEmail)) {
+		if (userRepository.existsByEmailAndProvider(adminEmail, AuthProvider.LOCAL)) {
 			return;
 		}
 
@@ -45,7 +45,7 @@ public class InitService {
 
 	@Transactional
 	public void initDefaultUser() {
-		if (userRepository.existsByEmail(userEmail)) {
+		if (userRepository.existsByEmailAndProvider(userEmail, AuthProvider.LOCAL)) {
 			return;
 		}
 

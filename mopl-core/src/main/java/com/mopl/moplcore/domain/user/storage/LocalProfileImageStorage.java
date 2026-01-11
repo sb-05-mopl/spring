@@ -10,7 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 @Component
-@Profile({"dev", "local"})
+@Deprecated
+@Profile({"none"})
 public class LocalProfileImageStorage implements ProfileImageStorage {
 
 	private static final String PROFILE_DIR_NAME = "profiles";

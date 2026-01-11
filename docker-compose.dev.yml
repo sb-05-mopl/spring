@@ -6,6 +6,8 @@ services:
       context: .
       dockerfile: mopl-core/Dockerfile
     container_name: spring-api
+    ports:
+      - "8080:8080" # OAuth때문에 spring-api만 허용
     env_file:
       - ./mopl-core/.env
     depends_on:

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.mopl.moplcore.domain.follow.dto.FollowDto;
 import com.mopl.moplcore.domain.follow.dto.FollowRequest;
 import com.mopl.moplcore.domain.follow.service.FollowService;
-import com.mopl.moplcore.security.principal.MoplUserDetails;
+import com.mopl.moplcore.security.core.principal.MoplUserDetails;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
