@@ -23,6 +23,7 @@ public class RedisJwtRegistry implements JwtRegistry {
 	private static final String ACCESS_PREFIX = "jwt:access:";
 	private static final String REFRESH_PREFIX = "jwt:refresh:";
 	private static final String USER_TOKENS_PREFIX = "jwt:user:tokens:";
+	private static final String USER_ACCESS_TOKENS_PREFIX = "jwt:user:access";
 
 	private final RedisTemplate<String, String> stringRedisTemplate;
 
@@ -41,35 +42,51 @@ public class RedisJwtRegistry implements JwtRegistry {
 		String accessToken = jwtInformation.getAccessToken();
 		String refreshToken = jwtInformation.getRefreshToken();
 
-		stringRedisTemplate.opsForValue()
-			.set(ACCESS_PREFIX + accessToken, userId.toString(), accessTokenExpiration, TimeUnit.MILLISECONDS);
-		stringRedisTemplate.opsForValue()
-			.set(REFRESH_PREFIX + refreshToken, userId.toString(), refreshTokenExpiration, TimeUnit.MILLISECONDS);
+		stringRedisTemplate.opsForValue().set(ACCESS_PREFIX + accessToken, userId.toString(), accessTokenExpiration, TimeUnit.MILLISECONDS);
+		stringRedisTemplate.opsForValue().set(REFRESH_PREFIX + refreshToken, userId.toString(), refreshTokenExpiration, TimeUnit.MILLISECONDS);
 
 		String userTokensKey = USER_TOKENS_PREFIX + userId;
+		String userAccessTokenKey = USER_ACCESS_TOKENS_PREFIX + userId;
 
 		Long tokenCount = stringRedisTemplate.opsForList().size(userTokensKey);
 		if (tokenCount != null && tokenCount >= maxActiveCount) {
 			String oldRefreshToken = stringRedisTemplate.opsForList().leftPop(userTokensKey);
+			String oldAccessToken = stringRedisTemplate.opsForList().leftPop(userAccessTokenKey);
+
 			if (oldRefreshToken != null) {
 				stringRedisTemplate.delete(REFRESH_PREFIX + oldRefreshToken);
+			}
+
+			if(oldAccessToken != null){
+				stringRedisTemplate.delete(ACCESS_PREFIX + oldRefreshToken);
 			}
 		}
 
 		stringRedisTemplate.opsForList().rightPush(userTokensKey, refreshToken);
+		stringRedisTemplate.opsForList().rightPush(userAccessTokenKey, accessToken);
+
 		stringRedisTemplate.expire(userTokensKey, refreshTokenExpiration, TimeUnit.MILLISECONDS);
+		stringRedisTemplate.expire(userAccessTokenKey, refreshTokenExpiration, TimeUnit.MILLISECONDS);
 	}
 
 	@Override
 	public void invalidateJwtInformationByUserId(UUID userId) {
 		String userTokensKey = USER_TOKENS_PREFIX + userId;
+		String userAccessTokensKey = USER_ACCESS_TOKENS_PREFIX + userId;
 
 		List<String> userRefreshTokens = stringRedisTemplate.opsForList().range(userTokensKey, 0, -1);
 		if (userRefreshTokens != null) {
 			userRefreshTokens.forEach(token -> stringRedisTemplate.delete(REFRESH_PREFIX + token));
 		}
+		List<String> userAccessTokens = stringRedisTemplate.opsForList()
+			.range(userAccessTokensKey, 0, -1);
+		if (userAccessTokens != null) {
+			userAccessTokens.forEach(token ->
+				stringRedisTemplate.delete(ACCESS_PREFIX + token));
+		}
 
 		stringRedisTemplate.delete(userTokensKey);
+		stringRedisTemplate.delete(userAccessTokensKey);
 	}
 
 	@Override
@@ -91,20 +108,29 @@ public class RedisJwtRegistry implements JwtRegistry {
 	public void rotateJwtInformation(String oldRefreshToken, JwtInformation newJwtInformation) {
 		UUID userId = newJwtInformation.getUserDto().getId();
 		String userTokensKey = USER_TOKENS_PREFIX + userId;
+		String userAccessTokensKey = USER_ACCESS_TOKENS_PREFIX + userId;
 
 		stringRedisTemplate.delete(REFRESH_PREFIX + oldRefreshToken);
 
-		List<String> tokens = stringRedisTemplate.opsForList().range(userTokensKey, 0, -1);
-		if (tokens != null) {
-			for (int i = 0; i < tokens.size(); i++) {
-				if (tokens.get(i).equals(oldRefreshToken)) {
-					stringRedisTemplate.opsForList().set(userTokensKey, i, newJwtInformation.getRefreshToken());
+		String newAccessToken = newJwtInformation.getAccessToken();
+		String newRefreshToken = newJwtInformation.getRefreshToken();
+
+		stringRedisTemplate.opsForValue().set(ACCESS_PREFIX + newAccessToken, userId.toString(), accessTokenExpiration, TimeUnit.MILLISECONDS);
+		stringRedisTemplate.opsForValue().set(REFRESH_PREFIX + newRefreshToken, userId.toString(), refreshTokenExpiration, TimeUnit.MILLISECONDS);
+
+		List<String> refreshTokens = stringRedisTemplate.opsForList().range(userTokensKey, 0, -1);
+		if (refreshTokens != null) {
+			for (int i = 0; i < refreshTokens.size(); i++) {
+				if (refreshTokens.get(i).equals(oldRefreshToken)) {
+					stringRedisTemplate.opsForList().set(userTokensKey, i, newRefreshToken);
+					stringRedisTemplate.opsForList().set(userAccessTokensKey, i, newAccessToken);
 					break;
 				}
 			}
 		}
 
-		registerJwtInformation(newJwtInformation);
+		stringRedisTemplate.expire(userTokensKey, refreshTokenExpiration, TimeUnit.MILLISECONDS);
+		stringRedisTemplate.expire(userAccessTokensKey, refreshTokenExpiration, TimeUnit.MILLISECONDS);
 	}
 
 	@Override
