@@ -23,7 +23,7 @@ public class User extends BaseEntity {
 	@Column(nullable = false, unique = true)
 	private String email;
 
-	@Column(nullable = false)
+	@Column // oauth 로그인은 비밀번호가 없음
 	private String password;
 
 	@Column(name = "profile_image_url")
@@ -36,12 +36,26 @@ public class User extends BaseEntity {
 	@Column(nullable = false)
 	private boolean locked;
 
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private AuthProvider provider;
+
+
 	public User(String name, String email, String password) {
 		this.name = name;
 		this.password = password;
 		this.email = email;
 		this.role = Role.USER;
 		this.locked = false;
+		this.provider = AuthProvider.LOCAL;
+	}
+	public User(String name, String email, String password, AuthProvider provider) {
+		this.name = name;
+		this.password = password;
+		this.email = email;
+		this.role = Role.USER;
+		this.locked = false;
+		this.provider = provider;
 	}
 
 	public void updateName(String name) {
@@ -66,5 +80,10 @@ public class User extends BaseEntity {
 
 	public void updateRole(Role role) {
 		this.role = role;
+	}
+
+	// 처음 생성자 생성용
+	public void initAdmin() {
+		this.role = Role.ADMIN;
 	}
 }
