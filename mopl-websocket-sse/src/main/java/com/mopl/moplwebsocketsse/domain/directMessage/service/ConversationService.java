@@ -8,9 +8,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mopl.moplwebsocketsse.domain.directMessage.dto.ConversationCreatedLockResult;
 import com.mopl.moplwebsocketsse.domain.directMessage.dto.ConversationDto;
 import com.mopl.moplwebsocketsse.domain.directMessage.dto.ConversationSearchRequest;
 import com.mopl.moplwebsocketsse.domain.directMessage.dto.CursorResponseConversationDto;
@@ -18,6 +20,8 @@ import com.mopl.moplwebsocketsse.domain.directMessage.dto.DirectMessageDto;
 import com.mopl.moplwebsocketsse.domain.directMessage.entity.Conversation;
 import com.mopl.moplwebsocketsse.domain.directMessage.entity.ConversationParticipants;
 import com.mopl.moplwebsocketsse.domain.directMessage.entity.DirectMessage;
+import com.mopl.moplwebsocketsse.domain.directMessage.event.ConversationCreatedLockEvent;
+import com.mopl.moplwebsocketsse.domain.directMessage.exception.ConversationLockAcquisitionFailedException;
 import com.mopl.moplwebsocketsse.domain.directMessage.exception.ConversationNotFoundException;
 import com.mopl.moplwebsocketsse.domain.directMessage.exception.NotConversationParticipantException;
 import com.mopl.moplwebsocketsse.domain.directMessage.exception.SelfConversationNotAllowedException;
@@ -43,12 +47,27 @@ public class ConversationService {
 	private final DirectMessageRepository directMessageRepository;
 	private final UserRepository userRepository;
 	private final ConversationMapper conversationMapper;
+	private final ConversationLockService conversationLockService;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Transactional
 	public ConversationDto createConversation(UUID requesterId, UUID withUserId) {
 		if (requesterId.equals(withUserId)) {
 			throw new SelfConversationNotAllowedException();
 		}
+
+		Optional<ConversationCreatedLockResult> lockResultOpt = conversationLockService.tryLock(requesterId,
+			withUserId);
+
+		if (lockResultOpt.isEmpty()) {
+			return participantsRepository.findConversationBetween(requesterId, withUserId)
+				.map(conv -> findConversationInternal(conv.getId(), requesterId))
+				.orElseThrow(ConversationLockAcquisitionFailedException::new);
+		}
+
+		ConversationCreatedLockResult lockResult = lockResultOpt.get();
+
+		eventPublisher.publishEvent(new ConversationCreatedLockEvent(lockResult.key(), lockResult.value()));
 
 		Optional<Conversation> existing = participantsRepository.findConversationBetween(requesterId, withUserId);
 		if (existing.isPresent()) {
