@@ -49,6 +49,7 @@ public class RedisJwtRegistry implements JwtRegistry {
 		String userAccessTokenKey = USER_ACCESS_TOKENS_PREFIX + userId;
 
 		Long tokenCount = stringRedisTemplate.opsForList().size(userTokensKey);
+
 		if (tokenCount != null && tokenCount >= maxActiveCount) {
 			String oldRefreshToken = stringRedisTemplate.opsForList().leftPop(userTokensKey);
 			String oldAccessToken = stringRedisTemplate.opsForList().leftPop(userAccessTokenKey);
@@ -58,7 +59,7 @@ public class RedisJwtRegistry implements JwtRegistry {
 			}
 
 			if(oldAccessToken != null){
-				stringRedisTemplate.delete(ACCESS_PREFIX + oldRefreshToken);
+				stringRedisTemplate.delete(ACCESS_PREFIX + oldAccessToken);
 			}
 		}
 
@@ -66,7 +67,7 @@ public class RedisJwtRegistry implements JwtRegistry {
 		stringRedisTemplate.opsForList().rightPush(userAccessTokenKey, accessToken);
 
 		stringRedisTemplate.expire(userTokensKey, refreshTokenExpiration, TimeUnit.MILLISECONDS);
-		stringRedisTemplate.expire(userAccessTokenKey, refreshTokenExpiration, TimeUnit.MILLISECONDS);
+		stringRedisTemplate.expire(userAccessTokenKey, accessTokenExpiration, TimeUnit.MILLISECONDS);
 	}
 
 	@Override
@@ -130,7 +131,7 @@ public class RedisJwtRegistry implements JwtRegistry {
 		}
 
 		stringRedisTemplate.expire(userTokensKey, refreshTokenExpiration, TimeUnit.MILLISECONDS);
-		stringRedisTemplate.expire(userAccessTokensKey, refreshTokenExpiration, TimeUnit.MILLISECONDS);
+		stringRedisTemplate.expire(userAccessTokensKey, accessTokenExpiration, TimeUnit.MILLISECONDS);
 	}
 
 	@Override
