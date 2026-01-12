@@ -1,5 +1,7 @@
 package com.mopl.moplcore.domain.content.repository;
 
+import static com.mopl.moplcore.domain.content.dto.ContentSearchRequest.SortDirection.*;
+
 import java.util.List;
 
 import com.mopl.moplcore.domain.content.dto.ContentSearchRequest;
@@ -84,12 +86,22 @@ public class ContentRepositoryImpl implements ContentRepositoryCustom {
 				CursorResponseContentDto.decodeCursor(request.getCursor());
 
 			boolean isAsc = request.getSortDirection() ==
-				ContentSearchRequest.SortDirection.ASCENDING;
+				ASCENDING;
 
 			if (request.getSortBy() == ContentSearchRequest.SortBy.createdAt) {
-				return isAsc
-					? content.createdAt.gt(cursor.createdAt())
-					: content.createdAt.lt(cursor.createdAt());
+				if (isAsc) {
+					return content.createdAt.gt(cursor.createdAt())
+						.or(
+							content.createdAt.eq(cursor.createdAt())
+								.and(content.id.gt(cursor.id()))
+						);
+				} else {
+					return content.createdAt.lt(cursor.createdAt())
+						.or(
+							content.createdAt.eq(cursor.createdAt())
+								.and(content.id.lt(cursor.id()))
+						);
+				}
 			}
 
 			return null;
@@ -98,15 +110,25 @@ public class ContentRepositoryImpl implements ContentRepositoryCustom {
 		}
 	}
 
-	private OrderSpecifier<?> getOrderSpecifier(ContentSearchRequest request) {
+	private OrderSpecifier<?>[] getOrderSpecifier(ContentSearchRequest request) {
 		QContent content = QContent.content;
-
-		boolean isAsc = request.getSortDirection() == ContentSearchRequest.SortDirection.ASCENDING;
+		boolean isAsc = request.getSortDirection() == ASCENDING;
 
 		return switch (request.getSortBy()) {
-			case createdAt -> isAsc ? content.createdAt.asc() : content.createdAt.desc();
-			case watcherCount -> throw new UnsupportedOperationException("watcherCount 정렬은 아직 미구현");
-			case rate -> isAsc ? content.averageRating.asc() : content.averageRating.desc();
+			case createdAt -> isAsc
+				? new OrderSpecifier<?>[] {
+				content.createdAt.asc(),
+				content.id.asc()
+			}
+				: new OrderSpecifier<?>[] {
+				content.createdAt.desc(),
+				content.id.desc()
+			};
+			case watcherCount -> null; // ES / Redis 기준
+			case rate -> new OrderSpecifier<?>[] {
+				isAsc ? content.averageRating.asc() : content.averageRating.desc(),
+				content.id.asc()
+			};
 		};
 	}
 
