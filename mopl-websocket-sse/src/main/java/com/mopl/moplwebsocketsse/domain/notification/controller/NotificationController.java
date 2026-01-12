@@ -2,7 +2,7 @@ package com.mopl.moplwebsocketsse.domain.notification.controller;
 
 import java.util.UUID;
 
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,6 +15,7 @@ import com.mopl.moplwebsocketsse.domain.notification.dto.NotificationDto;
 import com.mopl.moplwebsocketsse.domain.notification.dto.NotificationSortBy;
 import com.mopl.moplwebsocketsse.domain.notification.dto.NotificationSortDirection;
 import com.mopl.moplwebsocketsse.domain.notification.service.NotificationService;
+import com.mopl.moplwebsocketsse.security.principal.MoplUserDetails;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,22 +28,26 @@ public class NotificationController {
 
 	@GetMapping
 	public CursorResponseNotificationDto<NotificationDto> findNotifications(
-		Authentication authentication,
+		@AuthenticationPrincipal MoplUserDetails moplUserDetails,
 		@RequestParam(name = "cursor", required = false) String cursor,
 		@RequestParam(name = "idAfter", required = false) UUID idAfter,
 		@RequestParam(name = "limit", defaultValue = "20") int limit,
 		@RequestParam(name = "sortBy", defaultValue = "createdAt") NotificationSortBy sortBy,
 		@RequestParam(name = "sortDirection", defaultValue = "ASCENDING") NotificationSortDirection sortDirection
 	) {
-		UUID userId = (UUID)authentication.getPrincipal();
+		UUID userId = moplUserDetails.getUserDto().getId();
+
 		return notificationService.findNotifications(
 			userId, cursor, idAfter, limit, sortBy, sortDirection
 		);
 	}
 
 	@DeleteMapping("/{notificationId}")
-	public void deleteNotification(Authentication authentication, @PathVariable("notificationId") UUID id) {
-		UUID userId = (UUID)authentication.getPrincipal();
+	public void deleteNotification(
+		@AuthenticationPrincipal MoplUserDetails moplUserDetails,
+		@PathVariable("notificationId") UUID id
+	) {
+		UUID userId = moplUserDetails.getUserDto().getId();
 		notificationService.deleteNotification(userId, id);
 	}
 }

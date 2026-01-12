@@ -31,9 +31,6 @@ public class NotificationService {
 		NotificationSortBy sortBy,
 		NotificationSortDirection sortDirection
 	) {
-		if (me == null) {
-			throw new AccessDeniedException("사용자 ID가 없어 접근이 거부되었습니다. : " + me);
-		}
 		if (sortBy != NotificationSortBy.createdAt) {
 			throw new IllegalArgumentException("지원되지 않는 정렬 방식입니다 : " + sortBy);
 		}
@@ -86,20 +83,37 @@ public class NotificationService {
 		}
 	}
 
-	@Transactional
-	public NotificationDto saveIfAbsentFromEvent(NotificationDto dto) {
-		if (notificationRepository.existsById(dto.id())) {
-			return dto;
+	@Transactional(readOnly = true)
+	public List<NotificationDto> findMissedForReplay(UUID receiverId, String lastEventId, int limit) {
+		if (lastEventId == null || lastEventId.isBlank())
+			return List.of();
+
+		UUID pivotId;
+		try {
+			pivotId = UUID.fromString(lastEventId.trim());
+		} catch (Exception e) {
+			return List.of();
 		}
 
-		Notification entity = new Notification(
-			dto.receiverId(),
-			dto.title(),
-			dto.content(),
-			dto.level()
-		);
-		Notification saved = notificationRepository.save(entity);
+		Notification pivot = notificationRepository.findByIdAndReceiverId(pivotId, receiverId).orElse(null);
+		if (pivot == null) {
+			return List.of();
+		}
 
-		return NotificationDto.from(saved);
+		int size = Math.min(Math.max(limit, 1), 200);
+
+		List<Notification> fetched = notificationRepository.findByReceiverIdWithCursor(
+			receiverId,
+			pivot.getCreatedAt().toString(),
+			pivot.getId(),
+			size,
+			NotificationSortBy.createdAt,
+			NotificationSortDirection.ASCENDING
+		);
+
+		if (fetched.size() > size)
+			fetched = fetched.subList(0, size);
+		return fetched.stream().map(NotificationDto::from).toList();
 	}
+
 }
