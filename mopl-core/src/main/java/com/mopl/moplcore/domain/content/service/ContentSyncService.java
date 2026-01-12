@@ -77,9 +77,19 @@ public class ContentSyncService {
 			.map(ct -> ct.getTag().getName())
 			.collect(Collectors.toList());
 
-		return ContentDocument.from(content.getId(), content.getType(), content.getTitle(), content.getDescription(),
-			content.getThumbnailUrl(), tags, content.getAverageRating(), content.getReviewCount(), 0L,
-			content.getCreatedAt());
+		return ContentDocument.builder()
+			.id(content.getId().toString())
+			.contentId(content.getId().toString())
+			.type(content.getType())
+			.title(content.getTitle())
+			.description(content.getDescription())
+			.thumbnailUrl(content.getThumbnailUrl())
+			.tags(tags)
+			.averageRating(content.getAverageRating())
+			.reviewCount(content.getReviewCount())
+			.watcherCount(0L)
+			.createdAt(content.getCreatedAt())
+			.build();
 	}
 
 	public void updateWatcherCount(UUID contentId) {
