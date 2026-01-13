@@ -12,6 +12,6 @@ public record NotificationEvent(
 	UUID receiverId,
 	NotificationLevel level,
 	NotificationEventType type,
-	Map<String, Object> meta
+	Map<String, String> meta
 ) {
 }

@@ -2,29 +2,93 @@ package com.mopl.moplwebsocketsse.domain.notification.event;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
-// NotificationEvent.meta 키
-public class NotificationMetaSpec {
+public final class NotificationMetaSpec {
 	private NotificationMetaSpec() {
 	}
 
+	// Meta key 상수
+	public static final String OLD_ROLE = "oldRole"; // 기존 권한
+	public static final String NEW_ROLE = "newRole"; // 새 권한
+	public static final String CHANGED_BY = "changedBy"; // 권한 변경 주체
+
+	public static final String PLAYLIST_ID = "playlistId"; // 알림이 발생한 플리의 아이디
+	public static final String SUBSCRIBER_ID = "subscriberId"; // 내 플리를 구독한 유저의 아이디
+
+	public static final String CONTENT_ID = "contentId"; // 내가 구독한 플리에 추가된 콘텐츠 아이디
+
+	public static final String ACTOR_ID = "actorId"; // 활동 알림이 발생한 유저
+	public static final String ACTIVITY_KIND = "activityKind"; // 해당 활동의 종류
+
+	public static final String FOLLOWER_ID = "followerId"; // 나를 팔로우한 사람의 아이디
+
+	public static final String CONVERSATION_ID = "conversationId"; // DM이 온 대화방의 아이디
+	public static final String DIRECT_MESSAGE_ID = "directMessageId"; // 알림 발생 트리거 DM의 아이디
+	public static final String SENDER_ID = "senderId"; // DM 발신자의 아이디
+
 	public static final Map<NotificationEventType, List<String>> REQUIRED_KEYS = Map.of(
 		NotificationEventType.ROLE_CHANGED,
-		List.of("oldRole", "newRole", "changedBy"), // 기존 권한, 새 권한, 변경한 사람
+		List.of(OLD_ROLE, NEW_ROLE, CHANGED_BY),
 
 		NotificationEventType.PLAYLIST_SUBSCRIBED,
-		List.of("playlistId", "subscriberId"), // 구독이 발생한 플리 아이디, 해당 구독자 아이디
+		List.of(PLAYLIST_ID, SUBSCRIBER_ID),
 
 		NotificationEventType.SUBSCRIBED_PLAYLIST_CONTENT_ADDED,
-		List.of("playlistId", "contentId"), // 구독한 플리 아이디, 추가된 콘텐츠 아이디
+		List.of(PLAYLIST_ID, CONTENT_ID),
 
 		NotificationEventType.FOLLOWING_USER_ACTIVITY,
-		List.of("actorId", "activityKind"), // 팔로우 대상자 아이디, 활동 종류
+		List.of(ACTOR_ID, ACTIVITY_KIND),
 
 		NotificationEventType.FOLLOWED_BY_USER,
-		List.of("followerId"), // 팔로워의 아이디
+		List.of(FOLLOWER_ID),
 
 		NotificationEventType.DIRECT_MESSAGE_RECEIVED,
-		List.of("conversationId", "directMessageId", "senderId") // DM의 대화방 아이디, DM 메시지 아이디, 발신자 이이디
+		List.of(CONVERSATION_ID, DIRECT_MESSAGE_ID, SENDER_ID)
 	);
+
+	public static List<String> requiredKeysOf(NotificationEventType type) {
+		return REQUIRED_KEYS.getOrDefault(type, List.of());
+	}
+
+	public static void validate(NotificationEvent event) {
+		if (event == null) {
+			throw new IllegalArgumentException("이벤트가 존재하지 않습니다.");
+		}
+
+		if (event.type() == null) {
+			throw new IllegalArgumentException("이벤트 타입이 존재하지 않습니다.");
+		}
+
+		Map<String, String> meta = event.meta();
+		if (meta == null) {
+			meta = Map.of();
+		}
+
+		for (String key : requiredKeysOf(event.type())) {
+			String metaValue = meta.get(key);
+			if (metaValue == null || metaValue.isBlank()) {
+				throw new IllegalArgumentException("Meta 키 없음 : " + key + " (type=" + event.type() + ")");
+			}
+		}
+	}
+
+	public static String get(Map<String, String> meta, String key) {
+		if (meta == null) {
+			return null;
+		}
+		return meta.get(key);
+	}
+
+	public static UUID getUuid(Map<String, String> meta, String key) {
+		String metaValue = get(meta, key);
+		if (metaValue == null || metaValue.isBlank())
+			return null;
+		try {
+			return UUID.fromString(metaValue.trim());
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
 }

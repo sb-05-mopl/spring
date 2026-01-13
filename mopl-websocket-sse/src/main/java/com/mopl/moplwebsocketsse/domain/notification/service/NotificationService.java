@@ -12,6 +12,7 @@ import com.mopl.moplwebsocketsse.domain.notification.dto.NotificationDto;
 import com.mopl.moplwebsocketsse.domain.notification.dto.NotificationSortBy;
 import com.mopl.moplwebsocketsse.domain.notification.dto.NotificationSortDirection;
 import com.mopl.moplwebsocketsse.domain.notification.entity.Notification;
+import com.mopl.moplwebsocketsse.domain.notification.event.NotificationEvent;
 import com.mopl.moplwebsocketsse.domain.notification.repository.NotificationRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,9 @@ import lombok.RequiredArgsConstructor;
 public class NotificationService {
 
 	private final NotificationRepository notificationRepository;
+
+	public record NotificationReplay(UUID eventId, NotificationDto payload) {
+	}
 
 	@Transactional(readOnly = true)
 	public CursorResponseNotificationDto<NotificationDto> findNotifications(
@@ -84,23 +88,25 @@ public class NotificationService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<NotificationDto> findMissedForReplay(UUID receiverId, String lastEventId, int limit) {
-		if (lastEventId == null || lastEventId.isBlank())
+	public List<NotificationReplay> findMissedForReplay(UUID receiverId, String lastEventId, int limit) {
+		if (lastEventId == null || lastEventId.isBlank()) {
 			return List.of();
+		}
 
-		UUID pivotId;
+		UUID pivotEventId;
 		try {
-			pivotId = UUID.fromString(lastEventId.trim());
+			pivotEventId = UUID.fromString(lastEventId.trim());
 		} catch (Exception e) {
 			return List.of();
 		}
 
-		Notification pivot = notificationRepository.findByIdAndReceiverId(pivotId, receiverId).orElse(null);
+		Notification pivot = notificationRepository
+			.findByEventIdAndReceiverId(pivotEventId, receiverId).orElse(null);
 		if (pivot == null) {
 			return List.of();
 		}
 
-		int size = Math.min(Math.max(limit, 1), 200);
+		int size = Math.min(Math.max(limit, 1), 100);
 
 		List<Notification> fetched = notificationRepository.findByReceiverIdWithCursor(
 			receiverId,
@@ -111,9 +117,34 @@ public class NotificationService {
 			NotificationSortDirection.ASCENDING
 		);
 
-		if (fetched.size() > size)
+		if (fetched.size() > size) {
 			fetched = fetched.subList(0, size);
-		return fetched.stream().map(NotificationDto::from).toList();
+		}
+
+		return fetched.stream()
+			.map(n -> new NotificationReplay(n.getEventId(), NotificationDto.from(n)))
+			.toList();
+	}
+
+	@Transactional
+	public NotificationDto createFromEvent(NotificationEvent event, String title, String content) {
+		Notification existed = notificationRepository
+			.findByEventIdAndReceiverId(event.eventId(), event.receiverId())
+			.orElse(null);
+		if (existed != null) {
+			return NotificationDto.from(existed);
+		}
+
+		Notification notification = new Notification(
+			event.receiverId(),
+			title,
+			content,
+			event.level()
+		);
+		notification.setEventId(event.eventId());
+
+		Notification saved = notificationRepository.save(notification);
+		return NotificationDto.from(saved);
 	}
 
 }

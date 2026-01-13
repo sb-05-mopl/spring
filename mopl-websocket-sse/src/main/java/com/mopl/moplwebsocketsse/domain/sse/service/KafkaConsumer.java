@@ -29,26 +29,16 @@ public class KafkaConsumer {
 	private String directMessagesTopic;
 
 	@KafkaListener(topics = "#{__listener.notificationsTopic}", groupId = "mopl-websocket-sse")
-	public void onNotification(String message, Acknowledgment acknowledgement) {
-		try {
-			NotificationEvent event = objectMapper.readValue(message, NotificationEvent.class);
-			notificationEventHandler.handle(event);
-			acknowledgement.acknowledge();
-		} catch (Exception e) {
-			log.error("Failed to consume notification message: {}", message, e);
-		}
+	public void onNotification(String message, Acknowledgment acknowledgement) throws Exception {
+		NotificationEvent event = objectMapper.readValue(message, NotificationEvent.class);
+		notificationEventHandler.handle(event);
+		acknowledgement.acknowledge();
 	}
 
-	// 임시 코드
 	@KafkaListener(topics = "#{__listener.directMessagesTopic}", groupId = "mopl-websocket-sse")
-	public void onDirectMessages(String message, Acknowledgment acknowledgement) {
-		//		try {
-		//			DirectMessageDto dto = objectMapper.readValue(message, DirectMessageDto.class);
-		//			UUID receiverId = dto.getReceiverId();
-		//			sseService.broadcast(receiverId, "direct-messages", dto.id().toString(), dto);
-		//			acknowledgement.acknowledge();
-		//		} catch (Exception e) {
-		//			log.error("Failed to consume direct-messages message: {}", message, e);
-		//		}
+	public void onDirectMessages(String message, Acknowledgment acknowledgement) throws Exception {
+		NotificationEvent event = objectMapper.readValue(message, NotificationEvent.class);
+		notificationEventHandler.handle(event);
+		acknowledgement.acknowledge();
 	}
 }

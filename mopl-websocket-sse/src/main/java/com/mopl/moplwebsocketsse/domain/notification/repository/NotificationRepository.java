@@ -15,4 +15,8 @@ public interface NotificationRepository
 	long deleteByIdAndReceiverId(UUID id, UUID receiverId);
 
 	Optional<Notification> findByIdAndReceiverId(UUID id, UUID receiverId);
+
+	Optional<Notification> findByEventIdAndReceiverId(UUID eventId, UUID receiverId);
+
+	boolean existsByEventId(UUID eventId);
 }

@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.mopl.moplwebsocketsse.domain.notification.dto.NotificationDto;
 import com.mopl.moplwebsocketsse.domain.notification.service.NotificationService;
 import com.mopl.moplwebsocketsse.domain.sse.service.SseService;
 import com.mopl.moplwebsocketsse.security.principal.MoplUserDetails;
@@ -35,17 +34,17 @@ public class SseController {
 
 		SseEmitter emitter = sseService.connect(userId);
 
-		List<NotificationDto> missed =
-			notificationService.findMissedForReplay(userId, lastEventId, 100);
+		if (lastEventId != null && !lastEventId.isBlank()) {
+			String pivot = lastEventId;
 
-		for (NotificationDto notificationDto : missed) {
-			sseService.send(
-				emitter,
-				"notifications",
-				notificationDto.id().toString(),
-				notificationDto
-			);
+			List<NotificationService.NotificationReplay> missed =
+				notificationService.findMissedForReplay(userId, pivot, 100);
+
+			for (var item : missed) {
+				sseService.send(emitter, "notifications", item.eventId().toString(), item.payload());
+			}
 		}
+
 		return emitter;
 	}
 }
