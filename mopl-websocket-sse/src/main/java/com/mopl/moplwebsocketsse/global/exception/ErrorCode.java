@@ -25,6 +25,7 @@ public enum ErrorCode {
 	NOT_CONVERSATION_PARTICIPANT(HttpStatus.FORBIDDEN, "대화 참여자가 아닙니다"),
 	SELF_CONVERSATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "자기 자신과 대화할 수 없습니다"),
 	CONVERSATION_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 대화가 존재합니다"),
+	CONVERSATION_LOCK_ACQUISITION_FAILED(HttpStatus.CONFLICT, "대화방 생성 요청 실패했습니다."),
 
 	INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 일치하지 않습니다"),
 	LOCKED_USER_ACCESS(HttpStatus.UNAUTHORIZED, "잠금 계정입니다."),

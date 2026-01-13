@@ -3,6 +3,7 @@ package com.mopl.moplwebsocketsse.domain.user.dto;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.mopl.moplwebsocketsse.domain.user.entity.AuthProvider;
 import com.mopl.moplwebsocketsse.domain.user.entity.Role;
 
 import lombok.AllArgsConstructor;
@@ -18,4 +19,5 @@ public class UserDto {
 	String profileImageUrl;
 	Role role;
 	boolean locked;
+	AuthProvider provider;
 }

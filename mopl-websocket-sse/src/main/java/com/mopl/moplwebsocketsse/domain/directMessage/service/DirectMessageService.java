@@ -21,6 +21,7 @@ import com.mopl.moplwebsocketsse.domain.directMessage.mapper.ConversationMapper;
 import com.mopl.moplwebsocketsse.domain.directMessage.repository.ConversationParticipantsRepository;
 import com.mopl.moplwebsocketsse.domain.directMessage.repository.ConversationRepository;
 import com.mopl.moplwebsocketsse.domain.directMessage.repository.DirectMessageRepository;
+import com.mopl.moplwebsocketsse.domain.sse.service.SseService;
 import com.mopl.moplwebsocketsse.domain.user.dto.UserSummary;
 import com.mopl.moplwebsocketsse.domain.user.entity.User;
 
@@ -40,6 +41,7 @@ public class DirectMessageService {
 	private final ConversationParticipantsRepository participantsRepository;
 	private final ConversationMapper conversationMapper;
 	private final SimpMessagingTemplate messagingTemplate;
+	private final SseService sseService;
 
 	@Transactional
 	public DirectMessageDto sendMessage(UUID conversationId, UUID senderId, String content) {
@@ -82,6 +84,8 @@ public class DirectMessageService {
 		// 브로드캐스트
 		String destination = DM_DEST_PREFIX + conversationId + DM_DEST_SUFFIX;
 		messagingTemplate.convertAndSend(destination, dto);
+
+		sseService.send(receiver.getId(), "direct-messages", dto.id().toString(), dto);
 
 		log.debug("[DirectMessageService] Message sent. conversationId={}, senderId={}, receiverId={}",
 			conversationId, senderId, receiver.getId());

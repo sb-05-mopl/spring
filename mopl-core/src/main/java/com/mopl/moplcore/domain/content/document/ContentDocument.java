@@ -34,6 +34,9 @@ public class ContentDocument {
 	private String id;
 
 	@Field(type = FieldType.Keyword)
+	private String contentId;
+
+	@Field(type = FieldType.Keyword)
 	private Type type;
 
 	@Field(type = FieldType.Text, analyzer = "nori")
@@ -58,28 +61,26 @@ public class ContentDocument {
 	private Long watcherCount;
 
 	@Field(type = FieldType.Date)
-	private LocalDate createdAt;
+	private Instant createdAt;
 
 	@Field(type = FieldType.Date)
-	private LocalDate updatedAt;
+	private Instant updatedAt;
 
 	public static ContentDocument from(UUID id, Type type, String title, String description, String thumbnailUrl,
 		List<String> tags, Double averageRating, Integer reviewCount, Long watcherCount, Instant createdAt) {
-		LocalDate createdAtLocal =
-			createdAt != null ? LocalDate.ofInstant(createdAt, ZoneId.systemDefault()) : LocalDate.now();
 
 		return ContentDocument.builder()
 			.id(id.toString())
+			.contentId(id.toString())
 			.type(type)
 			.title(title)
 			.description(description)
 			.thumbnailUrl(thumbnailUrl)
-			.tags(tags != null ? tags : List.of())
-			.averageRating(averageRating != null ? averageRating : 0.0)
-			.reviewCount(reviewCount != null ? reviewCount : 0)
-			.watcherCount(watcherCount != null ? watcherCount : 0L)
-			.createdAt(createdAtLocal)
-			.updatedAt(createdAtLocal)
+			.tags(tags)
+			.averageRating(averageRating)
+			.reviewCount(reviewCount)
+			.watcherCount(watcherCount)
+			.createdAt(createdAt != null ? createdAt : Instant.now())
 			.build();
 	}
 }
