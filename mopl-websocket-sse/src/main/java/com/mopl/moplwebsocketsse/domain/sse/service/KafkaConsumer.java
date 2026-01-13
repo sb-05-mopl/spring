@@ -34,11 +34,11 @@ public class KafkaConsumer {
 		notificationEventHandler.handle(event);
 		acknowledgement.acknowledge();
 	}
-
+	/*
 	@KafkaListener(topics = "#{__listener.directMessagesTopic}", groupId = "mopl-websocket-sse")
 	public void onDirectMessages(String message, Acknowledgment acknowledgement) throws Exception {
 		NotificationEvent event = objectMapper.readValue(message, NotificationEvent.class);
 		notificationEventHandler.handle(event);
 		acknowledgement.acknowledge();
-	}
+	} */
 }
