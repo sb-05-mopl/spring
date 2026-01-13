@@ -14,6 +14,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import com.mopl.moplwebsocketsse.domain.user.entity.Role;
+import com.mopl.moplwebsocketsse.security.exception.InValidAccessTokenException;
+import com.mopl.moplwebsocketsse.security.jwt.registry.JwtRegistry;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 public class JwtChannelInterceptor implements ChannelInterceptor {
 
 	private final JwtTokenProvider jwtTokenProvider;
+	private final JwtRegistry jwtRegistry;
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -41,14 +44,18 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
 
 			if (!jwtTokenProvider.validateAccessToken(token)) {
 				log.warn("WebSocket 연결 실패: 유효하지 않은 JWT 토큰");
-				throw new IllegalArgumentException("Invalid JWT token");
+				throw new InValidAccessTokenException();
 			}
+
+			if (!jwtRegistry.hasActiveJwtInformationByAccessToken(token))
+				throw new InValidAccessTokenException();
 
 			UUID userId = jwtTokenProvider.getUserId(token);
 			Role role = jwtTokenProvider.getRole(token);
 
 			List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
-			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userId, null, authorities);
+			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userId, null,
+				authorities);
 
 			accessor.setUser(authentication);
 
