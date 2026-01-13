@@ -41,11 +41,13 @@ public class ContentSearchService {
 	private final ElasticsearchOperations elasticsearchOperations;
 	private final WatchingSessionReader watchingSessionReader;
 	private final WatcherCountSyncService watcherCountSyncService;
+	private final ContentSyncService contentSyncService;
 
 	public CursorResponseContentDto searchContents(ContentSearchRequest request) {
 		if (request.getSortBy() == ContentSearchRequest.SortBy.watcherCount) {
 			watcherCountSyncService.syncWatcherCountsAsync();
 		}
+		contentSyncService.syncAllContents(); // 리뷰 CUD 시 contentSyncService.syncContent(UUID contentId) 호출 방식으로 변경 필요
 
 		BoolQuery.Builder mainBoolQuery = buildBoolQuery(request);
 

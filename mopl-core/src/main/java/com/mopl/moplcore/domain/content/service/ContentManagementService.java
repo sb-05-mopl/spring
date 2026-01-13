@@ -44,11 +44,15 @@ public class ContentManagementService {
 			thumbnailUrl = s3Service.upload(thumbnail);
 		}
 
+		Long sourceId = request.sourceId() != null
+			? request.sourceId()
+			: System.currentTimeMillis();
+
 		Content content = Content.builder()
 			.type(request.type())
 			.title(request.title())
 			.description(request.description())
-			.sourceId(request.sourceId())
+			.sourceId(sourceId)
 			.thumbnailUrl(thumbnailUrl)
 			.build();
 

@@ -1,8 +1,11 @@
 package com.mopl.moplcore.domain.content.service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,10 +35,28 @@ public class ContentSyncService {
 		log.info("Content 동기화 시작");
 
 		List<Content> contents = contentRepository.findAll();
+		Set<String> dbContentIds = contents.stream()
+			.map(c -> c.getId().toString())
+			.collect(Collectors.toSet());
 		log.info("동기화 할 Content 수: {}", contents.size());
 
-		List<ContentDocument> documents = contents.stream().map(this::convertToDocument).collect(Collectors.toList());
+		Iterable<ContentDocument> esIterable = contentSearchRepository.findAll();
+		List<ContentDocument> esDocuments = StreamSupport.stream(esIterable.spliterator(), false)
+			.toList();
+		Set<String> esContentIds = esDocuments.stream()
+			.map(ContentDocument::getContentId)
+			.collect(Collectors.toSet());
 
+		Set<String> toDelete = new HashSet<>(esContentIds);
+		toDelete.removeAll(dbContentIds);
+		toDelete.forEach(id -> {
+			contentSearchRepository.deleteById(id);
+			log.info("DB에 없는 Content 삭제: {}", id);
+		});
+
+		List<ContentDocument> documents = contents.stream()
+			.map(this::convertToDocument)
+			.collect(Collectors.toList());
 		contentSearchRepository.saveAll(documents);
 
 		long count = contentSearchRepository.count();

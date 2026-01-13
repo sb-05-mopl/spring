@@ -18,7 +18,6 @@ public record ContentCreateRequest(
 	@NotBlank(message = "설명은 필수입니다")
 	String description,
 
-	@NotNull(message = "sourceId는 필수입니다")
 	Long sourceId,
 
 	String thumbnailUrl,
