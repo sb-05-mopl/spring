@@ -23,7 +23,7 @@ public class User extends BaseEntity {
 	@Column(nullable = false, unique = true)
 	private String email;
 
-	@Column(nullable = false)
+	@Column // oauth 로그인은 비밀번호가 없음
 	private String password;
 
 	@Column(name = "profile_image_url")
@@ -80,5 +80,10 @@ public class User extends BaseEntity {
 
 	public void updateRole(Role role) {
 		this.role = role;
+	}
+
+	// 처음 생성자 생성용
+	public void initAdmin() {
+		this.role = Role.ADMIN;
 	}
 }
