@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.mopl.moplcore.security.authentication.jwt.registry.JwtRegistry;
 import com.mopl.moplcore.security.core.config.SecurityPaths;
 import com.mopl.moplcore.security.core.exception.InValidAccessTokenException;
 import com.mopl.moplcore.security.authentication.jwt.provider.JwtTokenProvider;
@@ -30,6 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private static final int BEARER_PREFIX_LENGTH = 7;
 
 	private final JwtTokenProvider tokenProvider;
+	private final JwtRegistry jwtRegistry;
 	private final UserDetailsService userDetailsService;
 
 	@Override
@@ -41,18 +43,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	}
 
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-		FilterChain filterChain) throws ServletException, IOException {
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
 		String path = request.getRequestURI();
 		String method = request.getMethod();
-		log.info("=== shouldNotFilter Debug ===");
-		log.info("Request URI: {}", path);
-		log.info("Method: {}", method);
+		log.debug("=== shouldNotFilter Debug ===");
+		log.debug("Request URI: {}", path);
+		log.debug("Method: {}", method);
 		String accessToken = request.getHeader(AUTHORIZATION_HEADER).substring(BEARER_PREFIX_LENGTH);
 
 		if (!tokenProvider.validateAccessToken(accessToken))
 			throw new InValidAccessTokenException();
+
+		if (!jwtRegistry.hasActiveJwtInformationByAccessToken(accessToken)) {
+			throw new InValidAccessTokenException();
+		}
+
 
 		String email = tokenProvider.getSubject(accessToken);
 		MoplUserDetails userDetails = (MoplUserDetails)userDetailsService.loadUserByUsername(email);
