@@ -22,6 +22,7 @@ import com.mopl.moplcore.domain.playlist.dto.PlaylistDto;
 import com.mopl.moplcore.domain.playlist.dto.PlaylistSearchRequest;
 import com.mopl.moplcore.domain.playlist.dto.PlaylistUpdateRequest;
 import com.mopl.moplcore.domain.playlist.service.PlaylistService;
+import com.mopl.moplcore.security.core.principal.MoplUserDetails;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,15 +40,16 @@ public class PlaylistController {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
 		if (authentication == null || !authentication.isAuthenticated()) {
-			return null;
+			throw new RuntimeException("인증되지 않은 사용자입니다.");
 		}
 
 		Object principal = authentication.getPrincipal();
-		if (principal instanceof UUID) {
-			return (UUID) principal;
+
+		if (principal instanceof MoplUserDetails) {
+			return ((MoplUserDetails) principal).getUserDto().getId();
 		}
 
-		return null;
+		throw new RuntimeException("사용자 정보를 가져올 수 없습니다.");
 	}
 
 	@Operation(summary = "플레이리스트 목록 조회")
