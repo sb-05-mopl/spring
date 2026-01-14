@@ -37,8 +37,8 @@ public class NotificationEventFactory {
 			receiverId,
 			NotificationEventType.PLAYLIST_SUBSCRIBED,
 			Map.of(
-				"playlistId", playlistId.toString(),
-				"subscriberId", subscriberId.toString()
+				NotificationMetaSpec.PLAYLIST_ID, playlistId.toString(),
+				NotificationMetaSpec.SUBSCRIBER_ID, subscriberId.toString()
 			)
 		);
 	}
@@ -53,8 +53,8 @@ public class NotificationEventFactory {
 			receiverId,
 			NotificationEventType.SUBSCRIBED_PLAYLIST_CONTENT_ADDED,
 			Map.of(
-				"playlistId", playlistId.toString(),
-				"contentId", contentId.toString()
+				NotificationMetaSpec.PLAYLIST_ID, playlistId.toString(),
+				NotificationMetaSpec.CONTENT_ID, contentId.toString()
 			)
 		);
 	}
@@ -70,9 +70,9 @@ public class NotificationEventFactory {
 			receiverId,
 			NotificationEventType.FOLLOWEE_ACTIVITY,
 			Map.of(
-				"actorId", actorId.toString(),
-				"activityKind", activityKind,
-				"referenceId", referenceId.toString()
+				NotificationMetaSpec.ACTOR_ID, actorId.toString(),
+				NotificationMetaSpec.ACTIVITY_KIND, activityKind,
+				NotificationMetaSpec.REFERENCE_ID, referenceId.toString()
 			)
 		);
 	}
@@ -86,7 +86,7 @@ public class NotificationEventFactory {
 			receiverId,
 			NotificationEventType.FOLLOWED_BY_USER,
 			Map.of(
-				"followerId", followerId.toString()
+				NotificationMetaSpec.FOLLOWER_ID, followerId.toString()
 			)
 		);
 	}
@@ -102,9 +102,9 @@ public class NotificationEventFactory {
 			receiverId,
 			NotificationEventType.DIRECT_MESSAGE_RECEIVED,
 			Map.of(
-				"conversationId", conversationId.toString(),
-				"directMessageId", directMessageId.toString(),
-				"senderId", senderId.toString()
+				NotificationMetaSpec.CONVERSATION_ID, conversationId.toString(),
+				NotificationMetaSpec.DIRECT_MESSAGE_ID, directMessageId.toString(),
+				NotificationMetaSpec.SENDER_ID, senderId.toString()
 			)
 		);
 	}
