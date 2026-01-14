@@ -8,10 +8,13 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 import com.mopl.moplwebsocketsse.security.filter.JwtAuthenticationFilter;
+import com.mopl.moplwebsocketsse.security.handler.JwtAccessDeniedHandler;
+import com.mopl.moplwebsocketsse.security.handler.JwtAuthenticationEntryPoint;
 import com.mopl.moplwebsocketsse.security.handler.SpaCsrfTokenRequestHandler;
 
 import lombok.RequiredArgsConstructor;
@@ -21,11 +24,13 @@ import lombok.RequiredArgsConstructor;
 @Profile({"dev", "prod"})
 @RequiredArgsConstructor
 public class SecurityConfig {
-
-	private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
 	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	public SecurityFilterChain securityFilterChain(
+		HttpSecurity http,
+		JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+		JwtAccessDeniedHandler jwtAccessDeniedHandler,
+		JwtAuthenticationFilter jwtAuthenticationFilter
+	) throws Exception {
 		http
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers(SecurityPaths.PUBLIC_PATHS).permitAll()
@@ -39,7 +44,11 @@ public class SecurityConfig {
 			.sessionManagement(session -> session
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 			)
-			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+			.exceptionHandling(e->e
+				.authenticationEntryPoint(jwtAuthenticationEntryPoint)
+				.accessDeniedHandler(jwtAccessDeniedHandler)
+			)
+			.addFilterAfter(jwtAuthenticationFilter, ExceptionTranslationFilter.class);
 
 		return http.build();
 	}

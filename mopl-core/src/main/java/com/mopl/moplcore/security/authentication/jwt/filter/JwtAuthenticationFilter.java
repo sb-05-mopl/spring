@@ -53,11 +53,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		String accessToken = request.getHeader(AUTHORIZATION_HEADER).substring(BEARER_PREFIX_LENGTH);
 
 		if (!tokenProvider.validateAccessToken(accessToken)) {
-			throw new InValidAccessTokenException("Invalid access token");
+			throw new InValidAccessTokenException("Invalid access token: expire");
 		}
 
 		if (!jwtRegistry.hasActiveJwtInformationByAccessToken(accessToken)) {
-			throw new InValidAccessTokenException("Inactive access token");
+			throw new InValidAccessTokenException("Inactive access token: not registry");
 		}
 
 		String email = tokenProvider.getSubject(accessToken);

@@ -1,10 +1,11 @@
 package com.mopl.moplwebsocketsse.security.exception;
 
-import com.mopl.moplwebsocketsse.global.exception.BaseException;
-import com.mopl.moplwebsocketsse.global.exception.ErrorCode;
+import org.springframework.security.core.AuthenticationException;
 
-public class InValidAccessTokenException extends BaseException {
-	public InValidAccessTokenException() {
-		super(ErrorCode.INVALID_ACCESS_TOKEN);
+
+public class InValidAccessTokenException extends AuthenticationException {
+	public InValidAccessTokenException(String message) {
+		super(message);
 	}
 }
+
