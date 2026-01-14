@@ -40,8 +40,7 @@ public class AuthService {
 	private final ApplicationEventPublisher publisher;
 
 	public JwtInformation refreshToken(String refreshToken) {
-		if (!tokenProvider.validateRefreshToken(refreshToken) || !jwtRegistry.hasActiveJwtInformationByRefreshToken(
-			refreshToken)) {
+		if (!tokenProvider.validateRefreshToken(refreshToken) || !jwtRegistry.hasActiveJwtInformationByRefreshToken(refreshToken)) {
 			throw new InValidAccessTokenException();
 		}
 

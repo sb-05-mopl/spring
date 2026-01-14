@@ -33,46 +33,29 @@ TRUNCATE TABLE
 CASCADE;
 
 -- =========================
--- 2) USERS (100명, provider/role/locked 고르게)
+-- 2) USERS (100명, 전부 LOCAL)
 -- =========================
 WITH u AS (
     SELECT
         i,
-        gen_random_uuid() AS id,
+        gen_random_uuid()                         AS id,
         (now() - (random() * interval '365 days')) AS created_at,
-        (i % 17 = 0) AS locked,
-
-        -- ✅ 이메일: 공백 제거 보장
-        replace(format('user%04s@example.com', i), ' ', '') AS email,
-
+        (i % 17 = 0)                              AS locked,
+        ('user' || to_char(i, 'FM0000') || '@example.com') AS email,
         CASE
             WHEN i <= 10 THEN format('관리자%02s', i)
             ELSE format('사용자%04s', i)
-            END AS name,
-
-        CASE (i % 3)
-            WHEN 0 THEN 'LOCAL'
-            WHEN 1 THEN 'GOOGLE'
-            ELSE 'KAKAO'
-            END AS provider,
-
+            END                                       AS name,
+        'LOCAL'                                   AS provider,
         CASE
             WHEN i <= 10 THEN 'ADMIN'
             ELSE 'USER'
-            END AS role,
-
-        -- ✅ 비밀번호: 공백 제거 + LOCAL만 생성
+            END                                       AS role,
+        format('pw_%04s', i)                      AS "password",   -- 전원 패스워드
         CASE
-            WHEN (i % 3) = 0
-                THEN replace(format('pw_%04s', i), ' ', '')
+            WHEN random() < 0.75 THEN format('https://picsum.photos/seed/u%04s/200/200', i)
             ELSE NULL
-            END AS "password",
-
-        CASE
-            WHEN random() < 0.75
-                THEN replace(format('https://picsum.photos/seed/u%04s/200/200', i), ' ', '')
-            ELSE NULL
-            END AS profile_image_url
+            END                                       AS profile_image_url
     FROM generate_series(1, 100) AS s(i)
 )
 INSERT INTO public.users (
@@ -81,7 +64,6 @@ INSERT INTO public.users (
 SELECT
     locked, created_at, id, email, name, "password", profile_image_url, provider, role
 FROM u;
-
 -- =========================
 -- 3) CONTENTS (300개, type 고르게, source_id 중복 없이)
 -- =========================
