@@ -32,6 +32,7 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 	) {
 		return queryFactory
 			.selectFrom(review)
+			.join(review.author).fetchJoin()
 			.where(
 				contentIdEq(contentId),
 				cursorCondition(cursor, idAfter, sortBy, sortDirection)
