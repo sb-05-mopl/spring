@@ -3,7 +3,6 @@ package com.mopl.moplwebsocketsse.domain.notification.event;
 import org.springframework.stereotype.Component;
 
 import com.mopl.moplwebsocketsse.domain.notification.dto.NotificationDto;
-import com.mopl.moplwebsocketsse.domain.notification.message.NotificationMessageBuilder;
 import com.mopl.moplwebsocketsse.domain.notification.service.NotificationService;
 import com.mopl.moplwebsocketsse.domain.sse.service.SseService;
 
@@ -19,7 +18,7 @@ public class NotificationEventHandler {
 
 	public void handle(NotificationEvent event) {
 		NotificationMetaSpec.validate(event);
-		
+
 		NotificationMessageBuilder.Message msg = messageBuilder.build(event);
 
 		NotificationDto saved = notificationService.createFromEvent(event, msg.title(), msg.content());

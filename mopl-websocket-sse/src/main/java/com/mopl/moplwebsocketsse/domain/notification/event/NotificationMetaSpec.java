@@ -2,7 +2,6 @@ package com.mopl.moplwebsocketsse.domain.notification.event;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public final class NotificationMetaSpec {
 	private NotificationMetaSpec() {
@@ -20,6 +19,7 @@ public final class NotificationMetaSpec {
 
 	public static final String ACTOR_ID = "actorId"; // 활동 알림이 발생한 유저
 	public static final String ACTIVITY_KIND = "activityKind"; // 해당 활동의 종류
+	public static final String REFERENCE_ID = "referenceId"; // 해당 활동의 아이디
 
 	public static final String FOLLOWER_ID = "followerId"; // 나를 팔로우한 사람의 아이디
 
@@ -37,8 +37,8 @@ public final class NotificationMetaSpec {
 		NotificationEventType.SUBSCRIBED_PLAYLIST_CONTENT_ADDED,
 		List.of(PLAYLIST_ID, CONTENT_ID),
 
-		NotificationEventType.FOLLOWING_USER_ACTIVITY,
-		List.of(ACTOR_ID, ACTIVITY_KIND),
+		NotificationEventType.FOLLOWEE_ACTIVITY,
+		List.of(ACTOR_ID, ACTIVITY_KIND, REFERENCE_ID),
 
 		NotificationEventType.FOLLOWED_BY_USER,
 		List.of(FOLLOWER_ID),
@@ -79,16 +79,4 @@ public final class NotificationMetaSpec {
 		}
 		return meta.get(key);
 	}
-
-	public static UUID getUuid(Map<String, String> meta, String key) {
-		String metaValue = get(meta, key);
-		if (metaValue == null || metaValue.isBlank())
-			return null;
-		try {
-			return UUID.fromString(metaValue.trim());
-		} catch (Exception e) {
-			return null;
-		}
-	}
-
 }

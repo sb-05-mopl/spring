@@ -1,11 +1,8 @@
-package com.mopl.moplwebsocketsse.domain.notification.message;
+package com.mopl.moplwebsocketsse.domain.notification.event;
 
 import java.util.Map;
 
 import org.springframework.stereotype.Component;
-
-import com.mopl.moplwebsocketsse.domain.notification.event.NotificationEvent;
-import com.mopl.moplwebsocketsse.domain.notification.event.NotificationMetaSpec;
 
 @Component
 public class NotificationMessageBuilder {
@@ -31,7 +28,7 @@ public class NotificationMessageBuilder {
 				"콘텐츠 추가", "구독 중인 플레이리스트에 콘텐츠가 추가되었습니다."
 			);
 
-			case FOLLOWING_USER_ACTIVITY -> new Message(
+			case FOLLOWEE_ACTIVITY -> new Message(
 				"팔로이 활동 감지", "팔로우한 사용자의 새로운 활동이 있습니다."
 			);
 
