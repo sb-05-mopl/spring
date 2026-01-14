@@ -1,12 +1,10 @@
 package com.mopl.moplcore.domain.content.service;
 
-// 핵심: 신버전용 NativeQuery (elc 패키지 확인!)
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 
-// Elasticsearch Client (쿼리 빌더용)
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
@@ -14,7 +12,6 @@ import co.elastic.clients.json.JsonData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-// Spring Data Core 관련
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -28,6 +25,7 @@ import com.mopl.moplcore.domain.content.entity.Content;
 import com.mopl.moplcore.domain.content.entity.Type;
 import com.mopl.moplcore.domain.content.exception.ContentNotFoundException;
 import com.mopl.moplcore.domain.content.repository.ContentRepository;
+import com.mopl.moplcore.domain.content.repository.ContentTagRepository;
 import com.mopl.moplcore.domain.watch.repository.WatchingSessionReader;
 
 @Slf4j
@@ -38,6 +36,7 @@ public class ContentSearchService {
 	private static final String TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
 
 	private final ContentRepository contentRepository;
+	private final ContentTagRepository contentTagRepository;
 	private final ElasticsearchOperations elasticsearchOperations;
 	private final WatchingSessionReader watchingSessionReader;
 	private final WatcherCountSyncService watcherCountSyncService;
@@ -266,13 +265,18 @@ public class ContentSearchService {
 	}
 
 	private ContentDto toDto(Content content) {
+		List<String> tags = contentTagRepository.findByContentId(content.getId())
+			.stream()
+			.map(ct -> ct.getTag().getName())
+			.toList();
+
 		return ContentDto.builder()
 			.id(content.getId())
 			.type(content.getType())
 			.title(content.getTitle())
 			.description(content.getDescription())
 			.thumbnailUrl(buildImageUrl(content.getType(), content.getThumbnailUrl()))
-			.tags(List.of())
+			.tags(tags)
 			.averageRating(content.getAverageRating())
 			.reviewCount(content.getReviewCount())
 			.watcherCount(watchingSessionReader.countByContentId(content.getId()))

@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mopl.moplcore.domain.content.entity.Content;
 import com.mopl.moplcore.domain.content.repository.ContentRepository;
+import com.mopl.moplcore.domain.content.service.ContentSyncService;
 import com.mopl.moplcore.domain.review.dto.CursorResponseReviewDto;
 import com.mopl.moplcore.domain.review.dto.ReviewCreateRequest;
 import com.mopl.moplcore.domain.review.dto.ReviewDto;
@@ -33,6 +34,7 @@ public class ReviewService {
 	private final UserRepository userRepository;
 	private final ContentRepository contentRepository;
 	private final ReviewMapper reviewMapper;
+	private final ContentSyncService contentSyncService;
 
 	@Transactional
 	public ReviewDto create(ReviewCreateRequest request, UUID authorId) {
@@ -63,6 +65,8 @@ public class ReviewService {
 		Review saved = reviewRepository.save(review);
 
 		updateContentRating(content);
+
+		contentSyncService.syncContent(content.getId());
 
 		return reviewMapper.toDto(saved);
 	}
@@ -122,8 +126,10 @@ public class ReviewService {
 		}
 
 		review.update(request.text(), request.rating());
-
+		Content content = review.getContent();
 		updateContentRating(review.getContent());
+
+		contentSyncService.syncContent(content.getId());
 
 		return reviewMapper.toDto(review);
 	}
@@ -140,6 +146,8 @@ public class ReviewService {
 		Content content = review.getContent();
 		reviewRepository.delete(review);
 		updateContentRating(content);
+
+		contentSyncService.syncContent(content.getId());
 	}
 
 	private void updateContentRating(Content content) {
