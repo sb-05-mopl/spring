@@ -1,0 +1,103 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/app
+    driver-class-name: org.postgresql.Driver
+    username: app
+    password: app1234
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        generate_statistics: true
+
+  flyway:
+    enabled: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  elasticsearch:
+    uris: http://localhost:9200
+
+  kafka:
+    bootstrap-servers: localhost:29092
+
+  # SMTP 더미
+  mail:
+    host: localhost
+    port: 25
+    username: test
+    password: test
+
+  # OAuth 더미
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-google-client-id
+            client-secret: test-google-client-secret
+          kakao:
+            client-id: test-kakao-client-id
+            client-secret: test-kakao-client-secret
+
+# JWT 설정 (필수!)
+jwt:
+  max-active: 1
+  access-token:
+    secret: test-access-token-secret-key-must-be-long-enough
+    expiration-ms: 3600000
+  refresh-token:
+    secret: test-refresh-token-secret-key-must-be-long-enough
+    expiration-ms: 86400000
+
+# AWS 더미
+cloud:
+  aws:
+    credentials:
+      access-key: test-access-key
+      secret-key: test-secret-key
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: test-bucket
+    stack:
+      auto: false
+
+# 초기화 계정
+init:
+  admin:
+    email: admin@test.com
+    password: test1234
+  user:
+    email: user@test.com
+    password: test1234
+
+# 검색 엔진
+search:
+  engine: elasticsearch
+
+# P6Spy
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: true
+      log-format: "%(executionTime)ms | %(sql)"
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+#    org.hibernate.orm.jdbc.bind: TRACE
+    org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: OFF
+    p6spy: WARN
+
+content:
+  sync:
+    enabled: false

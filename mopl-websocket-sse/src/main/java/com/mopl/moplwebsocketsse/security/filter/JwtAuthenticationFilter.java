@@ -12,6 +12,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.mopl.moplwebsocketsse.security.config.SecurityPaths;
 import com.mopl.moplwebsocketsse.security.exception.InValidAccessTokenException;
 import com.mopl.moplwebsocketsse.security.jwt.JwtTokenProvider;
+import com.mopl.moplwebsocketsse.security.jwt.registry.JwtRegistry;
 import com.mopl.moplwebsocketsse.security.principal.MoplUserDetails;
 
 import jakarta.servlet.FilterChain;
@@ -31,6 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtTokenProvider tokenProvider;
 	private final UserDetailsService userDetailsService;
+	private final JwtRegistry jwtRegistry;
 
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -53,6 +55,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		if (!tokenProvider.validateAccessToken(accessToken))
 			throw new InValidAccessTokenException();
+
+		if (!jwtRegistry.hasActiveJwtInformationByAccessToken(accessToken)) {
+			throw new InValidAccessTokenException();
+		}
 
 		String email = tokenProvider.getSubject(accessToken);
 		MoplUserDetails userDetails = (MoplUserDetails)userDetailsService.loadUserByUsername(email);
