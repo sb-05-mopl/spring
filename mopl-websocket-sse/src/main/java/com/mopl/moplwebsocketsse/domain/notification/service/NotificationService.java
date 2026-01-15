@@ -139,12 +139,11 @@ public class NotificationService {
 			event.receiverId(),
 			title,
 			content,
-			event.level()
+			event.level(),
+			event.eventId()
 		);
-		notification.setEventId(event.eventId());
 
-		Notification saved = notificationRepository.save(notification);
-		return NotificationDto.from(saved);
+		return NotificationDto.from(notificationRepository.save(notification));
 	}
 
 }

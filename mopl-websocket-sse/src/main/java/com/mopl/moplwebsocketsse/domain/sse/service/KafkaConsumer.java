@@ -1,6 +1,5 @@
 package com.mopl.moplwebsocketsse.domain.sse.service;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -20,10 +19,10 @@ public class KafkaConsumer {
 	private final ObjectMapper objectMapper;
 	private final NotificationEventHandler notificationEventHandler;
 
-	@Value("${mopl.kafka.topics.notifications}")
-	private String notificationsTopic;
-
-	@KafkaListener(topics = "#{__listener.notificationsTopic}", groupId = "mopl-websocket-sse")
+	@KafkaListener(
+		topics = "${mopl.kafka.topics.notifications}",
+		groupId = "${spring.kafka.consumer.group-id:mopl-websocket-sse}"
+	)
 	public void onNotification(String message, Acknowledgment acknowledgement) throws Exception {
 		NotificationEvent event = objectMapper.readValue(message, NotificationEvent.class);
 		notificationEventHandler.handle(event);

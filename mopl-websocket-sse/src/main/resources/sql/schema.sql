@@ -167,6 +167,7 @@ CREATE TABLE notifications
     content     TEXT      NOT NULL,
     level       VARCHAR   NOT NULL,
     read_at     TIMESTAMP,
+    event_id    UUID      NOT NULL,
 
     CONSTRAINT pk_notifications PRIMARY KEY (id),
 
@@ -272,6 +273,9 @@ CREATE INDEX IF NOT EXISTS idx_content_tags_tag_id
 
 CREATE INDEX IF NOT EXISTS idx_notifications_receiver_id
     ON notifications (receiver_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_notifications_event_id
+    ON notifications (event_id);
 
 CREATE INDEX IF NOT EXISTS idx_playlist_contents_content_id
     ON playlist_contents (content_id);

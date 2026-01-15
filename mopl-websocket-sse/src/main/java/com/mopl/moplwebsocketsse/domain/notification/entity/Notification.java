@@ -12,7 +12,6 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -33,14 +32,14 @@ public class Notification extends BaseEntity {
 	@Column(nullable = false)
 	private NotificationLevel level;
 
-	@Setter(AccessLevel.PUBLIC)
-	@Column(name = "event_id", unique = true)
+	@Column(name = "event_id", nullable = false, unique = true)
 	private UUID eventId;
 
-	public Notification(UUID receiverId, String title, String content, NotificationLevel level) {
+	public Notification(UUID receiverId, String title, String content, NotificationLevel level, UUID eventId) {
 		this.receiverId = receiverId;
 		this.title = title;
 		this.content = content;
 		this.level = level;
+		this.eventId = eventId;
 	}
 }
