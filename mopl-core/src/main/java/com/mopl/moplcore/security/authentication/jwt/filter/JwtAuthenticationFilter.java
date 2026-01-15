@@ -9,10 +9,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.mopl.moplcore.security.authentication.jwt.exception.InValidAccessTokenException;
+import com.mopl.moplcore.security.authentication.jwt.provider.JwtTokenProvider;
 import com.mopl.moplcore.security.authentication.jwt.registry.JwtRegistry;
 import com.mopl.moplcore.security.core.config.SecurityPaths;
-import com.mopl.moplcore.security.core.exception.InValidAccessTokenException;
-import com.mopl.moplcore.security.authentication.jwt.provider.JwtTokenProvider;
 import com.mopl.moplcore.security.core.principal.MoplUserDetails;
 
 import jakarta.servlet.FilterChain;
@@ -52,13 +52,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		log.debug("Method: {}", method);
 		String accessToken = request.getHeader(AUTHORIZATION_HEADER).substring(BEARER_PREFIX_LENGTH);
 
-		if (!tokenProvider.validateAccessToken(accessToken))
-			throw new InValidAccessTokenException();
-
-		if (!jwtRegistry.hasActiveJwtInformationByAccessToken(accessToken)) {
-			throw new InValidAccessTokenException();
+		if (!tokenProvider.validateAccessToken(accessToken)) {
+			throw new InValidAccessTokenException("Invalid access token: expire");
 		}
 
+		if (!jwtRegistry.hasActiveJwtInformationByAccessToken(accessToken)) {
+			throw new InValidAccessTokenException("Inactive access token: not registry");
+		}
 
 		String email = tokenProvider.getSubject(accessToken);
 		MoplUserDetails userDetails = (MoplUserDetails)userDetailsService.loadUserByUsername(email);

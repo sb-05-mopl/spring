@@ -8,9 +8,14 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.access.ExceptionTranslationFilter;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
+import com.mopl.moplcore.security.authentication.jwt.handler.JwtAccessDeniedHandler;
+import com.mopl.moplcore.security.authentication.jwt.handler.JwtAuthenticationEntryPoint;
 import com.mopl.moplcore.security.authentication.jwt.filter.JwtAuthenticationFilter;
 import com.mopl.moplcore.security.authentication.local.handler.MoplLoginSuccessHandler;
 import com.mopl.moplcore.security.authentication.local.handler.MoplLogoutSuccessHandler;
@@ -32,7 +37,9 @@ public class SecurityConfig {
 		JwtAuthenticationFilter jwtAuthenticationFilter,
 		MoplOAuth2UserService oAuth2UserService,
 		MoplOidcUserService oidcUserService,
-		MoplOAuth2SuccessHandler moplOAuth2SuccessHandler
+		MoplOAuth2SuccessHandler moplOAuth2SuccessHandler,
+		JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+		JwtAccessDeniedHandler jwtAccessDeniedHandler
 	) throws Exception {
 
 		http
@@ -58,6 +65,10 @@ public class SecurityConfig {
 			.sessionManagement(session -> session
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 			)
+			.exceptionHandling(e->e
+				.authenticationEntryPoint(jwtAuthenticationEntryPoint)
+				.accessDeniedHandler(jwtAccessDeniedHandler)
+			)
 			.oauth2Login(
 				login -> login
 					.userInfoEndpoint(info -> info
@@ -66,7 +77,7 @@ public class SecurityConfig {
 					)
 					.successHandler(moplOAuth2SuccessHandler)
 			)
-			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+			.addFilterAfter(jwtAuthenticationFilter, ExceptionTranslationFilter.class);
 		;
 
 		return http.build();
