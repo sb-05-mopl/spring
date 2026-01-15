@@ -46,7 +46,6 @@ public class ContentSearchService {
 		if (request.getSortBy() == ContentSearchRequest.SortBy.watcherCount) {
 			watcherCountSyncService.syncWatcherCountsAsync();
 		}
-		contentSyncService.syncAllContents(); // 리뷰 CUD 시 contentSyncService.syncContent(UUID contentId) 호출 방식으로 변경 필요
 
 		BoolQuery.Builder mainBoolQuery = buildBoolQuery(request);
 
@@ -69,27 +68,30 @@ public class ContentSearchService {
 			}
 		}
 
-		SearchHits<ContentDocument> searchHits = elasticsearchOperations.search(
-			queryBuilder.build(), ContentDocument.class);
+		SearchHits<ContentDocument> searchHits = elasticsearchOperations.search(queryBuilder.build(),
+			ContentDocument.class);
 
-		List<ContentDocument> documents = searchHits.getSearchHits()
-			.stream().map(SearchHit::getContent).toList();
+		List<ContentDocument> documents = searchHits.getSearchHits().stream().map(SearchHit::getContent).toList();
 
 		long totalCount = elasticsearchOperations.count(
 			NativeQuery.builder().withQuery(q -> q.bool(buildBasicFilters(request).build())).build(),
-			ContentDocument.class
-		);
+			ContentDocument.class);
 
 		boolean hasNext = documents.size() > request.getLimit();
-		if (hasNext) documents = documents.subList(0, request.getLimit());
+		if (hasNext)
+			documents = documents.subList(0, request.getLimit());
 
 		List<ContentDto> contentDtos = documents.stream().map(this::toDto).toList();
 		String nextCursor = generateNextCursor(documents, hasNext, request);
 
 		return CursorResponseContentDto.builder()
-			.data(contentDtos).nextCursor(nextCursor).hasNext(hasNext)
-			.totalCount(totalCount).sortBy(request.getSortBy().name())
-			.sortDirection(request.getSortDirection().name()).build();
+			.data(contentDtos)
+			.nextCursor(nextCursor)
+			.hasNext(hasNext)
+			.totalCount(totalCount)
+			.sortBy(request.getSortBy().name())
+			.sortDirection(request.getSortDirection().name())
+			.build();
 	}
 
 	private BoolQuery.Builder buildBoolQuery(ContentSearchRequest request) {
@@ -117,11 +119,9 @@ public class ContentSearchService {
 
 		if (request.getKeywordLike() != null && !request.getKeywordLike().trim().isEmpty()) {
 			String keyword = request.getKeywordLike();
-			boolQuery.must(m -> m.bool(b -> b
-				.should(s -> s.match(mt -> mt.field("title").query(keyword)))
+			boolQuery.must(m -> m.bool(b -> b.should(s -> s.match(mt -> mt.field("title").query(keyword)))
 				.should(s -> s.match(mt -> mt.field("description").query(keyword)))
-				.minimumShouldMatch("1")
-			));
+				.minimumShouldMatch("1")));
 		}
 
 		if (request.getTypeEqual() != null) {
@@ -136,11 +136,8 @@ public class ContentSearchService {
 		return boolQuery;
 	}
 
-	private void addCreatedAtCursor(
-		BoolQuery.Builder boolQuery,
-		CursorResponseContentDto.Cursor cursor,
-		boolean isAsc
-	) {
+	private void addCreatedAtCursor(BoolQuery.Builder boolQuery, CursorResponseContentDto.Cursor cursor,
+		boolean isAsc) {
 		String createdAt = cursor.createdAt().toString();
 
 		boolQuery.filter(f -> f.range(r -> r.date(d -> {
@@ -153,11 +150,8 @@ public class ContentSearchService {
 			return d;
 		})));
 	}
-	private void addRateCursor(
-		BoolQuery.Builder boolQuery,
-		CursorResponseContentDto.Cursor cursor,
-		boolean isAsc
-	) {
+
+	private void addRateCursor(BoolQuery.Builder boolQuery, CursorResponseContentDto.Cursor cursor, boolean isAsc) {
 		Double rate = cursor.averageRating() != null ? cursor.averageRating() : 0.0;
 		String createdAt = cursor.createdAt().toString();
 
@@ -173,8 +167,7 @@ public class ContentSearchService {
 				return n;
 			})))
 
-			.should(s -> s.bool(sb -> sb
-				.must(m -> m.term(t -> t.field("averageRating").value(rate)))
+			.should(s -> s.bool(sb -> sb.must(m -> m.term(t -> t.field("averageRating").value(rate)))
 				.must(m -> m.range(r -> r.date(d -> {
 					d.field("createdAt");
 					if (isAsc) {
@@ -183,20 +176,12 @@ public class ContentSearchService {
 						d.lt(createdAt);
 					}
 					return d;
-				})))
-			))
-		));
+				})))))));
 	}
 
-
-	private void addWatcherCountCursor(
-		BoolQuery.Builder boolQuery,
-		CursorResponseContentDto.Cursor cursor,
-		boolean isAsc
-	) {
-		Double count = cursor.watcherCount() != null
-			? cursor.watcherCount().doubleValue()
-			: 0.0;
+	private void addWatcherCountCursor(BoolQuery.Builder boolQuery, CursorResponseContentDto.Cursor cursor,
+		boolean isAsc) {
+		Double count = cursor.watcherCount() != null ? cursor.watcherCount().doubleValue() : 0.0;
 		String createdAt = cursor.createdAt().toString();
 
 		boolQuery.filter(f -> f.bool(b -> b.minimumShouldMatch("1")
@@ -211,8 +196,7 @@ public class ContentSearchService {
 				return n;
 			})))
 
-			.should(s -> s.bool(sb -> sb
-				.must(m -> m.term(t -> t.field("watcherCount").value(count)))
+			.should(s -> s.bool(sb -> sb.must(m -> m.term(t -> t.field("watcherCount").value(count)))
 				.must(m -> m.range(r -> r.date(d -> {
 					d.field("createdAt");
 					if (isAsc) {
@@ -221,21 +205,17 @@ public class ContentSearchService {
 						d.lt(createdAt);
 					}
 					return d;
-				})))
-			))
-		));
+				})))))));
 	}
 
 	private String generateNextCursor(List<ContentDocument> docs, boolean hasNext, ContentSearchRequest request) {
-		if (!hasNext || docs.isEmpty()) return null;
+		if (!hasNext || docs.isEmpty())
+			return null;
 		ContentDocument last = docs.get(docs.size() - 1);
 
-		var cursor = new CursorResponseContentDto.Cursor(
-			UUID.fromString(last.getContentId()),
-			last.getCreatedAt(),
+		var cursor = new CursorResponseContentDto.Cursor(UUID.fromString(last.getContentId()), last.getCreatedAt(),
 			request.getSortBy() == ContentSearchRequest.SortBy.rate ? last.getAverageRating() : null,
-			request.getSortBy() == ContentSearchRequest.SortBy.watcherCount ? last.getWatcherCount() : null
-		);
+			request.getSortBy() == ContentSearchRequest.SortBy.watcherCount ? last.getWatcherCount() : null);
 		return CursorResponseContentDto.encodeCursor(cursor);
 	}
 
@@ -254,8 +234,10 @@ public class ContentSearchService {
 	}
 
 	private String buildImageUrl(Type type, String path) {
-		if (path == null) return null;
-		if (path.startsWith("http")) return path;
+		if (path == null)
+			return null;
+		if (path.startsWith("http"))
+			return path;
 		return (type == Type.MOVIE || type == Type.TV_SERIES) ? TMDB_IMAGE_BASE_URL + path : path;
 	}
 
