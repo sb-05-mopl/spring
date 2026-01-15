@@ -2,7 +2,10 @@ package com.mopl.moplwebsocketsse.domain.watch.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -130,16 +133,62 @@ public class WatchingSessionService {
 		}
 
 		// DTO 변환
+		List<UUID> watcherIds = actualSessions.stream()
+			.map(WatchingSession::getWatcherId)
+			.distinct()
+			.toList();
+
+		Map<UUID, User> userMap = userRepository.findAllById(watcherIds).stream()
+			.collect(Collectors.toMap(User::getId, Function.identity()));
+
+		// 2. Content 배치 조회 (contentId가 모두 같으면 1개지만, 다를 수 있으니 배치로)
+		List<UUID> contentIds = actualSessions.stream()
+			.map(WatchingSession::getContentId)
+			.distinct()
+			.toList();
+
+		Map<UUID, Content> contentMap = contentRepository.findAllById(contentIds).stream()
+			.collect(Collectors.toMap(Content::getId, Function.identity()));
+
+		// 3. ContentTag 배치 조회 (추가한 findByContentIds 사용)
+		Map<UUID, List<String>> tagMap = contentTagRepository.findByContentIds(contentIds).stream()
+			.collect(Collectors.groupingBy(
+				ct -> ct.getContent().getId(),
+				Collectors.mapping(ct -> ct.getTag().getName(), Collectors.toList())
+			));
+
+		// 4. DTO 변환
 		List<WatchingSessionDto> dtos = new ArrayList<>();
 		for (WatchingSession session : actualSessions) {
-			UserSummary userSummary = getUserSummary(session.getWatcherId());
+			User user = userMap.get(session.getWatcherId());
+			if (user == null) continue;
 
-			// watcherNameLike 필터링 (Redis는 Like 처리 불가하여 임시로 애플리케이션에서 처리)
-			if (watcherNameLike != null && !userSummary.name().contains(watcherNameLike)) {
+			// watcherNameLike 필터링
+			if (watcherNameLike != null && !user.getName().contains(watcherNameLike)) {
 				continue;
 			}
 
-			ContentSummary contentSummary = getContentSummary(session.getContentId());
+			UserSummary userSummary = new UserSummary(
+				user.getId(),
+				user.getName(),
+				user.getProfileImageUrl()
+			);
+
+			Content content = contentMap.get(session.getContentId());
+			if (content == null) continue;
+
+			List<String> tags = tagMap.getOrDefault(content.getId(), List.of());
+
+			ContentSummary contentSummary = ContentSummary.builder()
+				.id(content.getId())
+				.type(content.getType())
+				.title(content.getTitle())
+				.description(content.getDescription())
+				.thumbnailUrl(content.getThumbnailUrl())
+				.tags(tags)
+				.averageRating(content.getAverageRating())
+				.reviewCount(content.getReviewCount())
+				.build();
 
 			WatchingSessionDto dto = new WatchingSessionDto(
 				session.getId(),
