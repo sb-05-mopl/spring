@@ -2,8 +2,13 @@ package com.mopl.moplcore.domain.playlist.service;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,7 +59,7 @@ public class PlaylistService {
 		Playlist playlist = new Playlist(owner, request.title(), request.description());
 		Playlist savedPlaylist = playlistRepository.save(playlist);
 
-		return toDto(savedPlaylist, userId);
+		return toDtoSingle(playlist, userId);
 	}
 
 	public CursorResponsePlaylistDto searchPlaylists(PlaylistSearchRequest request, UUID currentUserId) {
@@ -66,8 +71,46 @@ public class PlaylistService {
 			playlists = playlists.subList(0, request.getLimit());
 		}
 
+		List<UUID> playlistIds = playlists.stream()
+			.map(Playlist::getId)
+			.toList();
+
+		// 1. subscriberCount Map
+		Map<UUID, Long> countMap = playlistSubscriptionRepository
+			.countByPlaylistIds(playlistIds)
+			.stream()
+			.collect(Collectors.toMap(
+				arr -> (UUID) arr[0],
+				arr -> (Long) arr[1]
+			));
+
+		// 2. subscribedByMe Set
+		Set<UUID> subscribedIds = currentUserId != null
+			? new HashSet<>(playlistSubscriptionRepository.findSubscribedPlaylistIds(playlistIds, currentUserId))
+			: Collections.emptySet();
+
+		// 3. contents Map
+		Map<UUID, List<PlaylistContent>> contentsMap = playlistContentRepository
+			.findByPlaylistIds(playlistIds)
+			.stream()
+			.collect(Collectors.groupingBy(pc -> pc.getPlaylist().getId()));
+
+		// 4. tags Map
+		List<UUID> contentIds = contentsMap.values().stream()
+			.flatMap(List::stream)
+			.map(pc -> pc.getContent().getId())
+			.toList();
+
+		Map<UUID, List<String>> tagsMap = contentTagRepository
+			.findByContentIds(contentIds)
+			.stream()
+			.collect(Collectors.groupingBy(
+				ct -> ct.getContent().getId(),
+				Collectors.mapping(ct -> ct.getTag().getName(), Collectors.toList())
+			));
+
 		List<PlaylistDto> playlistDtos = playlists.stream()
-			.map(playlist -> toDto(playlist, currentUserId))
+			.map(playlist -> toDto(playlist, countMap, subscribedIds, contentsMap, tagsMap))
 			.toList();
 
 		String nextCursor = null;
@@ -91,7 +134,7 @@ public class PlaylistService {
 		Playlist playlist = playlistRepository.findById(playlistId)
 			.orElseThrow(() -> new PlaylistNotFoundException(playlistId));
 
-		return toDto(playlist, currentUserId);
+		return toDtoSingle(playlist, currentUserId);
 	}
 
 	@Transactional
@@ -105,7 +148,7 @@ public class PlaylistService {
 
 		playlist.update(request.title(), request.description());
 
-		return toDto(playlist, userId);
+		return toDtoSingle(playlist, userId);
 	}
 
 	@Transactional
@@ -173,21 +216,27 @@ public class PlaylistService {
 		playlistSubscriptionRepository.deleteByPlaylistIdAndUserId(playlistId, userId);
 	}
 
-	private PlaylistDto toDto(Playlist playlist, UUID currentUserId) {
+	private PlaylistDto toDto(
+		Playlist playlist,
+		Map<UUID, Long> countMap,
+		Set<UUID> subscribedIds,
+		Map<UUID, List<PlaylistContent>> contentsMap,
+		Map<UUID, List<String>> tagsMap
+	) {
 		UserSummary owner = new UserSummary(
 			playlist.getOwner().getId(),
 			playlist.getOwner().getName(),
 			playlist.getOwner().getProfileImageUrl()
 		);
 
-		Long subscriberCount = playlistSubscriptionRepository.countByPlaylistId(playlist.getId());
+		Long subscriberCount = countMap.getOrDefault(playlist.getId(), 0L);
 
-		Boolean subscribedByMe = currentUserId != null &&
-			playlistSubscriptionRepository.existsByPlaylistIdAndUserId(playlist.getId(), currentUserId);
+		Boolean subscribedByMe = subscribedIds.contains(playlist.getId());
 
-		List<ContentSummary> contents = playlistContentRepository.findByPlaylistId(playlist.getId())
+		List<ContentSummary> contents = contentsMap
+			.getOrDefault(playlist.getId(), Collections.emptyList())
 			.stream()
-			.map(pc -> toContentSummary(pc.getContent()))
+			.map(pc -> toContentSummary(pc.getContent(), tagsMap))
 			.toList();
 
 		LocalDateTime updatedAtLocal = LocalDateTime.ofInstant(
@@ -207,11 +256,45 @@ public class PlaylistService {
 			.build();
 	}
 
-	private ContentSummary toContentSummary(Content content) {
-		List<String> tags = contentTagRepository.findByContentId(content.getId())
+	private PlaylistDto toDtoSingle(Playlist playlist, UUID currentUserId) {
+		List<UUID> playlistIds = List.of(playlist.getId());
+
+		Map<UUID, Long> countMap = playlistSubscriptionRepository
+			.countByPlaylistIds(playlistIds)
 			.stream()
-			.map(ct -> ct.getTag().getName())
+			.collect(Collectors.toMap(
+				arr -> (UUID) arr[0],
+				arr -> (Long) arr[1]
+			));
+
+		Set<UUID> subscribedIds = currentUserId != null
+			? new HashSet<>(playlistSubscriptionRepository.findSubscribedPlaylistIds(playlistIds, currentUserId))
+			: Collections.emptySet();
+
+		Map<UUID, List<PlaylistContent>> contentsMap = playlistContentRepository
+			.findByPlaylistIds(playlistIds)
+			.stream()
+			.collect(Collectors.groupingBy(pc -> pc.getPlaylist().getId()));
+
+		List<UUID> contentIds = contentsMap.values().stream()
+			.flatMap(List::stream)
+			.map(pc -> pc.getContent().getId())
 			.toList();
+
+		Map<UUID, List<String>> tagsMap = contentIds.isEmpty()
+			? Collections.emptyMap()
+			: contentTagRepository.findByContentIds(contentIds)
+			.stream()
+			.collect(Collectors.groupingBy(
+				ct -> ct.getContent().getId(),
+				Collectors.mapping(ct -> ct.getTag().getName(), Collectors.toList())
+			));
+
+		return toDto(playlist, countMap, subscribedIds, contentsMap, tagsMap);
+	}
+
+	private ContentSummary toContentSummary(Content content, Map<UUID, List<String>> tagsMap) {
+		List<String> tags = tagsMap.getOrDefault(content.getId(), Collections.emptyList());
 
 		String fullThumbnailUrl = buildImageUrl(content.getType(), content.getThumbnailUrl());
 

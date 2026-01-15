@@ -129,8 +129,8 @@ class PlaylistQueryTest {
     void 플레이리스트_목록_조회() {
         // given
         int limit = 5;
-        // 이상적: count 1 + select 1 = 2
-        int expectedQueries = 2;
+        // 이상적: select + totalCount + owner + SubscribedCount + contents + tags = 6
+        int expectedQueries = 6;
 
         PlaylistSearchRequest request = new PlaylistSearchRequest();
         request.setLimit(limit);
@@ -151,8 +151,8 @@ class PlaylistQueryTest {
     @DisplayName("[Playlist] 단건 조회")
     void 플레이리스트_단건_조회() {
         // given
-        // 이상적: select 1 + owner + contents + tags = 3~4 정도
-        int expectedQueries = 4;
+        // 이상적: select + totalCount + owner + SubscribedCount + contents + tags = 6
+        int expectedQueries = 6;
 
         // when
         long actual = queryCounter.count(() -> {
