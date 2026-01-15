@@ -14,10 +14,12 @@ import com.mopl.moplwebsocketsse.domain.common.enums.SortDirection;
 import com.mopl.moplwebsocketsse.domain.content.dto.ContentSummary;
 import com.mopl.moplwebsocketsse.domain.content.entity.Content;
 import com.mopl.moplwebsocketsse.domain.content.entity.Tag;
+import com.mopl.moplwebsocketsse.domain.content.exception.ContentNotFoundException;
 import com.mopl.moplwebsocketsse.domain.content.repository.ContentRepository;
 import com.mopl.moplwebsocketsse.domain.content.repository.ContentTagRepository;
 import com.mopl.moplwebsocketsse.domain.user.dto.UserSummary;
 import com.mopl.moplwebsocketsse.domain.user.entity.User;
+import com.mopl.moplwebsocketsse.domain.user.exception.UserNotFoundException;
 import com.mopl.moplwebsocketsse.domain.user.repository.UserRepository;
 import com.mopl.moplwebsocketsse.domain.watch.dto.CursorResponseWatchingSessionDto;
 import com.mopl.moplwebsocketsse.domain.watch.dto.WatchingSessionChange;
@@ -110,14 +112,12 @@ public class WatchingSessionService {
 		List<WatchingSession> actualSessions;
 
 		if (sessions.size() > limit) {
-			// limit+1번째가 있음 → hasNext = true
 			hasNext = true;
 			actualSessions = sessions.subList(0, limit);
 			WatchingSession lastSession = actualSessions.getLast();
 			nextCursor = String.valueOf(lastSession.getCreatedAt().toEpochMilli());
 			nextIdAfter = lastSession.getId();
 		} else {
-			// limit+1번째가 없음 → ZCOUNT로 확인
 			actualSessions = sessions;
 			if (!sessions.isEmpty()) {
 				WatchingSession lastSession = sessions.getLast();
@@ -132,7 +132,7 @@ public class WatchingSessionService {
 			}
 		}
 
-		// DTO 변환
+		// 1. User 배치 조회
 		List<UUID> watcherIds = actualSessions.stream()
 			.map(WatchingSession::getWatcherId)
 			.distinct()
@@ -141,21 +141,25 @@ public class WatchingSessionService {
 		Map<UUID, User> userMap = userRepository.findAllById(watcherIds).stream()
 			.collect(Collectors.toMap(User::getId, Function.identity()));
 
-		// 2. Content 배치 조회 (contentId가 모두 같으면 1개지만, 다를 수 있으니 배치로)
-		List<UUID> contentIds = actualSessions.stream()
-			.map(WatchingSession::getContentId)
-			.distinct()
+		// 2. Content 단일 조회
+		Content content = contentRepository.findById(contentId)
+			.orElseThrow(() -> ContentNotFoundException.withContentId(contentId));
+
+		// 3. Tag 단일 조회 (같은 contentId)
+		List<String> tags = contentTagRepository.findTagsByContentId(contentId).stream()
+			.map(Tag::getName)
 			.toList();
 
-		Map<UUID, Content> contentMap = contentRepository.findAllById(contentIds).stream()
-			.collect(Collectors.toMap(Content::getId, Function.identity()));
-
-		// 3. ContentTag 배치 조회 (추가한 findByContentIds 사용)
-		Map<UUID, List<String>> tagMap = contentTagRepository.findByContentIds(contentIds).stream()
-			.collect(Collectors.groupingBy(
-				ct -> ct.getContent().getId(),
-				Collectors.mapping(ct -> ct.getTag().getName(), Collectors.toList())
-			));
+		ContentSummary contentSummary = ContentSummary.builder()
+			.id(content.getId())
+			.type(content.getType())
+			.title(content.getTitle())
+			.description(content.getDescription())
+			.thumbnailUrl(content.getThumbnailUrl())
+			.tags(tags)
+			.averageRating(content.getAverageRating())
+			.reviewCount(content.getReviewCount())
+			.build();
 
 		// 4. DTO 변환
 		List<WatchingSessionDto> dtos = new ArrayList<>();
@@ -173,22 +177,6 @@ public class WatchingSessionService {
 				user.getName(),
 				user.getProfileImageUrl()
 			);
-
-			Content content = contentMap.get(session.getContentId());
-			if (content == null) continue;
-
-			List<String> tags = tagMap.getOrDefault(content.getId(), List.of());
-
-			ContentSummary contentSummary = ContentSummary.builder()
-				.id(content.getId())
-				.type(content.getType())
-				.title(content.getTitle())
-				.description(content.getDescription())
-				.thumbnailUrl(content.getThumbnailUrl())
-				.tags(tags)
-				.averageRating(content.getAverageRating())
-				.reviewCount(content.getReviewCount())
-				.build();
 
 			WatchingSessionDto dto = new WatchingSessionDto(
 				session.getId(),
@@ -232,14 +220,14 @@ public class WatchingSessionService {
 
 	private UserSummary getUserSummary(UUID userId) {
 		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+			.orElseThrow(() -> UserNotFoundException.withUserId(userId));
 
 		return new UserSummary(user.getId(), user.getName(), user.getProfileImageUrl());
 	}
 
 	private ContentSummary getContentSummary(UUID contentId) {
 		Content content = contentRepository.findById(contentId)
-			.orElseThrow(() -> new IllegalArgumentException("Content not found: " + contentId));
+			.orElseThrow(() -> ContentNotFoundException.withContentId(contentId));
 
 		List<Tag> tagEntities = contentTagRepository.findTagsByContentId(contentId);
 
