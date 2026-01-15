@@ -36,17 +36,17 @@ public class MoplAuthenticationProvider implements AuthenticationProvider {
 		UUID id = userDetails.getUserDto().getId();
 
 		if (!userDetails.isEnabled()) {
-			throw new LockedUserAccessException();
+			throw new LockedUserAccessException("Locked User");
 		}
 
 		if (userRegistry.existById(id)) {
 			if (!passwordEncoder.matches(password, userRegistry.getEncodedPassword(id))) {
-				throw new InValidCredentialException();
+				throw new InValidCredentialException("Password Not Matched-temp");
 			}
 			userRegistry.removeTempPassword(id);
 		} else {
 			if (!passwordEncoder.matches(password, userDetails.getPassword())) {
-				throw new InValidCredentialException();
+				throw new InValidCredentialException("Password Not Matched-db");
 			}
 		}
 

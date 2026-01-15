@@ -14,6 +14,7 @@ import com.mopl.moplwebsocketsse.security.exception.InValidAccessTokenException;
 import com.mopl.moplwebsocketsse.security.jwt.JwtTokenProvider;
 import com.mopl.moplwebsocketsse.security.jwt.registry.JwtRegistry;
 import com.mopl.moplwebsocketsse.security.principal.MoplUserDetails;
+import com.mopl.moplwebsocketsse.security.registry.JwtRegistry;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -53,13 +54,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		log.info("Method: {}", method);
 		String accessToken = request.getHeader(AUTHORIZATION_HEADER).substring(BEARER_PREFIX_LENGTH);
 
-		if (!tokenProvider.validateAccessToken(accessToken))
-			throw new InValidAccessTokenException();
-
-		if (!jwtRegistry.hasActiveJwtInformationByAccessToken(accessToken)) {
-			throw new InValidAccessTokenException();
+		if (!tokenProvider.validateAccessToken(accessToken)) {
+			throw new InValidAccessTokenException("Invalid access token");
 		}
 
+		if (!jwtRegistry.hasActiveJwtInformationByAccessToken(accessToken)) {
+			throw new InValidAccessTokenException("Inactive access token");
+		}
 		String email = tokenProvider.getSubject(accessToken);
 		MoplUserDetails userDetails = (MoplUserDetails)userDetailsService.loadUserByUsername(email);
 
