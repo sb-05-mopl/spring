@@ -1,11 +1,11 @@
-package com.mopl.moplwebsocketsse.global.kafka.notification;
+package com.mopl.moplcore.global.event.publisher.notification;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mopl.moplwebsocketsse.domain.notification.event.NotificationEvent;
-import com.mopl.moplwebsocketsse.global.kafka.common.KafkaEventPublisher;
+import com.mopl.moplcore.global.event.notification.NotificationEvent;
+import com.mopl.moplcore.global.event.publisher.common.KafkaEventPublisher;
 
 import lombok.RequiredArgsConstructor;
 

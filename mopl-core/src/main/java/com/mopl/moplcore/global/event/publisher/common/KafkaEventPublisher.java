@@ -1,4 +1,4 @@
-package com.mopl.moplwebsocketsse.global.kafka.common;
+package com.mopl.moplcore.global.event.publisher.common;
 
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;

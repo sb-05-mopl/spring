@@ -24,6 +24,9 @@ import com.mopl.moplcore.domain.user.mapper.UserMapper;
 import com.mopl.moplcore.domain.user.registry.UserRegistry;
 import com.mopl.moplcore.domain.user.repository.UserRepository;
 import com.mopl.moplcore.domain.user.storage.ProfileImageStorage;
+import com.mopl.moplcore.global.event.notification.NotificationEvent;
+import com.mopl.moplcore.global.event.notification.NotificationEventFactory;
+import com.mopl.moplcore.global.event.publisher.notification.NotificationEventPublisher;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +41,7 @@ public class UserService {
 	private final UserMapper userMapper;
 	private final ProfileImageStorage profileImageStorage;
 	private final UserRegistry userRegistry;
+	private final NotificationEventPublisher notificationEventPublisher;
 
 	@Transactional
 	public UserResponse signUp(UserCreateRequest dto) {
@@ -121,9 +125,19 @@ public class UserService {
 	}
 
 	@Transactional
-	public void updateRole(Role newRole, UUID userId) {
+	public void updateRole(Role newRole, UUID userId, UUID changedBy) {
 		User user = userRepository.findById(userId).orElseThrow(() -> UserNotFoundException.withUserId(userId));
+
+		Role oldRole = user.getRole();
 		user.updateRole(newRole);
+
+		NotificationEvent event = NotificationEventFactory.roleChanged(
+			userId,
+			oldRole.name(),
+			newRole.name(),
+			changedBy
+		);
+		notificationEventPublisher.publish(event);
 	}
 
 	@Transactional
