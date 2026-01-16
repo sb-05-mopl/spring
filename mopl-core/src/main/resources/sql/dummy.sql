@@ -1,400 +1,343 @@
--- PostgreSQL 더미 데이터 생성
--- 실행 순서대로 작성됨
+-- =========================
+-- 0) 기본 세팅
+-- =========================
+BEGIN;
 
--- 1. Users 테이블 (10명의 사용자)
-INSERT INTO users (id, name, email, created_at, password, profile_image_url, role, locked)
-VALUES ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '김철수', 'kim.cs@example.com', '2024-01-15 10:00:00',
-        '$2a$10$abcdefghijklmnopqrstuv', 'https://example.com/profiles/kim.jpg', 'USER', false),
-       ('b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', '이영희', 'lee.yh@example.com', '2024-01-20 11:00:00',
-        '$2a$10$bcdefghijklmnopqrstuvw', 'https://example.com/profiles/lee.jpg', 'USER', false),
-       ('c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', '박민수', 'park.ms@example.com', '2024-02-01 09:30:00',
-        '$2a$10$cdefghijklmnopqrstuvwx', 'https://example.com/profiles/park.jpg', 'ADMIN', false),
-       ('d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44', '최지연', 'choi.jy@example.com', '2024-02-10 14:20:00',
-        '$2a$10$defghijklmnopqrstuvwxy', 'https://example.com/profiles/choi.jpg', 'USER', false),
-       ('e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55', '정하늘', 'jung.hn@example.com', '2024-02-15 16:45:00',
-        '$2a$10$efghijklmnopqrstuvwxyz', 'https://example.com/profiles/jung.jpg', 'USER', false),
-       ('f5eebc99-9c0b-4ef8-bb6d-6bb9bd380a66', '강서연', 'kang.sy@example.com', '2024-03-01 10:10:00',
-        '$2a$10$fghijklmnopqrstuvwxyza', 'https://example.com/profiles/kang.jpg', 'USER', false),
-       ('a6eebc99-9c0b-4ef8-bb6d-6bb9bd380a77', '윤도현', 'yoon.dh@example.com', '2024-03-05 08:00:00',
-        '$2a$10$ghijklmnopqrstuvwxyzab', NULL, 'USER', false),
-       ('b7eebc99-9c0b-4ef8-bb6d-6bb9bd380a88', '임수정', 'lim.sj@example.com', '2024-03-10 13:30:00',
-        '$2a$10$hijklmnopqrstuvwxyzabc', 'https://example.com/profiles/lim.jpg', 'USER', false),
-       ('c8eebc99-9c0b-4ef8-bb6d-6bb9bd380a99', '송민호', 'song.mh@example.com', '2024-03-15 15:00:00',
-        '$2a$10$ijklmnopqrstuvwxyzabcd', 'https://example.com/profiles/song.jpg', 'USER', true),
-       ('d9eebc99-9c0b-4ef8-bb6d-6bb9bd380aaa', '한지민', 'han.jm@example.com', '2024-03-20 09:00:00',
-        '$2a$10$jklmnopqrstuvwxyzabcde', 'https://example.com/profiles/han.jpg', 'USER', false),
-       ('00000000-0000-0000-0000-000000000001', '테스트', 'test@example.com', '2024-01-01 00:00:00',
-        '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', NULL, 'ADMIN', false);
+-- (선택) 로컬 타임존 영향 줄이기
+SET LOCAL TIME ZONE 'Asia/Seoul';
 
--- 2. Contents 테이블 (15개의 콘텐츠)
-INSERT INTO contents (id, source_id, created_at, type, title, description, thumbnail_url, average_rating, review_count)
-VALUES ('10000000-0000-0000-0000-000000000001', 1, '2024-01-01 00:00:00', 'MOVIE', '인터스텔라', '우주를 배경으로 한 SF 대작',
-        'https://example.com/thumbs/interstellar.jpg', 4.5, 120),
-       ('10000000-0000-0000-0000-000000000002', 2, '2024-01-02 00:00:00', 'MOVIE', '기생충', '계급 격차를 그린 스릴러',
-        'https://example.com/thumbs/parasite.jpg', 4.8, 250),
-       ('10000000-0000-0000-0000-000000000003', 3, '2024-01-03 00:00:00', 'TV_SERIES', '더 글로리', '복수극 드라마 시리즈',
-        'https://example.com/thumbs/glory.jpg', 4.3, 89),
-       ('10000000-0000-0000-0000-000000000004', 4, '2024-01-04 00:00:00', 'MOVIE', '아바타: 물의 길', '판도라 행성의 새로운 모험',
-        'https://example.com/thumbs/avatar2.jpg', 4.2, 180),
-       ('10000000-0000-0000-0000-000000000005', 5, '2024-01-05 00:00:00', 'SPORTS', '2024 파리 올림픽 하이라이트', '올림픽 주요 경기 모음',
-        'https://example.com/thumbs/olympic.jpg', 4.7, 340),
-       ('10000000-0000-0000-0000-000000000006', 6, '2024-01-06 00:00:00', 'TV_SERIES', '오징어 게임', '생존 게임 드라마',
-        'https://example.com/thumbs/squidgame.jpg', 4.4, 95),
-       ('10000000-0000-0000-0000-000000000007', 7, '2024-01-07 00:00:00', 'MOVIE', '탑건: 매버릭', '전투기 조종사의 귀환',
-        'https://example.com/thumbs/topgun.jpg', 4.6, 210),
-       ('10000000-0000-0000-0000-000000000008', 8, '2024-01-08 00:00:00', 'SPORTS', 'UEFA 챔피언스리그 결승', '맨시티 vs 인터밀란',
-        'https://example.com/thumbs/ucl.jpg', 4.9, 450),
-       ('10000000-0000-0000-0000-000000000009', 9, '2024-01-09 00:00:00', 'TV_SERIES', '이상한 변호사 우영우', '자폐 스펙트럼 변호사 이야기',
-        'https://example.com/thumbs/woo.jpg', 4.7, 112),
-       ('10000000-0000-0000-0000-00000000000a', 10, '2024-01-10 00:00:00', 'MOVIE', '범죄도시 3', '한국 액션 영화',
-        'https://example.com/thumbs/crime3.jpg', 4.1, 165),
-       ('10000000-0000-0000-0000-00000000000b', 11, '2024-01-11 00:00:00', 'SPORTS', '2024 MLB 월드시리즈', '다저스 vs 양키스',
-        'https://example.com/thumbs/mlb.jpg', 4.3, 280),
-       ('10000000-0000-0000-0000-00000000000c', 12, '2024-01-12 00:00:00', 'MOVIE', '오펜하이머', '원자폭탄 개발 이야기',
-        'https://example.com/thumbs/oppenheimer.jpg', 4.5, 195),
-       ('10000000-0000-0000-0000-00000000000d', 13, '2024-01-13 00:00:00', 'TV_SERIES', '더 라스트 오브 어스', '포스트 아포칼립스 드라마',
-        'https://example.com/thumbs/tlou.jpg', 4.8, 320),
-       ('10000000-0000-0000-0000-00000000000e', 14, '2024-01-14 00:00:00', 'MOVIE', '서울의 봄', '한국 현대사 드라마',
-        'https://example.com/thumbs/seoul.jpg', 4.6, 230),
-       ('10000000-0000-0000-0000-00000000000f', 15, '2024-01-15 00:00:00', 'SPORTS', '2024 NBA 파이널', '보스턴 vs 댈러스',
-        'https://example.com/thumbs/nba.jpg', 4.2, 175);
+-- pgcrypto (gen_random_uuid() 등) 사용
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- 3. Tags 테이블 (10개의 태그)
-INSERT INTO tags (id, name, created_at)
-VALUES ('20000000-0000-0000-0000-000000000001', 'SF', '2024-01-01 00:00:00'),
-       ('20000000-0000-0000-0000-000000000002', '액션', '2024-01-01 00:00:00'),
-       ('20000000-0000-0000-0000-000000000003', '스릴러', '2024-01-01 00:00:00'),
-       ('20000000-0000-0000-0000-000000000004', 'K-POP', '2024-01-01 00:00:00'),
-       ('20000000-0000-0000-0000-000000000005', '판타지', '2024-01-01 00:00:00'),
-       ('20000000-0000-0000-0000-000000000006', '드라마', '2024-01-01 00:00:00'),
-       ('20000000-0000-0000-0000-000000000007', '발라드', '2024-01-01 00:00:00'),
-       ('20000000-0000-0000-0000-000000000008', '고전', '2024-01-01 00:00:00'),
-       ('20000000-0000-0000-0000-000000000009', '한국영화', '2024-01-01 00:00:00'),
-       ('20000000-0000-0000-0000-00000000000a', '베스트셀러', '2024-01-01 00:00:00');
+-- 랜덤 시드 고정(매번 완전 동일하진 않지만 분포가 안정됨)
+SELECT setseed(0.4242);
 
--- 4. Content_Tags 테이블 (콘텐츠-태그 관계)
-INSERT INTO content_tags (id, content_id, tag_id, created_at)
-VALUES ('30000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001',
-        '20000000-0000-0000-0000-000000000001', '2024-01-01 00:00:00'),
-       ('30000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002',
-        '20000000-0000-0000-0000-000000000003', '2024-01-02 00:00:00'),
-       ('30000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000002',
-        '20000000-0000-0000-0000-000000000009', '2024-01-02 00:00:00'),
-       ('30000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000003',
-        '20000000-0000-0000-0000-000000000004', '2024-01-03 00:00:00'),
-       ('30000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000004',
-        '20000000-0000-0000-0000-000000000001', '2024-01-04 00:00:00'),
-       ('30000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000005',
-        '20000000-0000-0000-0000-000000000008', '2024-01-05 00:00:00'),
-       ('30000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000006',
-        '20000000-0000-0000-0000-000000000004', '2024-01-06 00:00:00'),
-       ('30000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000007',
-        '20000000-0000-0000-0000-000000000002', '2024-01-07 00:00:00'),
-       ('30000000-0000-0000-0000-000000000009', '10000000-0000-0000-0000-000000000008',
-        '20000000-0000-0000-0000-000000000005', '2024-01-08 00:00:00'),
-       ('30000000-0000-0000-0000-00000000000a', '10000000-0000-0000-0000-000000000008',
-        '20000000-0000-0000-0000-00000000000a', '2024-01-08 00:00:00'),
-       ('30000000-0000-0000-0000-00000000000b', '10000000-0000-0000-0000-000000000009',
-        '20000000-0000-0000-0000-000000000007', '2024-01-09 00:00:00'),
-       ('30000000-0000-0000-0000-00000000000c', '10000000-0000-0000-0000-00000000000a',
-        '20000000-0000-0000-0000-000000000002', '2024-01-10 00:00:00'),
-       ('30000000-0000-0000-0000-00000000000d', '10000000-0000-0000-0000-00000000000a',
-        '20000000-0000-0000-0000-000000000009', '2024-01-10 00:00:00'),
-       ('30000000-0000-0000-0000-00000000000e', '10000000-0000-0000-0000-00000000000c',
-        '20000000-0000-0000-0000-000000000006', '2024-01-12 00:00:00'),
-       ('30000000-0000-0000-0000-00000000000f', '10000000-0000-0000-0000-00000000000d',
-        '20000000-0000-0000-0000-000000000004', '2024-01-13 00:00:00'),
-       ('30000000-0000-0000-0000-000000000010', '10000000-0000-0000-0000-00000000000e',
-        '20000000-0000-0000-0000-000000000009', '2024-01-14 00:00:00'),
-       ('30000000-0000-0000-0000-000000000011', '10000000-0000-0000-0000-00000000000e',
-        '20000000-0000-0000-0000-000000000006', '2024-01-14 00:00:00');
+-- =========================
+-- 1) 여러 번 실행 가능하게 전체 데이터 삭제
+--    FK가 얽혀있으니 한번에 TRUNCATE + CASCADE
+-- =========================
+TRUNCATE TABLE
+    public.content_tags,
+  public.playlist_contents,
+  public.playlist_subscriptions,
+  public.reviews,
+  public.follows,
+  public.playlists,
+  public.direct_messages,
+  public.conversation_participants,
+  public.conversations,
+  public.notifications,
+  public.tags,
+  public.contents,
+  public.users
+CASCADE;
 
--- 5. Reviews 테이블 (20개의 리뷰)
-INSERT INTO reviews (id, author_id, content_id, text, rating, created_at, updated_at)
-VALUES ('40000000-0000-0000-0000-000000000001', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-        '10000000-0000-0000-0000-000000000001', '정말 감동적인 영화였습니다. 우주의 장대함이 잘 표현되었어요.', 5.0, '2024-01-16 10:30:00', NULL),
-       ('40000000-0000-0000-0000-000000000002', 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22',
-        '10000000-0000-0000-0000-000000000001', '과학적 고증이 훌륭합니다. 시간 여행 개념이 흥미로워요.', 4.5, '2024-01-17 14:20:00', NULL),
-       ('40000000-0000-0000-0000-000000000003', 'c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33',
-        '10000000-0000-0000-0000-000000000002', '봉준호 감독의 역작. 사회 비판이 날카롭습니다.', 5.0, '2024-01-18 09:15:00', NULL),
-       ('40000000-0000-0000-0000-000000000004', 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
-        '10000000-0000-0000-0000-000000000002', '연기가 정말 훌륭했어요. 긴장감이 넘칩니다.', 4.8, '2024-01-19 16:45:00', NULL),
-       ('40000000-0000-0000-0000-000000000005', 'e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55',
-        '10000000-0000-0000-0000-000000000003', '중독성 있는 멜로디! 계속 듣게 돼요.', 4.0, '2024-01-20 11:00:00', NULL),
-       ('40000000-0000-0000-0000-000000000006', 'f5eebc99-9c0b-4ef8-bb6d-6bb9bd380a66',
-        '10000000-0000-0000-0000-000000000004', '영상미는 좋은데 스토리가 약한 것 같아요.', 3.5, '2024-01-21 13:30:00', NULL),
-       ('40000000-0000-0000-0000-000000000007', 'a6eebc99-9c0b-4ef8-bb6d-6bb9bd380a77',
-        '10000000-0000-0000-0000-000000000005', '시대를 초월한 고전. 꼭 읽어야 할 책입니다.', 5.0, '2024-01-22 08:20:00', NULL),
-       ('40000000-0000-0000-0000-000000000008', 'b7eebc99-9c0b-4ef8-bb6d-6bb9bd380a88',
-        '10000000-0000-0000-0000-000000000006', '뉴진스 특유의 감성이 좋아요.', 4.5, '2024-01-23 15:40:00', NULL),
-       ('40000000-0000-0000-0000-000000000009', 'c8eebc99-9c0b-4ef8-bb6d-6bb9bd380a99',
-        '10000000-0000-0000-0000-000000000007', '톰 크루즈의 액션 연기가 대단합니다!', 4.8, '2024-01-24 10:10:00', NULL),
-       ('40000000-0000-0000-0000-00000000000a', 'd9eebc99-9c0b-4ef8-bb6d-6bb9bd380aaa',
-        '10000000-0000-0000-0000-000000000008', '어린 시절 읽었던 추억의 책. 다시 읽어도 재밌어요.', 5.0, '2024-01-25 12:30:00', NULL),
-       ('40000000-0000-0000-0000-00000000000b', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-        '10000000-0000-0000-0000-000000000008', '마법의 세계가 생생하게 그려져요.', 4.9, '2024-01-26 09:00:00', NULL),
-       ('40000000-0000-0000-0000-00000000000c', 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22',
-        '10000000-0000-0000-0000-000000000009', '아이유의 보컬이 돋보이는 곡입니다.', 4.7, '2024-01-27 14:15:00', NULL),
-       ('40000000-0000-0000-0000-00000000000d', 'c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33',
-        '10000000-0000-0000-0000-00000000000a', '마동석 액션은 언제나 시원합니다.', 4.0, '2024-01-28 16:20:00', NULL),
-       ('40000000-0000-0000-0000-00000000000e', 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
-        '10000000-0000-0000-0000-00000000000b', '하루키 특유의 감성이 묻어나요.', 4.3, '2024-01-29 11:45:00', NULL),
-       ('40000000-0000-0000-0000-00000000000f', 'e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55',
-        '10000000-0000-0000-0000-00000000000c', '묵직한 주제를 잘 다뤘습니다.', 4.6, '2024-01-30 13:00:00', NULL),
-       ('40000000-0000-0000-0000-000000000010', 'f5eebc99-9c0b-4ef8-bb6d-6bb9bd380a66',
-        '10000000-0000-0000-0000-00000000000d', 'BTS 최고의 곡 중 하나!', 5.0, '2024-01-31 10:30:00', NULL),
-       ('40000000-0000-0000-0000-000000000011', 'a6eebc99-9c0b-4ef8-bb6d-6bb9bd380a77',
-        '10000000-0000-0000-0000-00000000000e', '한국 현대사를 이해하는데 도움이 됩니다.', 4.5, '2024-02-01 15:20:00', NULL),
-       ('40000000-0000-0000-0000-000000000012', 'b7eebc99-9c0b-4ef8-bb6d-6bb9bd380a88',
-        '10000000-0000-0000-0000-00000000000f', '긴장감 넘치는 전개가 인상적이에요.', 4.2, '2024-02-02 09:40:00', NULL),
-       ('40000000-0000-0000-0000-000000000013', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-        '10000000-0000-0000-0000-000000000007', '전투기 장면이 압도적입니다.', 4.7, '2024-02-03 14:00:00', NULL),
-       ('40000000-0000-0000-0000-000000000014', 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22',
-        '10000000-0000-0000-0000-000000000005', '디스토피아 소설의 걸작.', 4.8, '2024-02-04 11:30:00', NULL);
+-- =========================
+-- 2) USERS (100명, 전부 LOCAL)
+-- =========================
+WITH u AS (
+    SELECT
+        i,
+        gen_random_uuid()                         AS id,
+        (now() - (random() * interval '365 days')) AS created_at,
+        (i % 17 = 0)                              AS locked,
+        ('user' || to_char(i, 'FM0000') || '@example.com') AS email,
+        CASE
+            WHEN i <= 10 THEN format('관리자%02s', i)
+            ELSE format('사용자%04s', i)
+            END                                       AS name,
+        'LOCAL'                                   AS provider,
+        CASE
+            WHEN i <= 10 THEN 'ADMIN'
+            ELSE 'USER'
+            END                                       AS role,
+        format('pw_%04s', i)                      AS "password",   -- 전원 패스워드
+        CASE
+            WHEN random() < 0.75 THEN format('https://picsum.photos/seed/u%04s/200/200', i)
+            ELSE NULL
+            END                                       AS profile_image_url
+    FROM generate_series(1, 100) AS s(i)
+)
+INSERT INTO public.users (
+  locked, created_at, id, email, name, "password", profile_image_url, provider, "role"
+)
+SELECT
+    locked, created_at, id, email, name, "password", profile_image_url, provider, role
+FROM u;
+-- =========================
+-- 3) CONTENTS (300개, type 고르게, source_id 중복 없이)
+-- =========================
+WITH c AS (
+    SELECT
+        i,
+        gen_random_uuid()                          AS id,
+        (now() - (random() * interval '900 days')) AS created_at,
+        i::bigint                                  AS source_id,
+        CASE (i % 3)
+            WHEN 0 THEN 'MOVIE'
+            WHEN 1 THEN 'TV_SERIES'
+            ELSE 'SPORTS'
+            END                                         AS "type",
+        round((random() * 5)::numeric, 2)::float8  AS average_rating,
+        (random() * 5000)::int                     AS review_count,
+        format('%s 타이틀 %03s', CASE (i % 3) WHEN 0 THEN '영화' WHEN 1 THEN 'TV' ELSE '스포츠' END, i) AS title,
+        CASE WHEN random() < 0.85 THEN format('더미 설명 %03s: 내용 예시입니다.', i) ELSE NULL END AS description,
+        CASE WHEN random() < 0.90 THEN format('https://picsum.photos/seed/c%03s/480/720', i) ELSE NULL END AS thumbnail_url
+    FROM generate_series(1, 300) AS s(i)
+)
+INSERT INTO public.contents (
+  average_rating, review_count, created_at, source_id, id, description, thumbnail_url, title, "type"
+)
+SELECT
+    average_rating, review_count, created_at, source_id, id, description, thumbnail_url, title, "type"
+FROM c;
 
--- 6. Playlists 테이블 (8개의 플레이리스트)
-INSERT INTO playlists (id, owner_id, title, description, created_at, updated_at)
-VALUES ('50000000-0000-0000-0000-000000000001', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '나의 SF 영화 컬렉션',
-        'SF 영화만 모아둔 리스트', '2024-02-01 10:00:00', '2024-02-01 10:00:00'),
-       ('50000000-0000-0000-0000-000000000002', 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', 'K-POP 플레이리스트',
-        '최신 K-POP 음악 모음', '2024-02-02 11:00:00', '2024-02-05 14:00:00'),
-       ('50000000-0000-0000-0000-000000000003', 'c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', '필독 고전 문학', '꼭 읽어야 할 고전들',
-        '2024-02-03 09:00:00', '2024-02-03 09:00:00'),
-       ('50000000-0000-0000-0000-000000000004', 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44', '한국 영화 베스트', '한국 영화 추천 리스트',
-        '2024-02-04 13:00:00', '2024-02-10 16:00:00'),
-       ('50000000-0000-0000-0000-000000000005', 'e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55', '감성 발라드', '잔잔한 발라드 모음',
-        '2024-02-05 15:00:00', '2024-02-05 15:00:00'),
-       ('50000000-0000-0000-0000-000000000006', 'f5eebc99-9c0b-4ef8-bb6d-6bb9bd380a66', '액션 영화 모음', '스릴 넘치는 액션 영화들',
-        '2024-02-06 10:30:00', '2024-02-12 11:00:00'),
-       ('50000000-0000-0000-0000-000000000007', 'a6eebc99-9c0b-4ef8-bb6d-6bb9bd380a77', '판타지 소설', '판타지 장르 소설 컬렉션',
-        '2024-02-07 14:20:00', '2024-02-07 14:20:00'),
-       ('50000000-0000-0000-0000-000000000008', 'b7eebc99-9c0b-4ef8-bb6d-6bb9bd380a88', '2024년 최고의 영화',
-        '올해 개봉한 영화 중 베스트', '2024-02-08 16:00:00', '2024-02-15 10:00:00');
+-- =========================
+-- 4) TAGS (30개, name 유니크)
+-- =========================
+WITH t(name, ord) AS (
+    SELECT * FROM unnest(ARRAY[
+                             'action','drama','comedy','thriller','romance','sf','fantasy','crime','mystery','documentary',
+                         'korean','japanese','us','europe','classic','new','family','kids','animation','music',
+                         'sports','soccer','baseball','basketball','f1','ufc','award','popular','hidden','weekend'
+                             ]) WITH ORDINALITY
+)
+INSERT INTO public.tags (created_at, id, "name")
+SELECT
+    (now() - (random() * interval '365 days')),
+    gen_random_uuid(),
+    name
+FROM t;
 
--- 7. Playlist_Contents 테이블 (플레이리스트-콘텐츠 관계)
-INSERT INTO playlist_contents (id, playlist_id, content_id, created_at)
-VALUES ('60000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001',
-        '10000000-0000-0000-0000-000000000001', '2024-02-01 10:05:00'),
-       ('60000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000001',
-        '10000000-0000-0000-0000-000000000004', '2024-02-01 10:06:00'),
-       ('60000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000002',
-        '10000000-0000-0000-0000-000000000003', '2024-02-02 11:10:00'),
-       ('60000000-0000-0000-0000-000000000004', '50000000-0000-0000-0000-000000000002',
-        '10000000-0000-0000-0000-000000000006', '2024-02-02 11:11:00'),
-       ('60000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000002',
-        '10000000-0000-0000-0000-00000000000d', '2024-02-05 14:05:00'),
-       ('60000000-0000-0000-0000-000000000006', '50000000-0000-0000-0000-000000000003',
-        '10000000-0000-0000-0000-000000000005', '2024-02-03 09:10:00'),
-       ('60000000-0000-0000-0000-000000000007', '50000000-0000-0000-0000-000000000003',
-        '10000000-0000-0000-0000-000000000008', '2024-02-03 09:11:00'),
-       ('60000000-0000-0000-0000-000000000008', '50000000-0000-0000-0000-000000000004',
-        '10000000-0000-0000-0000-000000000002', '2024-02-04 13:10:00'),
-       ('60000000-0000-0000-0000-000000000009', '50000000-0000-0000-0000-000000000004',
-        '10000000-0000-0000-0000-00000000000a', '2024-02-04 13:11:00'),
-       ('60000000-0000-0000-0000-00000000000a', '50000000-0000-0000-0000-000000000004',
-        '10000000-0000-0000-0000-00000000000e', '2024-02-10 16:10:00'),
-       ('60000000-0000-0000-0000-00000000000b', '50000000-0000-0000-0000-000000000005',
-        '10000000-0000-0000-0000-000000000009', '2024-02-05 15:10:00'),
-       ('60000000-0000-0000-0000-00000000000c', '50000000-0000-0000-0000-000000000006',
-        '10000000-0000-0000-0000-000000000007', '2024-02-06 10:40:00'),
-       ('60000000-0000-0000-0000-00000000000d', '50000000-0000-0000-0000-000000000006',
-        '10000000-0000-0000-0000-00000000000a', '2024-02-06 10:41:00'),
-       ('60000000-0000-0000-0000-00000000000e', '50000000-0000-0000-0000-000000000007',
-        '10000000-0000-0000-0000-000000000008', '2024-02-07 14:30:00'),
-       ('60000000-0000-0000-0000-00000000000f', '50000000-0000-0000-0000-000000000008',
-        '10000000-0000-0000-0000-000000000002', '2024-02-08 16:10:00'),
-       ('60000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000008',
-        '10000000-0000-0000-0000-00000000000c', '2024-02-08 16:11:00'),
-       ('60000000-0000-0000-0000-000000000011', '50000000-0000-0000-0000-000000000008',
-        '10000000-0000-0000-0000-00000000000e', '2024-02-15 10:10:00');
+-- =========================
+-- 5) CONTENT_TAGS (각 컨텐츠당 1~4개 태그)
+-- =========================
+INSERT INTO public.content_tags (created_at, content_id, id, tag_id)
+SELECT
+    (now() - (random() * interval '180 days')),
+    c.id,
+    gen_random_uuid(),
+    t.id
+FROM public.contents c
+         JOIN LATERAL (
+    SELECT id
+    FROM public.tags
+    ORDER BY random()
+        LIMIT (1 + (random() * 3)::int)   -- 1~4
+    ) t ON true;
 
--- 8. Playlist_Subscriptions 테이블 (플레이리스트 구독)
-INSERT INTO playlist_subscriptions (id, playlist_id, user_id, created_at)
-VALUES ('70000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001',
-        'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', '2024-02-03 09:00:00'),
-       ('70000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000001',
-        'c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', '2024-02-04 10:00:00'),
-       ('70000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000002',
-        'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '2024-02-05 11:00:00'),
-       ('70000000-0000-0000-0000-000000000004', '50000000-0000-0000-0000-000000000002',
-        'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44', '2024-02-06 12:00:00'),
-       ('70000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000003',
-        'e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55', '2024-02-07 13:00:00'),
-       ('70000000-0000-0000-0000-000000000006', '50000000-0000-0000-0000-000000000004',
-        'f5eebc99-9c0b-4ef8-bb6d-6bb9bd380a66', '2024-02-08 14:00:00'),
-       ('70000000-0000-0000-0000-000000000007', '50000000-0000-0000-0000-000000000004',
-        'a6eebc99-9c0b-4ef8-bb6d-6bb9bd380a77', '2024-02-09 15:00:00'),
-       ('70000000-0000-0000-0000-000000000008', '50000000-0000-0000-0000-000000000006',
-        'b7eebc99-9c0b-4ef8-bb6d-6bb9bd380a88', '2024-02-10 16:00:00'),
-       ('70000000-0000-0000-0000-000000000009', '50000000-0000-0000-0000-000000000008',
-        'd9eebc99-9c0b-4ef8-bb6d-6bb9bd380aaa', '2024-02-11 17:00:00'),
-       ('70000000-0000-0000-0000-00000000000a', '50000000-0000-0000-0000-000000000008',
-        'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '2024-02-12 18:00:00');
+-- =========================
+-- 6) FOLLOWS (약 500개, 자기 자신 제외)
+-- =========================
+WITH pairs AS (
+    SELECT DISTINCT ON (follower_id, followee_id)
+    u1.id AS follower_id,
+    u2.id AS followee_id
+FROM (SELECT id FROM public.users ORDER BY random() LIMIT 70) u1
+    CROSS JOIN (SELECT id FROM public.users ORDER BY random() LIMIT 70) u2
+WHERE u1.id <> u2.id
+ORDER BY follower_id, followee_id, random()
+    LIMIT 500
+    )
+INSERT INTO public.follows (created_at, followee_id, follower_id, id)
+SELECT
+    (now() - (random() * interval '200 days')),
+    followee_id,
+    follower_id,
+    gen_random_uuid()
+FROM pairs;
 
--- 9. Follows 테이블 (팔로우 관계)
-INSERT INTO follows (id, follower_id, followee_id, created_at)
-VALUES ('80000000-0000-0000-0000-000000000001', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-        'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', '2024-02-01 10:00:00'),
-       ('80000000-0000-0000-0000-000000000002', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-        'c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', '2024-02-01 10:05:00'),
-       ('80000000-0000-0000-0000-000000000003', 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22',
-        'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '2024-02-02 11:00:00'),
-       ('80000000-0000-0000-0000-000000000004', 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22',
-        'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44', '2024-02-02 11:10:00'),
-       ('80000000-0000-0000-0000-000000000005', 'c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33',
-        'e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55', '2024-02-03 09:00:00'),
-       ('80000000-0000-0000-0000-000000000006', 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
-        'f5eebc99-9c0b-4ef8-bb6d-6bb9bd380a66', '2024-02-04 13:00:00'),
-       ('80000000-0000-0000-0000-000000000007', 'e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55',
-        'a6eebc99-9c0b-4ef8-bb6d-6bb9bd380a77', '2024-02-05 15:00:00'),
-       ('80000000-0000-0000-0000-000000000008', 'f5eebc99-9c0b-4ef8-bb6d-6bb9bd380a66',
-        'b7eebc99-9c0b-4ef8-bb6d-6bb9bd380a88', '2024-02-06 10:00:00'),
-       ('80000000-0000-0000-0000-000000000009', 'a6eebc99-9c0b-4ef8-bb6d-6bb9bd380a77',
-        'd9eebc99-9c0b-4ef8-bb6d-6bb9bd380aaa', '2024-02-07 14:00:00'),
-       ('80000000-0000-0000-0000-00000000000a', 'b7eebc99-9c0b-4ef8-bb6d-6bb9bd380a88',
-        'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '2024-02-08 16:00:00'),
-       ('80000000-0000-0000-0000-00000000000b', 'd9eebc99-9c0b-4ef8-bb6d-6bb9bd380aaa',
-        'c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', '2024-02-09 12:00:00'),
-       ('80000000-0000-0000-0000-00000000000c', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-        'e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55', '2024-02-10 08:00:00');
+-- =========================
+-- 7) PLAYLISTS (유저당 2개씩 = 200개)
+-- =========================
+WITH owners AS (
+    SELECT id, row_number() OVER (ORDER BY created_at, id) AS rn
+    FROM public.users
+),
+     pl AS (
+         SELECT
+             gen_random_uuid() AS id,
+             o.id              AS owner_id,
+             (now() - (random() * interval '200 days')) AS created_at,
+             (now() - (random() * interval '30 days'))  AS updated_at,
+             format('플레이리스트 %03s-%s', o.rn, p)     AS title,
+             CASE WHEN random() < 0.65 THEN format('설명 %03s-%s', o.rn, p) ELSE NULL END AS description
+         FROM owners o
+                  CROSS JOIN generate_series(1, 2) AS p
+     )
+INSERT INTO public.playlists (created_at, updated_at, id, owner_id, description, title)
+SELECT created_at, updated_at, id, owner_id, description, title
+FROM pl;
 
--- 10. Notifications 테이블 (알림)
-INSERT INTO notifications (id, receiver_id, title, created_at, content, level, read_at, event_id)
-VALUES ('90000000-0000-0000-0000-000000000001', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '새로운 팔로워',
-        '2024-02-02 11:05:00', '이영희님이 회원님을 팔로우하기 시작했습니다.', 'INFO', '2024-02-02 15:00:00',
-        'db2de45c-b26d-4945-9137-ec402449c6f5'),
-       ('90000000-0000-0000-0000-000000000002', 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', '플레이리스트 구독',
-        '2024-02-05 11:05:00', '김철수님이 회원님의 플레이리스트를 구독했습니다.', 'INFO', NULL,
-        'bbead101-4b69-4f6c-a77e-97729e2dfa25'),
-       ('90000000-0000-0000-0000-000000000003', 'c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', '새로운 팔로워',
-        '2024-02-09 12:05:00', '한지민님이 회원님을 팔로우하기 시작했습니다.', 'INFO', '2024-02-09 13:00:00',
-        '4afb5724-7304-4e2a-8407-0d69d1e20532'),
-       ('90000000-0000-0000-0000-000000000004', 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44', '리뷰 알림', '2024-02-19 16:50:00',
-        '회원님이 좋아하는 콘텐츠에 새로운 리뷰가 달렸습니다.', 'INFO', NULL,
-        'a942bf8c-6f62-4ab3-8d5a-d6ea21adf7d3'),
-       ('90000000-0000-0000-0000-000000000005', 'e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55', '시스템 공지', '2024-02-20 09:00:00',
-        '서비스 업데이트가 예정되어 있습니다.', 'WARNING', '2024-02-20 10:00:00',
-        '6e7d710b-0abc-4505-9620-58f9919753a1'),
-       ('90000000-0000-0000-0000-000000000006', 'f5eebc99-9c0b-4ef8-bb6d-6bb9bd380a66', '새로운 팔로워',
-        '2024-02-04 13:05:00', '최지연님이 회원님을 팔로우하기 시작했습니다.', 'INFO', NULL,
-        'c988619c-6e82-45b3-a9b4-a2d7e225cd21'),
-       ('90000000-0000-0000-0000-000000000007', 'a6eebc99-9c0b-4ef8-bb6d-6bb9bd380a77', '플레이리스트 업데이트',
-        '2024-02-21 14:00:00', '구독 중인 플레이리스트에 새로운 콘텐츠가 추가되었습니다.', 'INFO', '2024-02-21 15:00:00',
-        'd9fb845f-f514-4b02-a518-c4c449f7c9ac'),
-       ('90000000-0000-0000-0000-000000000008', 'b7eebc99-9c0b-4ef8-bb6d-6bb9bd380a88', '새로운 팔로워',
-        '2024-02-06 10:05:00', '강서연님이 회원님을 팔로우하기 시작했습니다.', 'INFO', NULL,
-        'a933e98e-260e-4a2d-88a8-3200039c30f1'),
-       ('90000000-0000-0000-0000-000000000009', 'd9eebc99-9c0b-4ef8-bb6d-6bb9bd380aaa', '중요 공지', '2024-02-22 10:00:00',
-        '보안 업데이트를 진행해주세요.', 'ERROR', NULL,
-        '7dfe5f22-9938-45bb-91e1-93bb23bc3f14'),
-       ('90000000-0000-0000-0000-00000000000a', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '플레이리스트 구독',
-        '2024-02-12 18:05:00', '한지민님이 회원님의 플레이리스트를 구독했습니다.', 'INFO', NULL,
-        '1ed2a39e-2841-49a3-aab9-5d6b3461da99');
+-- =========================
+-- 8) PLAYLIST_CONTENTS (플레이리스트당 10개 컨텐츠)
+-- =========================
+INSERT INTO public.playlist_contents (created_at, content_id, id, playlist_id)
+SELECT
+    (now() - (random() * interval '200 days')),
+    c.id,
+    gen_random_uuid(),
+    p.id
+FROM public.playlists p
+         JOIN LATERAL (
+    SELECT id
+    FROM public.contents
+    ORDER BY random()
+        LIMIT 10
+) c ON true;
 
--- 11. Conversations 테이블 (대화방 - last_message_id는 나중에 업데이트)
-INSERT INTO conversations (id, created_at, last_message_id)
-VALUES ('a1000000-0000-0000-0000-000000000001', '2024-02-10 10:00:00', NULL),
-       ('a1000000-0000-0000-0000-000000000002', '2024-02-11 11:00:00', NULL),
-       ('a1000000-0000-0000-0000-000000000003', '2024-02-12 12:00:00', NULL),
-       ('a1000000-0000-0000-0000-000000000004', '2024-02-13 13:00:00', NULL);
+-- =========================
+-- 9) PLAYLIST_SUBSCRIPTIONS (플레이리스트당 0~4명 구독, owner 제외)
+-- =========================
+INSERT INTO public.playlist_subscriptions (created_at, id, playlist_id, user_id)
+SELECT
+    (now() - (random() * interval '200 days')),
+    gen_random_uuid(),
+    p.id,
+    u.id
+FROM public.playlists p
+         JOIN LATERAL (
+    SELECT id
+    FROM public.users
+    WHERE id <> p.owner_id
+    ORDER BY random()
+        LIMIT ((random() * 5)::int)  -- 0~4
+) u ON true;
 
--- 12. Conversation_Participants 테이블 (대화 참여자)
-INSERT INTO conversation_participants (id, created_at, user_id, conversation_id, last_read_at)
-VALUES ('b1000000-0000-0000-0000-000000000001', '2024-02-10 10:00:00', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-        'a1000000-0000-0000-0000-000000000001', '2024-02-10 14:30:00'),
-       ('b1000000-0000-0000-0000-000000000002', '2024-02-10 10:00:00', 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22',
-        'a1000000-0000-0000-0000-000000000001', '2024-02-10 14:20:00'),
-       ('b1000000-0000-0000-0000-000000000003', '2024-02-11 11:00:00', 'c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33',
-        'a1000000-0000-0000-0000-000000000002', '2024-02-11 16:00:00'),
-       ('b1000000-0000-0000-0000-000000000004', '2024-02-11 11:00:00', 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
-        'a1000000-0000-0000-0000-000000000002', '2024-02-11 15:30:00'),
-       ('b1000000-0000-0000-0000-000000000005', '2024-02-12 12:00:00', 'e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55',
-        'a1000000-0000-0000-0000-000000000003', '2024-02-12 18:00:00'),
-       ('b1000000-0000-0000-0000-000000000006', '2024-02-12 12:00:00', 'f5eebc99-9c0b-4ef8-bb6d-6bb9bd380a66',
-        'a1000000-0000-0000-0000-000000000003', NULL),
-       ('b1000000-0000-0000-0000-000000000007', '2024-02-13 13:00:00', 'a6eebc99-9c0b-4ef8-bb6d-6bb9bd380a77',
-        'a1000000-0000-0000-0000-000000000004', '2024-02-13 17:00:00'),
-       ('b1000000-0000-0000-0000-000000000008', '2024-02-13 13:00:00', 'b7eebc99-9c0b-4ef8-bb6d-6bb9bd380a88',
-        'a1000000-0000-0000-0000-000000000004', '2024-02-13 17:10:00');
-
--- 13. Direct_Messages 테이블 (다이렉트 메시지)
-INSERT INTO direct_messages (id, conversation_id, sender_id, content, created_at, read_at)
-VALUES ('c1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001',
-        'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '안녕하세요! 혹시 SF 영화 좋아하세요?', '2024-02-10 10:05:00', '2024-02-10 10:10:00'),
-       ('c1000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000001',
-        'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', '네! 인터스텔라 정말 좋아해요.', '2024-02-10 10:15:00', '2024-02-10 10:20:00'),
-       ('c1000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000001',
-        'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '저도요! 제 플레이리스트에 추가해뒀어요.', '2024-02-10 10:25:00', '2024-02-10 10:30:00'),
-       ('c1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000001',
-        'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', '저도 구독할게요!', '2024-02-10 14:15:00', '2024-02-10 14:20:00'),
-       ('c1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000002',
-        'c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', '기생충 보셨어요?', '2024-02-11 11:10:00', '2024-02-11 11:15:00'),
-       ('c1000000-0000-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000002',
-        'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44', '네, 정말 명작이더라고요!', '2024-02-11 11:20:00', '2024-02-11 11:25:00'),
-       ('c1000000-0000-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000002',
-        'c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', '한국 영화 플레이리스트 만들려고요.', '2024-02-11 15:00:00', '2024-02-11 15:30:00'),
-       ('c1000000-0000-0000-0000-000000000008', 'a1000000-0000-0000-0000-000000000003',
-        'e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55', 'K-POP 추천 좀 해주세요!', '2024-02-12 12:10:00', NULL),
-       ('c1000000-0000-0000-0000-000000000009', 'a1000000-0000-0000-0000-000000000003',
-        'f5eebc99-9c0b-4ef8-bb6d-6bb9bd380a66', '블랙핑크나 뉴진스 어때요?', '2024-02-12 12:20:00', NULL),
-       ('c1000000-0000-0000-0000-00000000000a', 'a1000000-0000-0000-0000-000000000003',
-        'e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55', '좋아요! 들어볼게요.', '2024-02-12 17:30:00', NULL),
-       ('c1000000-0000-0000-0000-00000000000b', 'a1000000-0000-0000-0000-000000000004',
-        'a6eebc99-9c0b-4ef8-bb6d-6bb9bd380a77', '해리포터 다시 읽고 있어요.', '2024-02-13 13:15:00', '2024-02-13 13:20:00'),
-       ('c1000000-0000-0000-0000-00000000000c', 'a1000000-0000-0000-0000-000000000004',
-        'b7eebc99-9c0b-4ef8-bb6d-6bb9bd380a88', '저도 어렸을 때 읽었는데, 다시 읽고 싶네요.', '2024-02-13 17:00:00',
-        '2024-02-13 17:10:00');
-
--- 14. Conversations 테이블의 last_message_id 업데이트
-UPDATE conversations
-SET last_message_id = 'c1000000-0000-0000-0000-000000000004'
-WHERE id = 'a1000000-0000-0000-0000-000000000001';
-UPDATE conversations
-SET last_message_id = 'c1000000-0000-0000-0000-000000000007'
-WHERE id = 'a1000000-0000-0000-0000-000000000002';
-UPDATE conversations
-SET last_message_id = 'c1000000-0000-0000-0000-00000000000a'
-WHERE id = 'a1000000-0000-0000-0000-000000000003';
-UPDATE conversations
-SET last_message_id = 'c1000000-0000-0000-0000-00000000000c'
-WHERE id = 'a1000000-0000-0000-0000-000000000004';
-
--- 데이터 확인 쿼리
-SELECT 'Users' as table_name, COUNT(*) as count
-FROM users
+-- =========================
+-- 10) CONVERSATIONS / PARTICIPANTS / DIRECT_MESSAGES
+--     last_message_id는 나중에 UPDATE로 채움(순환 FK 회피)
+-- =========================
+WITH pairs AS (
+    SELECT DISTINCT ON (a, b)
+    LEAST(u1.id, u2.id) AS a,
+    GREATEST(u1.id, u2.id) AS b
+FROM (SELECT id FROM public.users ORDER BY random() LIMIT 90) u1
+    CROSS JOIN (SELECT id FROM public.users ORDER BY random() LIMIT 90) u2
+WHERE u1.id <> u2.id
+ORDER BY a, b
+    LIMIT 120
+    ),
+    convs AS (
+SELECT
+    gen_random_uuid()                        AS id,
+    (now() - (random() * interval '120 days'))::timestamp AS created_at,
+    NULL::uuid                               AS last_message_id,
+    a, b
+FROM pairs
+    ),
+    ins_convs AS (
+INSERT INTO public.conversations (id, created_at, last_message_id)
+SELECT id, created_at, last_message_id
+FROM convs
+    RETURNING id, created_at, last_message_id
+    ),
+    conv_join AS (
+SELECT ic.id, ic.created_at, c.a, c.b
+FROM ins_convs ic
+    JOIN convs c USING (id)
+    ),
+    ins_participants AS (
+INSERT INTO public.conversation_participants (id, created_at, user_id, conversation_id, last_read_at)
+SELECT
+    gen_random_uuid(),
+    cj.created_at,
+    cj.a,
+    cj.id,
+    CASE WHEN random() < 0.70 THEN (cj.created_at + (random() * interval '90 days'))::timestamp ELSE NULL END
+FROM conv_join cj
 UNION ALL
-SELECT 'Contents', COUNT(*)
-FROM contents
-UNION ALL
-SELECT 'Tags', COUNT(*)
-FROM tags
-UNION ALL
-SELECT 'Content_Tags', COUNT(*)
-FROM content_tags
-UNION ALL
-SELECT 'Reviews', COUNT(*)
-FROM reviews
-UNION ALL
-SELECT 'Playlists', COUNT(*)
-FROM playlists
-UNION ALL
-SELECT 'Playlist_Contents', COUNT(*)
-FROM playlist_contents
-UNION ALL
-SELECT 'Playlist_Subscriptions', COUNT(*)
-FROM playlist_subscriptions
-UNION ALL
-SELECT 'Follows', COUNT(*)
-FROM follows
-UNION ALL
-SELECT 'Notifications', COUNT(*)
-FROM notifications
-UNION ALL
-SELECT 'Conversations', COUNT(*)
-FROM conversations
-UNION ALL
-SELECT 'Conversation_Participants', COUNT(*)
-FROM conversation_participants
-UNION ALL
-SELECT 'Direct_Messages', COUNT(*)
-FROM direct_messages;
+SELECT
+    gen_random_uuid(),
+    cj.created_at,
+    cj.b,
+    cj.id,
+    CASE WHEN random() < 0.70 THEN (cj.created_at + (random() * interval '90 days'))::timestamp ELSE NULL END
+FROM conv_join cj
+    RETURNING conversation_id
+    ),
+    ins_messages AS (
+INSERT INTO public.direct_messages (id, conversation_id, sender_id, "content", created_at, read_at)
+SELECT
+    gen_random_uuid(),
+    cj.id,
+    CASE WHEN (gs % 2) = 0 THEN cj.a ELSE cj.b END AS sender_id,
+    format('더미 DM #%s (conv %s)', gs, substring(cj.id::text, 1, 8)) AS "content",
+    (cj.created_at + (gs * interval '10 minutes'))::timestamp AS created_at,
+    CASE
+    WHEN random() < 0.60 THEN (cj.created_at + (gs * interval '10 minutes') + (random() * interval '2 hours'))::timestamp
+    ELSE NULL
+    END AS read_at
+FROM conv_join cj
+    JOIN LATERAL generate_series(1, (5 + (random() * 15)::int)) gs ON true
+    RETURNING id, conversation_id, created_at
+    )
+UPDATE public.conversations c
+SET last_message_id = x.id
+    FROM (
+  SELECT DISTINCT ON (conversation_id)
+    conversation_id,
+    id
+  FROM public.direct_messages
+  ORDER BY conversation_id, created_at DESC
+) x
+WHERE c.id = x.conversation_id;
+
+-- =========================
+-- 11) REVIEWS (컨텐츠 200개에 대해 컨텐츠당 2개 리뷰)
+--     이후 contents의 average_rating / review_count를 리뷰 기반으로 현실감 있게 업데이트
+-- =========================
+INSERT INTO public.reviews (rating, created_at, updated_at, author_id, content_id, id, "text")
+SELECT
+    round((1 + random() * 4)::numeric, 1)::float8 AS rating,  -- 1.0 ~ 5.0
+    (now() - (random() * interval '200 days'))    AS created_at,
+    CASE WHEN random() < 0.55 THEN (now() - (random() * interval '50 days')) ELSE NULL END AS updated_at,
+    u.id                                          AS author_id,
+    c.id                                          AS content_id,
+    gen_random_uuid()                             AS id,
+    format('더미 리뷰: content=%s, author=%s', substring(c.id::text,1,8), substring(u.id::text,1,8)) AS "text"
+FROM (SELECT id FROM public.contents ORDER BY random() LIMIT 200) c
+         JOIN LATERAL (
+    SELECT id
+    FROM public.users
+    ORDER BY random()
+        LIMIT 2
+) u ON true;
+
+WITH agg AS (
+    SELECT content_id, avg(rating) AS avg_rating, count(*) AS cnt
+    FROM public.reviews
+    GROUP BY content_id
+)
+UPDATE public.contents c
+SET
+    average_rating = round(agg.avg_rating::numeric, 2)::float8,
+  review_count   = agg.cnt::int
+FROM agg
+WHERE c.id = agg.content_id;
+
+-- =========================
+-- 12) NOTIFICATIONS (300개, level 고르게, read_at 일부만)
+-- =========================
+INSERT INTO public.notifications (id, receiver_id, title, created_at, "content", "level", read_at)
+SELECT
+    gen_random_uuid(),
+    u.id,
+    format('알림 #%s', gs),
+    (now() - (random() * interval '30 days'))::timestamp,
+    format('더미 알림 내용 #%s', gs),
+    CASE
+        WHEN (gs % 10) = 0 THEN 'ERROR'
+        WHEN (gs % 3) = 0 THEN 'WARNING'
+        ELSE 'INFO'
+        END,
+    CASE WHEN random() < 0.50 THEN (now() - (random() * interval '30 days'))::timestamp ELSE NULL END
+FROM generate_series(1, 300) gs
+    JOIN LATERAL (SELECT id FROM public.users ORDER BY random() LIMIT 1) u ON true;
+
+-- =========================
+-- 13) 권한 (요청하신 라인)
+-- =========================
+GRANT USAGE ON SCHEMA public TO public;
+
+COMMIT;
