@@ -2,16 +2,20 @@ package com.mopl.moplcore.domain.content.service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mopl.moplcore.domain.content.document.ContentDocument;
 import com.mopl.moplcore.domain.content.entity.Content;
+import com.mopl.moplcore.domain.content.entity.ContentTag;
 import com.mopl.moplcore.domain.content.repository.ContentRepository;
 import com.mopl.moplcore.domain.content.repository.ContentSearchRepository;
 import com.mopl.moplcore.domain.content.repository.ContentTagRepository;
@@ -32,37 +36,62 @@ public class ContentSyncService {
 
 	@Transactional(readOnly = true)
 	public long syncAllContents() {
-		log.info("Content 동기화 시작");
+		log.info("=== 동기화 시작 ===");
 
-		List<Content> contents = contentRepository.findAll();
-		Set<String> dbContentIds = contents.stream()
-			.map(c -> c.getId().toString())
-			.collect(Collectors.toSet());
-		log.info("동기화 할 Content 수: {}", contents.size());
+		contentSearchRepository.deleteAll();
+		log.info("기존 ES 인덱스 초기화 완료");
 
-		Iterable<ContentDocument> esIterable = contentSearchRepository.findAll();
-		List<ContentDocument> esDocuments = StreamSupport.stream(esIterable.spliterator(), false)
-			.toList();
-		Set<String> esContentIds = esDocuments.stream()
-			.map(ContentDocument::getContentId)
-			.collect(Collectors.toSet());
+		int pageSize = 1000;
+		int pageNumber = 0;
+		long totalSyncedCount = 0; // 전체 동기화 개수를 담을 변수
+		Page<Content> contentPage;
 
-		Set<String> toDelete = new HashSet<>(esContentIds);
-		toDelete.removeAll(dbContentIds);
-		toDelete.forEach(id -> {
-			contentSearchRepository.deleteById(id);
-			log.info("DB에 없는 Content 삭제: {}", id);
-		});
+		do {
+			contentPage = contentRepository.findAll(PageRequest.of(pageNumber, pageSize));
+			List<Content> contents = contentPage.getContent();
 
-		List<ContentDocument> documents = contents.stream()
-			.map(this::convertToDocument)
-			.collect(Collectors.toList());
-		contentSearchRepository.saveAll(documents);
+			if (contents.isEmpty())
+				break;
 
-		long count = contentSearchRepository.count();
-		log.info("Content 동기화 완료: {} 건", count);
+			List<UUID> contentIds = contents.stream().map(Content::getId).toList();
 
-		return count;
+			List<ContentTag> allTagsInBatch = contentTagRepository.findByContentIdIn(contentIds);
+
+			Map<UUID, List<String>> tagMap = allTagsInBatch.stream()
+				.collect(Collectors.groupingBy(ct -> ct.getContent().getId(),
+					Collectors.mapping(ct -> ct.getTag().getName(), Collectors.toList())));
+
+			List<ContentDocument> documents = contents.stream().map(content -> {
+				List<String> tags = tagMap.getOrDefault(content.getId(), List.of());
+				return convertToDocumentManual(content, tags);
+			}).toList();
+
+			contentSearchRepository.saveAll(documents);
+
+			totalSyncedCount += documents.size();
+			pageNumber++;
+
+			log.info("진행 상황: 현재까지 {} 건 완료", totalSyncedCount);
+
+		} while (contentPage.hasNext());
+
+		log.info("=== 동기화 최종 완료: 총 {} 건 ===", totalSyncedCount);
+		return totalSyncedCount;
+	}
+
+	private ContentDocument convertToDocumentManual(Content content, List<String> tags) {
+		return ContentDocument.builder()
+			.id(content.getId().toString())
+			.contentId(content.getId().toString())
+			.type(content.getType())
+			.title(content.getTitle())
+			.description(content.getDescription())
+			.thumbnailUrl(content.getThumbnailUrl())
+			.tags(tags)
+			.averageRating(content.getAverageRating())
+			.reviewCount(content.getReviewCount())
+			.createdAt(content.getCreatedAt())
+			.build();
 	}
 
 	@Transactional(readOnly = true)
