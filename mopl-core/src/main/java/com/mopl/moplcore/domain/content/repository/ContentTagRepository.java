@@ -12,6 +12,8 @@ public interface ContentTagRepository extends JpaRepository<ContentTag, UUID> {
 	@Query("SELECT ct FROM ContentTag ct JOIN FETCH ct.tag WHERE ct.content.id = :contentId")
 	List<ContentTag> findByContentId(UUID contentId);
 
+	List<ContentTag> findByContentIdIn(List<UUID> contentIds);
+
 	void deleteByContentId(UUID id);
 
 	@Query("""

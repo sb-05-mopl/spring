@@ -12,7 +12,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.mopl.moplwebsocketsse.security.config.SecurityPaths;
 import com.mopl.moplwebsocketsse.security.exception.InValidAccessTokenException;
 import com.mopl.moplwebsocketsse.security.jwt.JwtTokenProvider;
-import com.mopl.moplwebsocketsse.security.jwt.registry.JwtRegistry;
+
 import com.mopl.moplwebsocketsse.security.principal.MoplUserDetails;
 import com.mopl.moplwebsocketsse.security.registry.JwtRegistry;
 

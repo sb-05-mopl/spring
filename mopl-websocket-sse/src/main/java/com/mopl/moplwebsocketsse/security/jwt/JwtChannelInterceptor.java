@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 
 import com.mopl.moplwebsocketsse.domain.user.entity.Role;
 import com.mopl.moplwebsocketsse.security.exception.InValidAccessTokenException;
-import com.mopl.moplwebsocketsse.security.jwt.registry.JwtRegistry;
+import com.mopl.moplwebsocketsse.security.registry.JwtRegistry;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,11 +44,11 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
 
 			if (!jwtTokenProvider.validateAccessToken(token)) {
 				log.warn("WebSocket 연결 실패: 유효하지 않은 JWT 토큰");
-				throw new InValidAccessTokenException();
+				throw new InValidAccessTokenException("유효하지 않은 액세스 토큰");
 			}
 
 			if (!jwtRegistry.hasActiveJwtInformationByAccessToken(token))
-				throw new InValidAccessTokenException();
+				throw new InValidAccessTokenException("유효하지 않은 액세스토큰");
 
 			UUID userId = jwtTokenProvider.getUserId(token);
 			Role role = jwtTokenProvider.getRole(token);
