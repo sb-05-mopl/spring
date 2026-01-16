@@ -12,6 +12,7 @@ import com.mopl.moplwebsocketsse.domain.notification.dto.NotificationDto;
 import com.mopl.moplwebsocketsse.domain.notification.dto.NotificationSortBy;
 import com.mopl.moplwebsocketsse.domain.notification.dto.NotificationSortDirection;
 import com.mopl.moplwebsocketsse.domain.notification.entity.Notification;
+import com.mopl.moplwebsocketsse.domain.notification.event.NotificationEvent;
 import com.mopl.moplwebsocketsse.domain.notification.repository.NotificationRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,9 @@ public class NotificationService {
 
 	private final NotificationRepository notificationRepository;
 
+	public record NotificationReplay(UUID eventId, NotificationDto payload) {
+	}
+
 	@Transactional(readOnly = true)
 	public CursorResponseNotificationDto<NotificationDto> findNotifications(
 		UUID me,
@@ -31,9 +35,6 @@ public class NotificationService {
 		NotificationSortBy sortBy,
 		NotificationSortDirection sortDirection
 	) {
-		if (me == null) {
-			throw new AccessDeniedException("사용자 ID가 없어 접근이 거부되었습니다. : " + me);
-		}
 		if (sortBy != NotificationSortBy.createdAt) {
 			throw new IllegalArgumentException("지원되지 않는 정렬 방식입니다 : " + sortBy);
 		}
@@ -86,20 +87,63 @@ public class NotificationService {
 		}
 	}
 
-	@Transactional
-	public NotificationDto saveIfAbsentFromEvent(NotificationDto dto) {
-		if (notificationRepository.existsById(dto.id())) {
-			return dto;
+	@Transactional(readOnly = true)
+	public List<NotificationReplay> findMissedForReplay(UUID receiverId, String lastEventId, int limit) {
+		if (lastEventId == null || lastEventId.isBlank()) {
+			return List.of();
 		}
 
-		Notification entity = new Notification(
-			dto.receiverId(),
-			dto.title(),
-			dto.content(),
-			dto.level()
-		);
-		Notification saved = notificationRepository.save(entity);
+		UUID pivotEventId;
+		try {
+			pivotEventId = UUID.fromString(lastEventId.trim());
+		} catch (Exception e) {
+			return List.of();
+		}
 
-		return NotificationDto.from(saved);
+		Notification pivot = notificationRepository
+			.findByEventIdAndReceiverId(pivotEventId, receiverId).orElse(null);
+		if (pivot == null) {
+			return List.of();
+		}
+
+		int size = Math.min(Math.max(limit, 1), 100);
+
+		List<Notification> fetched = notificationRepository.findByReceiverIdWithCursor(
+			receiverId,
+			pivot.getCreatedAt().toString(),
+			pivot.getId(),
+			size,
+			NotificationSortBy.createdAt,
+			NotificationSortDirection.ASCENDING
+		);
+
+		if (fetched.size() > size) {
+			fetched = fetched.subList(0, size);
+		}
+
+		return fetched.stream()
+			.map(n -> new NotificationReplay(n.getEventId(), NotificationDto.from(n)))
+			.toList();
 	}
+
+	@Transactional
+	public NotificationDto createFromEvent(NotificationEvent event, String title, String content) {
+		Notification existed = notificationRepository
+			.findByEventIdAndReceiverId(event.eventId(), event.receiverId())
+			.orElse(null);
+		if (existed != null) {
+			return NotificationDto.from(existed);
+		}
+
+		Notification notification = new Notification(
+			event.receiverId(),
+			title,
+			content,
+			event.level(),
+			event.eventId()
+		);
+
+		return NotificationDto.from(notificationRepository.save(notification));
+	}
+
 }
