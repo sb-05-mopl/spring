@@ -85,7 +85,7 @@ public class DirectMessageService {
 		String destination = DM_DEST_PREFIX + conversationId + DM_DEST_SUFFIX;
 		messagingTemplate.convertAndSend(destination, dto);
 
-		sseService.send(receiver.getId(), "direct-messages", dto.id().toString(), dto);
+		sseService.broadcast(receiver.getId(), "direct-messages", dto.id().toString(), dto);
 
 		log.debug("[DirectMessageService] Message sent. conversationId={}, senderId={}, receiverId={}",
 			conversationId, senderId, receiver.getId());
