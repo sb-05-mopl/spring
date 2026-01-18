@@ -29,6 +29,9 @@ import com.mopl.moplcore.domain.playlist.repository.PlaylistSubscriptionReposito
 import com.mopl.moplcore.domain.user.dto.UserSummary;
 import com.mopl.moplcore.domain.user.entity.User;
 import com.mopl.moplcore.domain.user.repository.UserRepository;
+import com.mopl.moplcore.global.event.notification.NotificationEvent;
+import com.mopl.moplcore.global.event.notification.NotificationEventFactory;
+import com.mopl.moplcore.global.event.publisher.notification.NotificationEventPublisher;
 
 import lombok.RequiredArgsConstructor;
 
@@ -45,6 +48,7 @@ public class PlaylistService {
 	private final ContentRepository contentRepository;
 	private final ContentTagRepository contentTagRepository;
 	private final UserRepository userRepository;
+	private final NotificationEventPublisher notificationEventPublisher;
 
 	@Transactional
 	public PlaylistDto createPlaylist(UUID userId, PlaylistCreateRequest request) {
@@ -138,6 +142,18 @@ public class PlaylistService {
 
 		PlaylistContent playlistContent = new PlaylistContent(playlist, content);
 		playlistContentRepository.save(playlistContent);
+
+		List<UUID> subscriberIds = playlistSubscriptionRepository.findSubscriberIdsByPlaylistId(playlistId);
+
+		for (UUID receiverId : subscriberIds) {
+			NotificationEvent event = NotificationEventFactory.subscribedPlaylistContentAdded(
+				receiverId,
+				playlistId,
+				contentId
+			);
+
+			notificationEventPublisher.publish(event);
+		}
 	}
 
 	@Transactional
@@ -166,6 +182,18 @@ public class PlaylistService {
 
 		PlaylistSubscription subscription = new PlaylistSubscription(playlist, user);
 		playlistSubscriptionRepository.save(subscription);
+
+		UUID receiverId = playlist.getOwner().getId();
+
+		if (!receiverId.equals(user.getId())) {
+			NotificationEvent event = NotificationEventFactory.playlistSubscribed(
+				receiverId,
+				playlistId,
+				user.getId()
+			);
+
+			notificationEventPublisher.publish(event);
+		}
 	}
 
 	@Transactional
