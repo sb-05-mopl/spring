@@ -86,9 +86,12 @@ public class UserController {
 	@PatchMapping(value = "/{userId}/role")
 	public ResponseEntity<Void> updateRole(
 		@PathVariable UUID userId,
-		@RequestBody UpdateRoleRequest dto
+		@RequestBody UpdateRoleRequest dto,
+		@AuthenticationPrincipal MoplUserDetails adminDetails
 	) {
-		userService.updateRole(dto.getRole(), userId);
+		UUID adminId = adminDetails.getUserDto().getId();
+
+		userService.updateRole(dto.getRole(), userId, adminId);
 		jwtRegistry.invalidateJwtInformationByUserId(userId);
 		return ResponseEntity.ok().build();
 	}

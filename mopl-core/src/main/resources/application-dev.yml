@@ -35,6 +35,13 @@ spring:
     connection-timeout: 10s
     socket-timeout: 60s
 
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:29092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+
 logging:
   level:
     root: INFO
@@ -43,3 +50,8 @@ logging:
     org.springframework.security: DEBUG
 search:
   engine: elasticsearch
+
+mopl:
+  kafka:
+    topics:
+      notifications: ${MOPL_KAFKA_TOPICS_NOTIFICATIONS:notification.events}

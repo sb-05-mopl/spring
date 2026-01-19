@@ -27,13 +27,13 @@ public class SseService {
 		emitter.onTimeout(() -> removeEmitter(userId, emitter));
 		emitter.onError((e) -> removeEmitter(userId, emitter));
 
-		send(userId, "connected", UUID.randomUUID().toString(),
+		send(emitter, "connected", UUID.randomUUID().toString(),
 			Map.of("connectedAt", Instant.now().toString()));
 
 		return emitter;
 	}
 
-	public void send(UUID userId, String eventName, String eventId, Object data) {
+	public void broadcast(UUID userId, String eventName, String eventId, Object data) {
 		List<SseEmitter> list = emitters.get(userId);
 
 		if (list == null || list.isEmpty()) {
@@ -48,6 +48,20 @@ public class SseService {
 					.data(data, MediaType.APPLICATION_JSON));
 			} catch (IOException e) {
 				removeEmitter(userId, emitter);
+			}
+		}
+	}
+
+	public void send(SseEmitter emitter, String eventName, String eventId, Object data) {
+		try {
+			emitter.send(SseEmitter.event()
+				.name(eventName)
+				.id(eventId)
+				.data(data, MediaType.APPLICATION_JSON));
+		} catch (IOException e) {
+			try {
+				emitter.complete();
+			} catch (Exception ignore) {
 			}
 		}
 	}

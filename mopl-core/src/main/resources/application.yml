@@ -1,6 +1,9 @@
 server:
   port: 8080
   address: 0.0.0.0
+  tomcat:
+    mbeanregistry:
+      enabled: true
 
 spring:
   application:
@@ -71,7 +74,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info, metrics, env
+        include: health, info, metrics, env, prometheus
 
   endpoint:
     health:
@@ -80,6 +83,11 @@ management:
   health:
     redis:
       enabled: false
+
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
 
 cloud:
   aws:
@@ -102,4 +110,3 @@ init:
   user:
     email: ${INIT_USER_EMAIL:test@mopl.com}
     password: ${INIT_USER_PASSWORD:1234qwer}
-

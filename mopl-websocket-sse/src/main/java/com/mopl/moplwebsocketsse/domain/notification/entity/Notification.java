@@ -32,10 +32,14 @@ public class Notification extends BaseEntity {
 	@Column(nullable = false)
 	private NotificationLevel level;
 
-	public Notification(UUID receiverId, String title, String content, NotificationLevel level) {
+	@Column(name = "event_id", nullable = false, unique = true)
+	private UUID eventId;
+
+	public Notification(UUID receiverId, String title, String content, NotificationLevel level, UUID eventId) {
 		this.receiverId = receiverId;
 		this.title = title;
 		this.content = content;
 		this.level = level;
+		this.eventId = eventId;
 	}
 }

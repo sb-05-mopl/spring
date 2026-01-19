@@ -24,6 +24,8 @@ import com.mopl.moplcore.domain.watch.repository.WatchingSessionReader;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,6 +42,7 @@ public class ContentSearchService {
 	private final WatchingSessionReader watchingSessionReader;
 	private final WatcherCountSyncService watcherCountSyncService;
 	private final ContentSyncService contentSyncService;
+	private final MeterRegistry meterRegistry;
 
 	public CursorResponseContentDto searchContents(ContentSearchRequest request) {
 		if (request.getSortBy() == ContentSearchRequest.SortBy.watcherCount) {
@@ -67,14 +70,18 @@ public class ContentSearchService {
 			}
 		}
 
+		Timer.Sample esSample = Timer.start(meterRegistry);
 		SearchHits<ContentDocument> searchHits = elasticsearchOperations.search(queryBuilder.build(),
 			ContentDocument.class);
+		esSample.stop(Timer.builder("content.search.elasticsearch").register(meterRegistry));
 
 		List<ContentDocument> documents = searchHits.getSearchHits().stream().map(SearchHit::getContent).toList();
 
+		Timer.Sample countSample = Timer.start(meterRegistry);
 		long totalCount = elasticsearchOperations.count(
 			NativeQuery.builder().withQuery(q -> q.bool(buildBasicFilters(request).build())).build(),
 			ContentDocument.class);
+		countSample.stop(Timer.builder("content.search.count").register(meterRegistry));
 
 		boolean hasNext = documents.size() > request.getLimit();
 		if (hasNext)
@@ -84,11 +91,15 @@ public class ContentSearchService {
 			.map(doc -> UUID.fromString(doc.getContentId()))
 			.toList();
 
+		Timer.Sample watcherCountSample = Timer.start(meterRegistry);
 		Map<UUID, Long> watcherCountMap = watchingSessionReader.countByContentIds(contentIds);
+		watcherCountSample.stop(Timer.builder("content.search.watcherCount").register(meterRegistry));
 
+		Timer.Sample mappingSample = Timer.start(meterRegistry);
 		List<ContentDto> contentDtos = documents.stream()
 			.map(doc -> toDto(doc, watcherCountMap))
 			.toList();
+		mappingSample.stop(Timer.builder("content.search.mapping").register(meterRegistry));
 		String nextCursor = generateNextCursor(documents, hasNext, request);
 
 		return CursorResponseContentDto.builder()
