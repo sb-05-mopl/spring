@@ -7,13 +7,13 @@ spring:
 
   sql:
     init:
-      mode: always
-      schema-locations: classpath:sql/schema.sql
-      data-locations: classpath:sql/dummy.sql
+#      mode: always
+#      schema-locations: classpath:sql/schema.sql
+#      data-locations: classpath:sql/dummy.sql
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:

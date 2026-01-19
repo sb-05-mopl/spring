@@ -19,12 +19,32 @@ spring:
         jdbc:
           time_zone: Asia/Seoul
 
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
 
+  elasticsearch:
+    uris: ${SPRING_ELASTIC_SERVERS}
+    connection-timeout: 10s
+    socket-timeout: 60s
 
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+
+mopl:
+  kafka:
+    topics:
+      notifications: ${MOPL_KAFKA_TOPICS_NOTIFICATIONS}
 
 logging:
   level:
