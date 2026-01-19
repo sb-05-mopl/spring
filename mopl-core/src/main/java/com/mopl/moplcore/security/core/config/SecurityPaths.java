@@ -32,7 +32,8 @@ public class SecurityPaths {
 		"/error",
 		"/uploads/**",
 		"/.well-known/**",
-		"/default-ui.css"
+		"/default-ui.css",
+		"/actuator/**"
 	};
 
 	public static class MethodSpecific {
