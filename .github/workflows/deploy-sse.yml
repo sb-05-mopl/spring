@@ -1,9 +1,9 @@
-name: deploy-sse.yml
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - "mopl-websocket-sse/**"
-      - ".github/workflows/deploy-sse.yml"
-jobs:
+#name: deploy-sse.yml
+#on:
+#  push:
+#    branches:
+#      - main
+#    paths:
+#      - "mopl-websocket-sse/**"
+#      - ".github/workflows/deploy-sse.yml"
+#jobs:
