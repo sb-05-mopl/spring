@@ -35,6 +35,8 @@ import com.mopl.moplcore.domain.user.dto.UserSummary;
 import com.mopl.moplcore.domain.user.entity.User;
 import com.mopl.moplcore.domain.user.repository.UserRepository;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -50,6 +52,7 @@ public class PlaylistService {
 	private final ContentRepository contentRepository;
 	private final ContentTagRepository contentTagRepository;
 	private final UserRepository userRepository;
+	private final MeterRegistry meterRegistry;
 
 	@Transactional
 	public PlaylistDto createPlaylist(UUID userId, PlaylistCreateRequest request) {
@@ -63,8 +66,13 @@ public class PlaylistService {
 	}
 
 	public CursorResponsePlaylistDto searchPlaylists(PlaylistSearchRequest request, UUID currentUserId) {
+		Timer.Sample mainSample = Timer.start(meterRegistry);
 		List<Playlist> playlists = playlistRepository.searchPlaylists(request);
+		mainSample.stop(Timer.builder("playlist.search.repository.main").register(meterRegistry));
+
+		Timer.Sample countSample = Timer.start(meterRegistry);
 		Long totalCount = playlistRepository.countPlaylists(request);
+		countSample.stop(Timer.builder("playlist.search.repository.count").register(meterRegistry));
 
 		boolean hasNext = playlists.size() > request.getLimit();
 		if (hasNext) {
@@ -75,7 +83,7 @@ public class PlaylistService {
 			.map(Playlist::getId)
 			.toList();
 
-		// 1. subscriberCount Map
+		Timer.Sample subscriberCountSample = Timer.start(meterRegistry);
 		Map<UUID, Long> countMap = playlistSubscriptionRepository
 			.countByPlaylistIds(playlistIds)
 			.stream()
@@ -83,24 +91,27 @@ public class PlaylistService {
 				arr -> (UUID) arr[0],
 				arr -> (Long) arr[1]
 			));
+		subscriberCountSample.stop(Timer.builder("playlist.search.subscriberCount").register(meterRegistry));
 
-		// 2. subscribedByMe Set
+		Timer.Sample subscribedByMeSample = Timer.start(meterRegistry);
 		Set<UUID> subscribedIds = currentUserId != null
 			? new HashSet<>(playlistSubscriptionRepository.findSubscribedPlaylistIds(playlistIds, currentUserId))
 			: Collections.emptySet();
+		subscribedByMeSample.stop(Timer.builder("playlist.search.subscribedByMe").register(meterRegistry));
 
-		// 3. contents Map
+		Timer.Sample contentsSample = Timer.start(meterRegistry);
 		Map<UUID, List<PlaylistContent>> contentsMap = playlistContentRepository
 			.findByPlaylistIds(playlistIds)
 			.stream()
 			.collect(Collectors.groupingBy(pc -> pc.getPlaylist().getId()));
+		contentsSample.stop(Timer.builder("playlist.search.contents").register(meterRegistry));
 
-		// 4. tags Map
 		List<UUID> contentIds = contentsMap.values().stream()
 			.flatMap(List::stream)
 			.map(pc -> pc.getContent().getId())
 			.toList();
 
+		Timer.Sample tagsSample = Timer.start(meterRegistry);
 		Map<UUID, List<String>> tagsMap = contentTagRepository
 			.findByContentIds(contentIds)
 			.stream()
@@ -108,10 +119,13 @@ public class PlaylistService {
 				ct -> ct.getContent().getId(),
 				Collectors.mapping(ct -> ct.getTag().getName(), Collectors.toList())
 			));
+		tagsSample.stop(Timer.builder("playlist.search.tags").register(meterRegistry));
 
+		Timer.Sample mappingSample = Timer.start(meterRegistry);
 		List<PlaylistDto> playlistDtos = playlists.stream()
 			.map(playlist -> toDto(playlist, countMap, subscribedIds, contentsMap, tagsMap))
 			.toList();
+		mappingSample.stop(Timer.builder("playlist.search.mapping").register(meterRegistry));
 
 		String nextCursor = null;
 		if (hasNext && !playlists.isEmpty()) {
