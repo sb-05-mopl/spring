@@ -27,13 +27,20 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Nginx Docker 이미지 생성
-        run: docker build -t mopl-nginx -f nginx/Dockerfile-nginx .
+        run: docker build -t mopl-nginx -f nginx/Dockerfile-nginx-deploy .
 
       - name: Nginx Docker 이미지에 Tag 붙이기.
         run: docker tag mopl-nginx ${{steps.login-ecr.outputs.registry}}/mopl/nginx:latest
 
       - name: ECR에 Nginx Docker 이미지 Push
         run: docker push ${{steps.login-ecr.outputs.registry}}/mopl/nginx:latest
+
+      - name: .env 파일 생성
+        run: |
+          cat > .env << EOF
+          SPRING_API_HOST=${{secrets.SPRING_API_HOST}}
+          WEBSOCKET_HOST=${{secrets.WEBSOCKET_HOST}}
+          EOF
 
       - name: 압축하기
         run: |
@@ -42,6 +49,7 @@ jobs:
           cp deploy/nginx/docker-compose.prod.yml ./docker-compose.prod.yml
           tar -czvf $GITHUB_SHA.tar.gz \
             appspec.yml \
+            .env \
             scripts \
             docker-compose.prod.yml
       - name: S3에 프로젝트 폴더 업로드 하기
