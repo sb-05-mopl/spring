@@ -24,6 +24,7 @@ class WatchingSessionReaderTest {
 
 	@Test
 	void countByContentId_동작확인() {
+		// // given
 		// UUID contentId = UUID.randomUUID();
 		// String key = "watch:content:" + contentId;
 		//
