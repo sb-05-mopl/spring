@@ -80,6 +80,8 @@ public class ContentSyncService {
 	}
 
 	private ContentDocument convertToDocumentManual(Content content, List<String> tags) {
+		long watcherCount = watchingSessionReader.countByContentId(content.getId());
+
 		return ContentDocument.builder()
 			.id(content.getId().toString())
 			.contentId(content.getId().toString())
@@ -90,6 +92,7 @@ public class ContentSyncService {
 			.tags(tags)
 			.averageRating(content.getAverageRating())
 			.reviewCount(content.getReviewCount())
+			.watcherCount(watcherCount)
 			.createdAt(content.getCreatedAt())
 			.build();
 	}
@@ -127,6 +130,8 @@ public class ContentSyncService {
 			.map(ct -> ct.getTag().getName())
 			.collect(Collectors.toList());
 
+		long watcherCount = watchingSessionReader.countByContentId(content.getId());
+
 		return ContentDocument.builder()
 			.id(content.getId().toString())
 			.contentId(content.getId().toString())
@@ -137,7 +142,7 @@ public class ContentSyncService {
 			.tags(tags)
 			.averageRating(content.getAverageRating())
 			.reviewCount(content.getReviewCount())
-			.watcherCount(0L)
+			.watcherCount(watcherCount)
 			.createdAt(content.getCreatedAt())
 			.build();
 	}
