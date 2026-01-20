@@ -26,7 +26,6 @@ jobs:
 
       - name: 빌드
         run: ./gradlew :mopl-websocket-sse:clean :mopl-websocket-sse:build
-
       - name: AWS Resource에 접근할 수 있게 AWS credentials 설정
         uses: aws-actions/configure-aws-credentials@v4
         with:
