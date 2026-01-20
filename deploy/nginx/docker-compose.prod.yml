@@ -5,7 +5,6 @@ services:
     image: 989775483620.dkr.ecr.ap-northeast-2.amazonaws.com/mopl/nginx:latest
     container_name: nginx
     restart: unless-stopped
-
     ports:
       - "80:80"
       - "443:443"
