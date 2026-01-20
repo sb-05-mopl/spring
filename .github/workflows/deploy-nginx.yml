@@ -42,7 +42,6 @@ jobs:
           cp deploy/nginx/docker-compose.prod.yml ./docker-compose.prod.yml
           tar -czvf $GITHUB_SHA.tar.gz \
             appspec.yml \
-            .env \
             scripts \
             docker-compose.prod.yml
       - name: S3에 프로젝트 폴더 업로드 하기
