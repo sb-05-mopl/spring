@@ -99,5 +99,5 @@ jobs:
           aws deploy create-deployment \
             --application-name mopl-spring-core \
             --deployment-config-name CodeDeployDefault.AllAtOnce \
-            --deployment-group-name mopl-deploy-group \
+            --deployment-group-name mopl-deploy-group-spring \
             --s3-location bucket=mopl-deploy-4,key=spring/$GITHUB_SHA.tar.gz,bundleType=tgz
