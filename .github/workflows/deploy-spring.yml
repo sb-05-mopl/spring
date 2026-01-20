@@ -73,6 +73,7 @@ jobs:
           
           GOOGLE_CLIENT_ID=${{secrets.GOOGLE_CLIENT_ID}}
           GOOGLE_CLIENT_SECRET=${{secrets.GOOGLE_CLIENT_SECRET}}
+          
           KAKAO_CLIENT_ID=${{secrets.KAKAO_CLIENT_ID}}
           KAKAO_CLIENT_SECRET=${{secrets.KAKAO_CLIENT_SECRET}}
           
