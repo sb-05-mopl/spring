@@ -29,7 +29,6 @@ import com.mopl.moplwebsocketsse.domain.user.repository.UserRepository;
 // @SpringBootTest
 // @ActiveProfiles("test")
 class ConversationDistributedLockTest {
-
 	// @Autowired
 	// private ConversationService conversationService;
 	//
