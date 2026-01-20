@@ -2,7 +2,7 @@ name: Deploy Spring-Websocket To EC2
 on:
   push:
     branches:
-      - deploy
+      - main
     paths:
       - "mopl-websocket-sse/**"
       - ".github/workflows/deploy-websocket.yml"
