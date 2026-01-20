@@ -83,4 +83,4 @@ jobs:
             --application-name mopl-spring-websocket \
             --deployment-config-name CodeDeployDefault.AllAtOnce \
             --deployment-group-name mopl-deploy-group-websocket \
-            --s3-location bucket=mopl-deploy-4,key=spring/$GITHUB_SHA.tar.gz,bundleType=tgz
+            --s3-location bucket=mopl-deploy-4,key=websocket/$GITHUB_SHA.tar.gz,bundleType=tgz
