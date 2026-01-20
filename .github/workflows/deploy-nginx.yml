@@ -5,7 +5,7 @@ on:
       - deploy
     paths:
       - "nginx/**"
-      - "deploy-nginx.yml"
+      - ".github/workflows/deploy-nginx.yml"
       - "deploy/nginx/**"
 
 jobs:
