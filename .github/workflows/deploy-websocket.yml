@@ -62,6 +62,12 @@ jobs:
           
           REDIS_HOST=${{secrets.REDIS_HOST}}
           REDIS_PORT=${{secrets.REDIS_PORT}}
+          
+          JWT_ACCESS_TOKEN_EXPIRCATION_MS=${{secrets.JWT_ACCESS_TOKEN_EXPIRCATION_MS}}
+          JWT_REFRESH_TOKEN_EXPIRCATION_MS=${{secrets.JWT_REFRESH_TOKEN_EXPIRCATION_MS}}
+          JWT_ACCESS_TOKEN_KEY=${{secrets.JWT_ACCESS_TOKEN_KEY}}
+          JWT_REFRESH_TOKEN_KEY=${{secrets.JWT_REFRESH_TOKEN_KEY}}
+          
           EOF
 
       - name: 압축하기
