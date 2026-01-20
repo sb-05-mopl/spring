@@ -33,6 +33,7 @@ public class StmpEmailServiceTest {
 		Instant baseDate = Instant.now();
 
 		// emailService.sendTemporaryPassword(testEmail, tempPassword, baseDate);
+		// emailService.sendTemporaryPassword(testEmail, tempPassword, baseDate);
 
 		System.out.println("이메일 전송 완료!");
 	}
