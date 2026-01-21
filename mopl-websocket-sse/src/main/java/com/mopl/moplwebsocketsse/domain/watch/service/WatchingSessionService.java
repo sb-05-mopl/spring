@@ -7,6 +7,9 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +45,7 @@ public class WatchingSessionService {
 	private final UserRepository userRepository;
 	private final ContentRepository contentRepository;
 	private final ContentTagRepository contentTagRepository;
+	private final MeterRegistry meterRegistry;
 
 	public WatchingSessionChange createJoinMessage(WatchingSession watchingSession) {
 		UserSummary userSummary = getUserSummary(watchingSession.getWatcherId());
@@ -97,6 +101,7 @@ public class WatchingSessionService {
 		SortDirection sortDirection = request.sortDirection();
 		String watcherNameLike = request.watcherNameLike();
 
+		Timer.Sample redisSessionSample = Timer.start(meterRegistry);
 		List<WatchingSession> sessions = watchingSessionRepository.findSessionsByContentId(
 			contentId,
 			cursor,
@@ -105,6 +110,7 @@ public class WatchingSessionService {
 			sortBy,
 			sortDirection
 		);
+		redisSessionSample.stop(meterRegistry.timer("watching.session.redis.find"));
 
 		boolean hasNext;
 		String nextCursor = null;
@@ -122,7 +128,11 @@ public class WatchingSessionService {
 			if (!sessions.isEmpty()) {
 				WatchingSession lastSession = sessions.getLast();
 				double lastScore = lastSession.getCreatedAt().toEpochMilli();
+
+				Timer.Sample redisHasMoreSample = Timer.start(meterRegistry);
 				hasNext = watchingSessionRepository.hasMoreAfter(contentId, lastScore, sortDirection);
+				redisHasMoreSample.stop(meterRegistry.timer("watching.session.redis.hasmore"));
+
 				if (hasNext) {
 					nextCursor = String.valueOf(lastSession.getCreatedAt().toEpochMilli());
 					nextIdAfter = lastSession.getId();
@@ -138,17 +148,23 @@ public class WatchingSessionService {
 			.distinct()
 			.toList();
 
+		Timer.Sample dbUserSample = Timer.start(meterRegistry);
 		Map<UUID, User> userMap = userRepository.findAllById(watcherIds).stream()
 			.collect(Collectors.toMap(User::getId, Function.identity()));
+		dbUserSample.stop(meterRegistry.timer("watching.session.db.user"));
 
 		// 2. Content 단일 조회
+		Timer.Sample dbContentSample = Timer.start(meterRegistry);
 		Content content = contentRepository.findById(contentId)
 			.orElseThrow(() -> ContentNotFoundException.withContentId(contentId));
+		dbContentSample.stop(meterRegistry.timer("watching.session.db.content"));
 
 		// 3. Tag 단일 조회 (같은 contentId)
+		Timer.Sample dbTagSample = Timer.start(meterRegistry);
 		List<String> tags = contentTagRepository.findTagsByContentId(contentId).stream()
 			.map(Tag::getName)
 			.toList();
+		dbTagSample.stop(meterRegistry.timer("watching.session.db.tag"));
 
 		ContentSummary contentSummary = ContentSummary.builder()
 			.id(content.getId())
@@ -187,7 +203,9 @@ public class WatchingSessionService {
 			dtos.add(dto);
 		}
 
+		Timer.Sample redisCountSample = Timer.start(meterRegistry);
 		long totalCount = watchingSessionRepository.countWatchersByContentId(contentId);
+		redisCountSample.stop(meterRegistry.timer("watching.session.redis.count"));
 
 		return new CursorResponseWatchingSessionDto(
 			dtos,
