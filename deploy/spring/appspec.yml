@@ -7,7 +7,6 @@ permissions:
   - object: /
     owner: ubuntu
     group: ubuntu
-
 hooks:
   ApplicationStart:
     - location: scripts/starts.sh
