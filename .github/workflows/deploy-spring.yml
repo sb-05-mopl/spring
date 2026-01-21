@@ -2,7 +2,7 @@ name: Deploy Spring-Core To EC2
 on:
   push:
     branches:
-      - main
+      - deploy
     paths:
       - "mopl-core/**"
       - ".github/workflows/deploy-spring.yml"
