@@ -13,6 +13,7 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        generate_statistics: true
 
   flyway:
     enabled: false
@@ -26,3 +27,11 @@ logging:
   level:
     root: INFO
     com.mopl: DEBUG
+jwt:
+  max-active: 1
+  access-token:
+    secret: test-access-token-secret-key-must-be-long-enough-for-hmac
+    expiration-ms: 3600000
+  refresh-token:
+    secret: test-refresh-token-secret-key-must-be-long-enough-for-hmac
+    expiration-ms: 86400000

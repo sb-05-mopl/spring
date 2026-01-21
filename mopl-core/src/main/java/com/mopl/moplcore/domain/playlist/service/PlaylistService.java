@@ -37,6 +37,8 @@ import com.mopl.moplcore.global.event.notification.NotificationEventFactory;
 import com.mopl.moplcore.global.event.notification.NotificationMetaSpec;
 import com.mopl.moplcore.global.event.publisher.notification.NotificationEventPublisher;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -78,17 +80,24 @@ public class PlaylistService {
 	}
 
 	public CursorResponsePlaylistDto searchPlaylists(PlaylistSearchRequest request, UUID currentUserId) {
+		Timer.Sample searchSample = Timer.start(meterRegistry);
 		List<Playlist> playlists = playlistRepository.searchPlaylists(request);
+		searchSample.stop(Timer.builder("playlist.search.repository.main").register(meterRegistry));
+
+		Timer.Sample countSample = Timer.start(meterRegistry);
 		Long totalCount = playlistRepository.countPlaylists(request);
+		countSample.stop(Timer.builder("playlist.search.repository.count").register(meterRegistry));
 
 		boolean hasNext = playlists.size() > request.getLimit();
 		if (hasNext) {
 			playlists = playlists.subList(0, request.getLimit());
 		}
 
+		Timer.Sample mappingSample = Timer.start(meterRegistry);
 		List<PlaylistDto> playlistDtos = playlists.stream()
 			.map(playlist -> toDto(playlist, currentUserId))
 			.toList();
+		mappingSample.stop(Timer.builder("playlist.search.mapping").register(meterRegistry));
 
 		String nextCursor = null;
 		if (hasNext && !playlists.isEmpty()) {
@@ -230,15 +239,21 @@ public class PlaylistService {
 			playlist.getOwner().getProfileImageUrl()
 		);
 
+		Timer.Sample subscriberCountSample = Timer.start(meterRegistry);
 		Long subscriberCount = playlistSubscriptionRepository.countByPlaylistId(playlist.getId());
+		subscriberCountSample.stop(Timer.builder("playlist.toDto.subscriberCount").register(meterRegistry));
 
+		Timer.Sample subscribedByMeSample = Timer.start(meterRegistry);
 		Boolean subscribedByMe = currentUserId != null &&
 			playlistSubscriptionRepository.existsByPlaylistIdAndUserId(playlist.getId(), currentUserId);
+		subscribedByMeSample.stop(Timer.builder("playlist.toDto.subscribedByMe").register(meterRegistry));
 
+		Timer.Sample contentsSample = Timer.start(meterRegistry);
 		List<ContentSummary> contents = playlistContentRepository.findByPlaylistId(playlist.getId())
 			.stream()
 			.map(pc -> toContentSummary(pc.getContent()))
 			.toList();
+		contentsSample.stop(Timer.builder("playlist.toDto.contents").register(meterRegistry));
 
 		LocalDateTime updatedAtLocal = LocalDateTime.ofInstant(
 			playlist.getUpdatedAt(),
@@ -258,10 +273,12 @@ public class PlaylistService {
 	}
 
 	private ContentSummary toContentSummary(Content content) {
+		Timer.Sample tagsSample = Timer.start(meterRegistry);
 		List<String> tags = contentTagRepository.findByContentId(content.getId())
 			.stream()
 			.map(ct -> ct.getTag().getName())
 			.toList();
+		tagsSample.stop(Timer.builder("playlist.toContentSummary.tags").register(meterRegistry));
 
 		String fullThumbnailUrl = buildImageUrl(content.getType(), content.getThumbnailUrl());
 
