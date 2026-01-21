@@ -2,6 +2,8 @@
 
 cd /home/ubuntu/spring
 
+echo "==배포시작=="
+
 docker pull 989775483620.dkr.ecr.ap-northeast-2.amazonaws.com/mopl/spring:latest
 
 CURRENT=$(cat .current_deployment 2>/dev/null || echo "none")
