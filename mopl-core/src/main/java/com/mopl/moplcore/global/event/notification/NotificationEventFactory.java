@@ -1,8 +1,11 @@
 package com.mopl.moplcore.global.event.notification;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import com.mopl.moplcore.domain.user.entity.User;
 
 public class NotificationEventFactory {
 
@@ -31,15 +34,26 @@ public class NotificationEventFactory {
 	public static NotificationEvent playlistSubscribed(
 		UUID receiverId,
 		UUID playlistId,
-		UUID subscriberId
+		UUID subscriberId,
+		String playlistTitle,
+		String subscriberName
 	) {
+		Map<String, String> meta = new HashMap<>();
+		meta.put(NotificationMetaSpec.PLAYLIST_ID, playlistId.toString());
+		meta.put(NotificationMetaSpec.SUBSCRIBER_ID, subscriberId.toString());
+
+		if (playlistTitle != null && !playlistTitle.isBlank()) {
+			meta.put(NotificationMetaSpec.PLAYLIST_TITLE, playlistTitle);
+		}
+
+		if (subscriberName != null && !subscriberName.isBlank()) {
+			meta.put(NotificationMetaSpec.SUBSCRIBER_NAME, subscriberName);
+		}
+
 		return eventTemplate(
 			receiverId,
 			NotificationEventType.PLAYLIST_SUBSCRIBED,
-			Map.of(
-				NotificationMetaSpec.PLAYLIST_ID, playlistId.toString(),
-				NotificationMetaSpec.SUBSCRIBER_ID, subscriberId.toString()
-			)
+			meta
 		);
 	}
 
@@ -47,15 +61,26 @@ public class NotificationEventFactory {
 	public static NotificationEvent subscribedPlaylistContentAdded(
 		UUID receiverId,
 		UUID playlistId,
-		UUID contentId
+		UUID contentId,
+		String playlistTitle,
+		String contentTitle
 	) {
+		Map<String, String> meta = new HashMap<>();
+		meta.put(NotificationMetaSpec.PLAYLIST_ID, playlistId.toString());
+		meta.put(NotificationMetaSpec.CONTENT_ID, contentId.toString());
+
+		if (playlistTitle != null && !playlistTitle.isBlank()) {
+			meta.put(NotificationMetaSpec.PLAYLIST_TITLE, playlistTitle);
+		}
+
+		if (contentTitle != null && !contentTitle.isBlank()) {
+			meta.put(NotificationMetaSpec.CONTENT_TITLE, contentTitle);
+		}
+
 		return eventTemplate(
 			receiverId,
 			NotificationEventType.SUBSCRIBED_PLAYLIST_CONTENT_ADDED,
-			Map.of(
-				NotificationMetaSpec.PLAYLIST_ID, playlistId.toString(),
-				NotificationMetaSpec.CONTENT_ID, contentId.toString()
-			)
+			meta
 		);
 	}
 
@@ -80,14 +105,20 @@ public class NotificationEventFactory {
 	// 다른 유저가 나를 팔로우
 	public static NotificationEvent followedByUser(
 		UUID receiverId,
-		UUID followerId
+		UUID followerId,
+		String followerName
 	) {
+		Map<String, String> meta = new HashMap<>();
+		meta.put(NotificationMetaSpec.FOLLOWER_ID, followerId.toString());
+
+		if (followerName != null && !followerName.isBlank()) {
+			meta.put(NotificationMetaSpec.FOLLOWER_NAME, followerName);
+		}
+
 		return eventTemplate(
 			receiverId,
 			NotificationEventType.FOLLOWED_BY_USER,
-			Map.of(
-				NotificationMetaSpec.FOLLOWER_ID, followerId.toString()
-			)
+			meta
 		);
 	}
 
@@ -96,15 +127,21 @@ public class NotificationEventFactory {
 		UUID receiverId,
 		UUID conversationId,
 		UUID directMessageId,
-		UUID senderId
+		User sender,
+		String content
 	) {
-		return eventTemplate(
+		return new NotificationEvent(
+			directMessageId,
+			Instant.now(),
 			receiverId,
+			NotificationEventType.DIRECT_MESSAGE_RECEIVED.defaultLevel(),
 			NotificationEventType.DIRECT_MESSAGE_RECEIVED,
 			Map.of(
 				NotificationMetaSpec.CONVERSATION_ID, conversationId.toString(),
 				NotificationMetaSpec.DIRECT_MESSAGE_ID, directMessageId.toString(),
-				NotificationMetaSpec.SENDER_ID, senderId.toString()
+				NotificationMetaSpec.SENDER_ID, sender.getId().toString(),
+				NotificationMetaSpec.SENDER_NAME, sender.getName(),
+				NotificationMetaSpec.DIRECT_MESSAGE_CONTENT, content
 			)
 		);
 	}

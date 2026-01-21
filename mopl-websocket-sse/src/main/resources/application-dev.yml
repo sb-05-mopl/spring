@@ -41,6 +41,7 @@ mopl:
   kafka:
     topics:
       notifications: ${MOPL_KAFKA_TOPICS_NOTIFICATIONS:notification.events}
+      watching-session-started: ${MOPL_KAFKA_TOPICS_WATCHING_SESSION_STARTED:watching.session.started}
 
 
 logging:
