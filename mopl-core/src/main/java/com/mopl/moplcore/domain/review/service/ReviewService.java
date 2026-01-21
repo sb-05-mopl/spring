@@ -1,6 +1,7 @@
 package com.mopl.moplcore.domain.review.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -9,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.mopl.moplcore.domain.content.entity.Content;
 import com.mopl.moplcore.domain.content.repository.ContentRepository;
 import com.mopl.moplcore.domain.content.service.ContentSyncService;
+import com.mopl.moplcore.domain.follow.activity.FolloweeActivityKind;
+import com.mopl.moplcore.domain.follow.activity.FolloweeActivityNotifier;
 import com.mopl.moplcore.domain.review.dto.CursorResponseReviewDto;
 import com.mopl.moplcore.domain.review.dto.ReviewCreateRequest;
 import com.mopl.moplcore.domain.review.dto.ReviewDto;
@@ -22,6 +25,7 @@ import com.mopl.moplcore.domain.review.mapper.ReviewMapper;
 import com.mopl.moplcore.domain.review.repository.ReviewRepository;
 import com.mopl.moplcore.domain.user.entity.User;
 import com.mopl.moplcore.domain.user.repository.UserRepository;
+import com.mopl.moplcore.global.event.notification.NotificationMetaSpec;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +39,7 @@ public class ReviewService {
 	private final ContentRepository contentRepository;
 	private final ReviewMapper reviewMapper;
 	private final ContentSyncService contentSyncService;
+	private final FolloweeActivityNotifier followeeActivityNotifier;
 
 	@Transactional
 	public ReviewDto create(ReviewCreateRequest request, UUID authorId) {
@@ -63,6 +68,18 @@ public class ReviewService {
 			.build();
 
 		Review saved = reviewRepository.save(review);
+
+		followeeActivityNotifier.notifyFollowers(
+			authorId,
+			FolloweeActivityKind.REVIEW_CREATED,
+			content.getId(),
+			Map.of(
+				NotificationMetaSpec.ACTOR_NAME, author.getName(),
+				NotificationMetaSpec.CONTENT_TITLE, content.getTitle(),
+				NotificationMetaSpec.REVIEW_ID, saved.getId().toString(),
+				NotificationMetaSpec.REVIEW_CONTENT, saved.getText()
+			)
+		);
 
 		updateContentRating(content);
 

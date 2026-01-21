@@ -14,6 +14,8 @@ import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 import com.mopl.moplwebsocketsse.domain.watch.dto.WatchingSessionChange;
 import com.mopl.moplwebsocketsse.domain.watch.entity.WatchingSession;
+import com.mopl.moplwebsocketsse.domain.watch.event.WatchingSessionEventPublisher;
+import com.mopl.moplwebsocketsse.domain.watch.event.WatchingSessionStartedEvent;
 import com.mopl.moplwebsocketsse.domain.watch.registry.SessionMapping;
 import com.mopl.moplwebsocketsse.domain.watch.registry.WatchingSessionRegistry;
 import com.mopl.moplwebsocketsse.domain.watch.repository.WatchingSessionRepository;
@@ -30,6 +32,7 @@ public class WatchingSessionEventListener {
 	private final WatchingSessionRepository wsRepository;
 	private final WatchingSessionRegistry wsRegistry;
 	private final WatchingSessionService wsService;
+	private final WatchingSessionEventPublisher wsPublisher;
 	private final SimpMessagingTemplate messagingTemplate;
 
 	@EventListener
@@ -58,19 +61,40 @@ public class WatchingSessionEventListener {
 			return;
 		}
 
+		WatchingSession existing = wsRepository.findSessionByWatcherId(userId);
+		boolean sameContentAlreadyWatching = existing != null && contentId.equals(existing.getContentId());
+
 		WatchingSession watchingSession = new WatchingSession(userId, contentId);
 
 		wsRepository.save(watchingSession);
 		wsRegistry.register(wsSessionId, subscriptionId, watchingSession.getId(), userId, contentId);
 
-		log.debug("[WatchingSessionEventListener] SUBSCRIBE After registry. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
-			wsSessionId, subscriptionId, watchingSession.getId(), userId, contentId);
+		log.debug(
+			"[WatchingSessionEventListener] SUBSCRIBE After registry. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
+			wsSessionId, subscriptionId, watchingSession.getId(), userId, contentId
+		);
 
 		try {
 			WatchingSessionChange message = wsService.createJoinMessage(watchingSession);
 			broadcastToWatchers(contentId, message);
+
+			if (!sameContentAlreadyWatching) {
+				String actorName = message.watchingSession().watcher().name();
+				String contentTitle = message.watchingSession().content().title();
+
+				WatchingSessionStartedEvent startedEvent = WatchingSessionStartedEvent.of(
+					userId,
+					actorName,
+					contentId,
+					contentTitle,
+					watchingSession.getId()
+				);
+
+				wsPublisher.publish(startedEvent);
+			}
 		} catch (Exception e) {
-			log.error("[WatchingSessionEventListener] Failed to broadcast JOIN. sessionId={}", watchingSession.getId(), e);
+			log.error("[WatchingSessionEventListener] Failed to broadcast JOIN. sessionId={}", watchingSession.getId(),
+				e);
 		}
 	}
 
@@ -98,12 +122,14 @@ public class WatchingSessionEventListener {
 			);
 			broadcastToWatchers(mapping.contentId(), message);
 		} catch (Exception e) {
-			log.error("[WatchingSessionEventListener] Failed to broadcast LEAVE. sessionId={}", mapping.watchingSessionId(), e);
+			log.error("[WatchingSessionEventListener] Failed to broadcast LEAVE. sessionId={}",
+				mapping.watchingSessionId(), e);
 		}
 
 		wsRepository.delete(mapping.watchingSessionId(), mapping.contentId(), mapping.userId());
 
-		log.debug("[WatchingSessionEventListener] UNSUBSCRIBE. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
+		log.debug(
+			"[WatchingSessionEventListener] UNSUBSCRIBE. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
 			wsSessionId, subscriptionId, mapping.watchingSessionId(), mapping.userId(), mapping.contentId());
 	}
 
@@ -131,12 +157,14 @@ public class WatchingSessionEventListener {
 				);
 				broadcastToWatchers(mapping.contentId(), message);
 			} catch (Exception e) {
-				log.error("[WatchingSessionEventListener] Failed to broadcast LEAVE. sessionId={}", mapping.watchingSessionId(), e);
+				log.error("[WatchingSessionEventListener] Failed to broadcast LEAVE. sessionId={}",
+					mapping.watchingSessionId(), e);
 			}
 
 			wsRepository.delete(mapping.watchingSessionId(), mapping.contentId(), mapping.userId());
 
-			log.debug("[WatchingSessionEventListener] DISCONNECT. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
+			log.debug(
+				"[WatchingSessionEventListener] DISCONNECT. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
 				wsSessionId, mapping.subscriptionId(), mapping.watchingSessionId(),
 				mapping.userId(), mapping.contentId());
 		}

@@ -1,5 +1,6 @@
 package com.mopl.moplcore.domain.follow.repository;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,4 +15,7 @@ public interface FollowRepository extends JpaRepository<Follow, UUID> {
 
 	@Query("SELECT COUNT(f) FROM Follow f WHERE f.followee.id = :followeeId")
 	long countByFolloweeId(UUID followeeId);
+
+	@Query(value = "SELECT follower_id FROM follows WHERE followee_id = :followeeID", nativeQuery = true)
+	List<UUID> findFollowerIdsByFolloweeId(UUID followeeID);
 }

@@ -3,6 +3,7 @@ package com.mopl.moplcore.domain.playlist.service;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -14,6 +15,8 @@ import com.mopl.moplcore.domain.content.entity.Type;
 import com.mopl.moplcore.domain.content.exception.ContentNotFoundException;
 import com.mopl.moplcore.domain.content.repository.ContentRepository;
 import com.mopl.moplcore.domain.content.repository.ContentTagRepository;
+import com.mopl.moplcore.domain.follow.activity.FolloweeActivityKind;
+import com.mopl.moplcore.domain.follow.activity.FolloweeActivityNotifier;
 import com.mopl.moplcore.domain.playlist.dto.CursorResponsePlaylistDto;
 import com.mopl.moplcore.domain.playlist.dto.PlaylistCreateRequest;
 import com.mopl.moplcore.domain.playlist.dto.PlaylistDto;
@@ -31,6 +34,7 @@ import com.mopl.moplcore.domain.user.entity.User;
 import com.mopl.moplcore.domain.user.repository.UserRepository;
 import com.mopl.moplcore.global.event.notification.NotificationEvent;
 import com.mopl.moplcore.global.event.notification.NotificationEventFactory;
+import com.mopl.moplcore.global.event.notification.NotificationMetaSpec;
 import com.mopl.moplcore.global.event.publisher.notification.NotificationEventPublisher;
 
 import lombok.RequiredArgsConstructor;
@@ -49,6 +53,7 @@ public class PlaylistService {
 	private final ContentTagRepository contentTagRepository;
 	private final UserRepository userRepository;
 	private final NotificationEventPublisher notificationEventPublisher;
+	private final FolloweeActivityNotifier followeeActivityNotifier;
 
 	@Transactional
 	public PlaylistDto createPlaylist(UUID userId, PlaylistCreateRequest request) {
@@ -57,6 +62,17 @@ public class PlaylistService {
 
 		Playlist playlist = new Playlist(owner, request.title(), request.description());
 		Playlist savedPlaylist = playlistRepository.save(playlist);
+
+		followeeActivityNotifier.notifyFollowers(
+			owner.getId(),
+			FolloweeActivityKind.PLAYLIST_CREATED,
+			savedPlaylist.getId(),
+			Map.of(
+				NotificationMetaSpec.ACTOR_NAME, owner.getName(),
+				NotificationMetaSpec.PLAYLIST_TITLE, savedPlaylist.getTitle(),
+				NotificationMetaSpec.PLAYLIST_DESCRIPTION, savedPlaylist.getDescription()
+			)
+		);
 
 		return toDto(savedPlaylist, userId);
 	}
@@ -149,9 +165,12 @@ public class PlaylistService {
 			NotificationEvent event = NotificationEventFactory.subscribedPlaylistContentAdded(
 				receiverId,
 				playlistId,
-				contentId
+				contentId,
+				playlist.getTitle(),
+				content.getTitle()
 			);
 
+			NotificationMetaSpec.validate(event);
 			notificationEventPublisher.publish(event);
 		}
 	}
@@ -189,9 +208,12 @@ public class PlaylistService {
 			NotificationEvent event = NotificationEventFactory.playlistSubscribed(
 				receiverId,
 				playlistId,
-				user.getId()
+				user.getId(),
+				playlist.getTitle(),
+				user.getName()
 			);
 
+			NotificationMetaSpec.validate(event);
 			notificationEventPublisher.publish(event);
 		}
 	}
