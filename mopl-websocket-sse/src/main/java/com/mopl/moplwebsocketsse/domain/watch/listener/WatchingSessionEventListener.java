@@ -130,7 +130,8 @@ public class WatchingSessionEventListener {
 
 		log.debug(
 			"[WatchingSessionEventListener] UNSUBSCRIBE. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
-			wsSessionId, subscriptionId, mapping.watchingSessionId(), mapping.userId(), mapping.contentId());
+			wsSessionId, subscriptionId, mapping.watchingSessionId(), mapping.userId(), mapping.contentId()
+		);
 	}
 
 	@EventListener
@@ -166,7 +167,8 @@ public class WatchingSessionEventListener {
 			log.debug(
 				"[WatchingSessionEventListener] DISCONNECT. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
 				wsSessionId, mapping.subscriptionId(), mapping.watchingSessionId(),
-				mapping.userId(), mapping.contentId());
+				mapping.userId(), mapping.contentId()
+			);
 		}
 	}
 

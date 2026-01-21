@@ -26,7 +26,7 @@ public class FolloweeActivityNotifier {
 
 	@Transactional
 	public void notifyFollowers(
-		UUID actorID,
+		UUID actorId,
 		FolloweeActivityKind activityKind,
 		// 플레이리스트 생성 시 신규 플레이리스트의 아이디가 referenceId
 		// 리뷰 생성 시 리뷰가 추가된 콘텐츠의 아이디가 referenceId
@@ -34,20 +34,20 @@ public class FolloweeActivityNotifier {
 		UUID referenceId,
 		Map<String, String> meta
 	) {
-		List<UUID> followerIds = followRepository.findFollowerIdsByFolloweeId(actorID);
+		List<UUID> followerIds = followRepository.findFollowerIdsByFolloweeId(actorId);
 
 		if (followerIds == null || followerIds.isEmpty()) {
 			return;
 		}
 
 		for (UUID receiverId : followerIds) {
-			if (receiverId.equals(actorID)) {
+			if (receiverId.equals(actorId)) {
 				continue;
 			}
 
 			NotificationEvent baseEvent = NotificationEventFactory.followeeActivity(
 				receiverId,
-				actorID,
+				actorId,
 				activityKind.name(),
 				referenceId
 			);
