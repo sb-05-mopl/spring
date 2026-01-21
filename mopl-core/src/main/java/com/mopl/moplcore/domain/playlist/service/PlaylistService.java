@@ -56,6 +56,7 @@ public class PlaylistService {
 	private final UserRepository userRepository;
 	private final NotificationEventPublisher notificationEventPublisher;
 	private final FolloweeActivityNotifier followeeActivityNotifier;
+	private final MeterRegistry meterRegistry;
 
 	@Transactional
 	public PlaylistDto createPlaylist(UUID userId, PlaylistCreateRequest request) {
