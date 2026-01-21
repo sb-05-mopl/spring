@@ -1,6 +1,7 @@
 package com.mopl.moplcore.domain.content.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
@@ -86,8 +87,18 @@ public class ContentSearchService {
 		if (hasNext)
 			documents = documents.subList(0, request.getLimit());
 
+		List<UUID> contentIds = documents.stream()
+			.map(doc -> UUID.fromString(doc.getContentId()))
+			.toList();
+
+		Timer.Sample watcherCountSample = Timer.start(meterRegistry);
+		Map<UUID, Long> watcherCountMap = watchingSessionReader.countByContentIds(contentIds);
+		watcherCountSample.stop(Timer.builder("content.search.watcherCount").register(meterRegistry));
+
 		Timer.Sample mappingSample = Timer.start(meterRegistry);
-		List<ContentDto> contentDtos = documents.stream().map(this::toDto).toList();
+		List<ContentDto> contentDtos = documents.stream()
+			.map(doc -> toDto(doc, watcherCountMap))
+			.toList();
 		mappingSample.stop(Timer.builder("content.search.mapping").register(meterRegistry));
 		String nextCursor = generateNextCursor(documents, hasNext, request);
 
@@ -226,6 +237,19 @@ public class ContentSearchService {
 		return CursorResponseContentDto.encodeCursor(cursor);
 	}
 
+	private String buildImageUrl(Type type, String path) {
+		if (path == null)
+			return null;
+		if (path.startsWith("http"))
+			return path;
+		return (type == Type.MOVIE || type == Type.TV_SERIES) ? TMDB_IMAGE_BASE_URL + path : path;
+	}
+
+	public ContentDto getContent(UUID id) {
+		Content content = contentRepository.findById(id).orElseThrow(() -> new ContentNotFoundException(id));
+		return toDto(content);
+	}
+
 	private ContentDto toDto(ContentDocument document) {
 		return ContentDto.builder()
 			.id(UUID.fromString(document.getContentId()))
@@ -238,19 +262,6 @@ public class ContentSearchService {
 			.reviewCount(document.getReviewCount() != null ? document.getReviewCount() : 0)
 			.watcherCount(watchingSessionReader.countByContentId(UUID.fromString(document.getContentId())))
 			.build();
-	}
-
-	private String buildImageUrl(Type type, String path) {
-		if (path == null)
-			return null;
-		if (path.startsWith("http"))
-			return path;
-		return (type == Type.MOVIE || type == Type.TV_SERIES) ? TMDB_IMAGE_BASE_URL + path : path;
-	}
-
-	public ContentDto getContent(UUID id) {
-		Content content = contentRepository.findById(id).orElseThrow(() -> new ContentNotFoundException(id));
-		return toDto(content);
 	}
 
 	private ContentDto toDto(Content content) {
@@ -269,6 +280,21 @@ public class ContentSearchService {
 			.averageRating(content.getAverageRating())
 			.reviewCount(content.getReviewCount())
 			.watcherCount(watchingSessionReader.countByContentId(content.getId()))
+			.build();
+	}
+
+	private ContentDto toDto(ContentDocument document, Map<UUID, Long> watcherCountMap) {
+		UUID contentId = UUID.fromString(document.getContentId());
+		return ContentDto.builder()
+			.id(contentId)
+			.type(document.getType())
+			.title(document.getTitle())
+			.description(document.getDescription())
+			.thumbnailUrl(buildImageUrl(document.getType(), document.getThumbnailUrl()))
+			.tags(document.getTags() != null ? document.getTags() : List.of())
+			.averageRating(document.getAverageRating() != null ? document.getAverageRating() : 0.0)
+			.reviewCount(document.getReviewCount() != null ? document.getReviewCount() : 0)
+			.watcherCount(watcherCountMap.getOrDefault(contentId, 0L))
 			.build();
 	}
 }
