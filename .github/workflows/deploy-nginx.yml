@@ -1,0 +1,61 @@
+name: Deploy Nginx To EC2
+on:
+  push:
+    branches:
+      - deploy
+    paths:
+      - "nginx/**"
+      - ".github/workflows/deploy-nginx.yml"
+      - "deploy/nginx/**"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: GitHub Repository 가져오기
+        uses: actions/checkout@v4
+
+      - name: AWS Resource에 접근할 수 있게 AWS credentials 설정
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-northeast-2
+          aws-access-key-id: ${{secrets.AWS_ACCESS_KEY}}
+          aws-secret-access-key: ${{secrets.AWS_SECRET_KEY}}
+      - name: ECR에 로그인하기
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Nginx Docker 이미지 생성
+        run: docker build -t mopl-nginx -f nginx/Dockerfile-nginx-deploy .
+
+      - name: Nginx Docker 이미지에 Tag 붙이기.
+        run: docker tag mopl-nginx ${{steps.login-ecr.outputs.registry}}/mopl/nginx:latest
+
+      - name: ECR에 Nginx Docker 이미지 Push
+        run: docker push ${{steps.login-ecr.outputs.registry}}/mopl/nginx:latest
+
+      - name: .env 파일 생성
+        run: |
+          echo "SPRING_API_HOST=${{secrets.SPRING_API_HOST}}" > .env
+          echo "WEBSOCKET_HOST=${{secrets.WEBSOCKET_HOST}}" >> .env
+
+      - name: 압축하기
+        run: |
+          cp deploy/nginx/appspec.yml ./appspec.yml
+          cp -r deploy/nginx/scripts ./scripts
+          cp deploy/nginx/docker-compose.prod.yml ./docker-compose.prod.yml
+          tar -czvf $GITHUB_SHA.tar.gz \
+            appspec.yml \
+            .env \
+            scripts \
+            docker-compose.prod.yml
+      - name: S3에 프로젝트 폴더 업로드 하기
+        run: aws s3 cp --region ap-northeast-2 ./$GITHUB_SHA.tar.gz s3://mopl-deploy-4/nginx/$GITHUB_SHA.tar.gz
+
+      - name: CodeDeploy 배포 트리거
+        run: |
+          aws deploy create-deployment \
+            --application-name mopl-nginx \
+            --deployment-config-name CodeDeployDefault.AllAtOnce \
+            --deployment-group-name mopl-deploy-group-nginx \
+            --s3-location bucket=mopl-deploy-4,key=nginx/$GITHUB_SHA.tar.gz,bundleType=tgz

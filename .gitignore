@@ -12,6 +12,7 @@ out/
 hs_err_pid*
 replay_pid*
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.ear
 *.nar

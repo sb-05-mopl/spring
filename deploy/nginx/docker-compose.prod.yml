@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: 989775483620.dkr.ecr.ap-northeast-2.amazonaws.com/mopl/nginx:latest
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - SPRING_API_HOST=${SPRING_API_HOST}
+      - WEBSOCKET_HOST=${WEBSOCKET_HOST}
