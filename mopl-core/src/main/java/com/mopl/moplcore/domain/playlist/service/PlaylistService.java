@@ -131,8 +131,9 @@ public class PlaylistService {
 			.toList();
 
 		Timer.Sample tagsSample = Timer.start(meterRegistry);
-		Map<UUID, List<String>> tagsMap = contentTagRepository
-			.findByContentIds(contentIds)
+		Map<UUID, List<String>> tagsMap = contentIds.isEmpty()
+			? Collections.emptyMap()
+			: contentTagRepository.findByContentIds(contentIds)
 			.stream()
 			.collect(Collectors.groupingBy(
 				ct -> ct.getContent().getId(),
