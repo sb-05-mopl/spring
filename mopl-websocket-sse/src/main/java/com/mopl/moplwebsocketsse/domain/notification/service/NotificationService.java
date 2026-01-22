@@ -145,5 +145,4 @@ public class NotificationService {
 
 		return NotificationDto.from(notificationRepository.save(notification));
 	}
-
 }

@@ -1,4 +1,4 @@
-package com.mopl.moplwebsocketsse.global.config;
+package com.mopl.moplcore.global.config;
 
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.context.annotation.Bean;

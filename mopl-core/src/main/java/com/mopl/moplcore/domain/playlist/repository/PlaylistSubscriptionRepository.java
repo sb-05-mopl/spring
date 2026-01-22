@@ -33,9 +33,15 @@ public interface PlaylistSubscriptionRepository extends JpaRepository<PlaylistSu
 		UUID userId
 	);
 	Long countByPlaylistId(UUID playlistId);
+
 	Optional<PlaylistSubscription> findByPlaylistIdAndUserId(UUID playlistId, UUID userId);
+
 	@Modifying
 	@Query("DELETE FROM PlaylistSubscription ps WHERE ps.playlist.id = :playlistId AND ps.user.id = :userId")
 	void deleteByPlaylistIdAndUserId(@Param("playlistId") UUID playlistId, @Param("userId") UUID userId);
+
 	boolean existsByPlaylistIdAndUserId(UUID playlistId, UUID userId);
+
+	@Query("SELECT ps.user.id FROM PlaylistSubscription ps WHERE ps.playlist.id = :playlistId")
+	List<UUID> findSubscriberIdsByPlaylistId(@Param("playlistId") UUID playlistId);
 }
