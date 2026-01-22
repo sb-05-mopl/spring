@@ -18,12 +18,17 @@ import com.mopl.moplwebsocketsse.domain.directMessage.entity.DirectMessage;
 import com.mopl.moplwebsocketsse.domain.directMessage.exception.ConversationNotFoundException;
 import com.mopl.moplwebsocketsse.domain.directMessage.exception.NotConversationParticipantException;
 import com.mopl.moplwebsocketsse.domain.directMessage.mapper.ConversationMapper;
+import com.mopl.moplwebsocketsse.domain.directMessage.registry.DirectMessageSubscriptionRegistry;
 import com.mopl.moplwebsocketsse.domain.directMessage.repository.ConversationParticipantsRepository;
 import com.mopl.moplwebsocketsse.domain.directMessage.repository.ConversationRepository;
 import com.mopl.moplwebsocketsse.domain.directMessage.repository.DirectMessageRepository;
+import com.mopl.moplwebsocketsse.domain.notification.event.NotificationEvent;
+import com.mopl.moplwebsocketsse.domain.notification.event.NotificationEventFactory;
+import com.mopl.moplwebsocketsse.domain.notification.repository.NotificationRepository;
 import com.mopl.moplwebsocketsse.domain.sse.service.SseService;
 import com.mopl.moplwebsocketsse.domain.user.dto.UserSummary;
 import com.mopl.moplwebsocketsse.domain.user.entity.User;
+import com.mopl.moplwebsocketsse.global.publisher.notification.NotificationEventPublisher;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +47,9 @@ public class DirectMessageService {
 	private final ConversationMapper conversationMapper;
 	private final SimpMessagingTemplate messagingTemplate;
 	private final SseService sseService;
+	private final DirectMessageSubscriptionRegistry directMessageSubscriptionRegistry;
+	private final NotificationEventPublisher notificationEventPublisher;
+	private final NotificationRepository notificationRepository;
 
 	@Transactional
 	public DirectMessageDto sendMessage(UUID conversationId, UUID senderId, String content) {
@@ -85,7 +93,21 @@ public class DirectMessageService {
 		String destination = DM_DEST_PREFIX + conversationId + DM_DEST_SUFFIX;
 		messagingTemplate.convertAndSend(destination, dto);
 
-		sseService.broadcast(receiver.getId(), "direct-messages", dto.id().toString(), dto);
+		boolean receiverActive = directMessageSubscriptionRegistry
+			.isSubscribed(conversationId, receiver.getId());
+
+		if (!receiverActive) {
+			NotificationEvent event = NotificationEventFactory.directMessageReceived(
+				receiver.getId(),
+				conversationId,
+				directMessage.getId(),
+				sender,
+				truncate(content, 20)
+			);
+
+			notificationEventPublisher.publish(event);
+			sseService.broadcast(receiver.getId(), "direct-messages", dto.id().toString(), dto);
+		}
 
 		log.debug("[DirectMessageService] Message sent. conversationId={}, senderId={}, receiverId={}",
 			conversationId, senderId, receiver.getId());
@@ -168,7 +190,18 @@ public class DirectMessageService {
 
 		directMessageRepository.markAllAsReadInConversation(conversationId, requesterId);
 
+		notificationRepository.deleteDmNotificationsByConversationId(requesterId, conversationId);
+
 		log.debug("[DirectMessageService] message read. conversationId={}, readerId={}",
 			conversationId, requesterId);
+	}
+
+	// DM 알림 글자 수 제한 메서드
+	private String truncate(String content, int limit) {
+		if (content == null) {
+			return "";
+		}
+
+		return content.length() <= limit ? content : content.substring(0, limit);
 	}
 }

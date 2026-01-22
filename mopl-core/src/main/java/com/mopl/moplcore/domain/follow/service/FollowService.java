@@ -16,6 +16,10 @@ import com.mopl.moplcore.domain.follow.repository.FollowRepository;
 import com.mopl.moplcore.domain.user.entity.Follow;
 import com.mopl.moplcore.domain.user.entity.User;
 import com.mopl.moplcore.domain.user.repository.UserRepository;
+import com.mopl.moplcore.global.event.notification.NotificationEvent;
+import com.mopl.moplcore.global.event.notification.NotificationEventFactory;
+import com.mopl.moplcore.global.event.notification.NotificationMetaSpec;
+import com.mopl.moplcore.global.event.publisher.notification.NotificationEventPublisher;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +32,8 @@ public class FollowService {
 	private final UserRepository userRepository;
 	private final FollowRepository followRepository;
 	private final FollowMapper followMapper;
+
+	private final NotificationEventPublisher notificationEventPublisher;
 
 	@Transactional
 	public FollowDto create(FollowRequest followRequest, UUID followerId) {
@@ -48,6 +54,15 @@ public class FollowService {
 
 		Follow follow = new Follow(follower, followee);
 		Follow savedFollow = followRepository.save(follow);
+
+		NotificationEvent event = NotificationEventFactory.followedByUser(
+			followeeId,
+			followerId,
+			follower.getName()
+		);
+
+		NotificationMetaSpec.validate(event);
+		notificationEventPublisher.publish(event);
 
 		return followMapper.toDto(savedFollow);
 	}
