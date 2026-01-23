@@ -39,6 +39,7 @@ jobs:
         run: |
           echo "SPRING_API_HOST=${{secrets.SPRING_API_HOST}}" > .env
           echo "WEBSOCKET_HOST=${{secrets.WEBSOCKET_HOST}}" >> .env
+          echo "SPRING_ALB_DNS"=${{secrets.SPRING_ALB_DNS}} >> .env
 
       - name: 압축하기
         run: |

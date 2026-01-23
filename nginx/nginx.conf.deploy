@@ -5,8 +5,8 @@ http {
   default_type application/octet-stream;
 
   upstream spring-api {
-    server ${SPRING_API_HOST}:8080 max_fails=2 fail_timeout=5s;
-    server ${SPRING_API_HOST}:8081 max_fails=2 fail_timeout=5s;
+    server ${SPRING_ALB_DNS}:8080;
+    keepalive 32;
   }
   upstream websocket-server { server ${WEBSOCKET_HOST}:8080; }
 
