@@ -45,12 +45,12 @@ services:
       - REDIS_PORT=${REDIS_PORT}
     ports:
       - "8080:8080"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 40s
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 40s
 
   spring-green:
     image: 989775483620.dkr.ecr.ap-northeast-2.amazonaws.com/mopl/spring:latest
@@ -97,9 +97,9 @@ services:
       - REDIS_PORT=${REDIS_PORT}
     ports:
       - "8081:8080"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 40s
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 40s
