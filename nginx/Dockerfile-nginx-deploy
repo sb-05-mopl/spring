@@ -8,4 +8,4 @@ RUN apk add --no-cache curl
 
 EXPOSE 80 443
 
-CMD ["/bin/sh", "-c", "envsubst '${SPRING_API_HOST} ${WEBSOCKET_HOST}' < /etc/nginx/nginx.conf.deploy > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "envsubst '${SPRING_ALB_DNS} ${WEBSOCKET_HOST}' < /etc/nginx/nginx.conf.deploy > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"]
