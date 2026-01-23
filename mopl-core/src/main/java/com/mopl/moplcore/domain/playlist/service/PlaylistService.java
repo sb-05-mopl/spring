@@ -83,7 +83,18 @@ public class PlaylistService {
 		String nextCursor = null;
 		if (hasNext && !playlists.isEmpty()) {
 			Playlist lastPlaylist = playlists.get(playlists.size() - 1);
-			nextCursor = encodeCursor(lastPlaylist.getId(), lastPlaylist.getUpdatedAt());
+			PlaylistDto lastDto = playlistDtos.get(playlistDtos.size() - 1);
+
+			nextCursor = switch (request.getSortBy()) {
+				case updatedAt -> encodeCursor(
+					lastPlaylist.getId(),
+					lastPlaylist.getUpdatedAt().toString()
+				);
+				case subscribeCount -> encodeCursor(
+					lastPlaylist.getId(),
+					lastDto.subscriberCount().toString()
+				);
+			};
 		}
 
 		return CursorResponsePlaylistDto.builder()
@@ -260,8 +271,8 @@ public class PlaylistService {
 		};
 	}
 
-	private String encodeCursor(UUID id, Instant updatedAt) {
-		String raw = id.toString() + "|" + updatedAt.toString();
+	private String encodeCursor(UUID id, String value) {
+		String raw = id.toString() + "|" + value;
 		return java.util.Base64.getUrlEncoder()
 			.withoutPadding()
 			.encodeToString(raw.getBytes(java.nio.charset.StandardCharsets.UTF_8));
