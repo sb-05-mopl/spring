@@ -11,3 +11,4 @@ services:
     environment:
       - SPRING_API_HOST=${SPRING_API_HOST}
       - WEBSOCKET_HOST=${WEBSOCKET_HOST}
+      - SPRING_ALB_DNS=${SPRING_ALB_DNS}
