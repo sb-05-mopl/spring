@@ -7,7 +7,6 @@ on:
       - "nginx/**"
       - ".github/workflows/deploy-nginx.yml"
       - "deploy/nginx/**"
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
