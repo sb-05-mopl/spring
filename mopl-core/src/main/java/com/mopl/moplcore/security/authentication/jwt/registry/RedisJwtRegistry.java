@@ -23,7 +23,7 @@ public class RedisJwtRegistry implements JwtRegistry {
 	private static final String ACCESS_PREFIX = "jwt:access:";
 	private static final String REFRESH_PREFIX = "jwt:refresh:";
 	private static final String USER_TOKENS_PREFIX = "jwt:user:tokens:";
-	private static final String USER_ACCESS_TOKENS_PREFIX = "jwt:user:access";
+	private static final String USER_ACCESS_TOKENS_PREFIX = "jwt:user:access:";
 
 	private final RedisTemplate<String, String> stringRedisTemplate;
 
@@ -42,8 +42,10 @@ public class RedisJwtRegistry implements JwtRegistry {
 		String accessToken = jwtInformation.getAccessToken();
 		String refreshToken = jwtInformation.getRefreshToken();
 
-		stringRedisTemplate.opsForValue().set(ACCESS_PREFIX + accessToken, userId.toString(), accessTokenExpiration, TimeUnit.MILLISECONDS);
-		stringRedisTemplate.opsForValue().set(REFRESH_PREFIX + refreshToken, userId.toString(), refreshTokenExpiration, TimeUnit.MILLISECONDS);
+		stringRedisTemplate.opsForValue()
+			.set(ACCESS_PREFIX + accessToken, userId.toString(), accessTokenExpiration, TimeUnit.MILLISECONDS);
+		stringRedisTemplate.opsForValue()
+			.set(REFRESH_PREFIX + refreshToken, userId.toString(), refreshTokenExpiration, TimeUnit.MILLISECONDS);
 
 		String userTokensKey = USER_TOKENS_PREFIX + userId;
 		String userAccessTokenKey = USER_ACCESS_TOKENS_PREFIX + userId;
@@ -58,7 +60,7 @@ public class RedisJwtRegistry implements JwtRegistry {
 				stringRedisTemplate.delete(REFRESH_PREFIX + oldRefreshToken);
 			}
 
-			if(oldAccessToken != null){
+			if (oldAccessToken != null) {
 				stringRedisTemplate.delete(ACCESS_PREFIX + oldAccessToken);
 			}
 		}
@@ -116,8 +118,10 @@ public class RedisJwtRegistry implements JwtRegistry {
 		String newAccessToken = newJwtInformation.getAccessToken();
 		String newRefreshToken = newJwtInformation.getRefreshToken();
 
-		stringRedisTemplate.opsForValue().set(ACCESS_PREFIX + newAccessToken, userId.toString(), accessTokenExpiration, TimeUnit.MILLISECONDS);
-		stringRedisTemplate.opsForValue().set(REFRESH_PREFIX + newRefreshToken, userId.toString(), refreshTokenExpiration, TimeUnit.MILLISECONDS);
+		stringRedisTemplate.opsForValue()
+			.set(ACCESS_PREFIX + newAccessToken, userId.toString(), accessTokenExpiration, TimeUnit.MILLISECONDS);
+		stringRedisTemplate.opsForValue()
+			.set(REFRESH_PREFIX + newRefreshToken, userId.toString(), refreshTokenExpiration, TimeUnit.MILLISECONDS);
 
 		List<String> refreshTokens = stringRedisTemplate.opsForList().range(userTokensKey, 0, -1);
 		if (refreshTokens != null) {
