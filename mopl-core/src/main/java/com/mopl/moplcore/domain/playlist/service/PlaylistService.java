@@ -2,9 +2,13 @@ package com.mopl.moplcore.domain.playlist.service;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -77,13 +81,13 @@ public class PlaylistService {
 			)
 		);
 
-		return toDto(savedPlaylist, userId);
+		return toDtoSingle(savedPlaylist, userId);
 	}
 
 	public CursorResponsePlaylistDto searchPlaylists(PlaylistSearchRequest request, UUID currentUserId) {
-		Timer.Sample searchSample = Timer.start(meterRegistry);
+		Timer.Sample mainSample = Timer.start(meterRegistry);
 		List<Playlist> playlists = playlistRepository.searchPlaylists(request);
-		searchSample.stop(Timer.builder("playlist.search.repository.main").register(meterRegistry));
+		mainSample.stop(Timer.builder("playlist.search.repository.main").register(meterRegistry));
 
 		Timer.Sample countSample = Timer.start(meterRegistry);
 		Long totalCount = playlistRepository.countPlaylists(request);
@@ -94,9 +98,52 @@ public class PlaylistService {
 			playlists = playlists.subList(0, request.getLimit());
 		}
 
+		List<UUID> playlistIds = playlists.stream()
+			.map(Playlist::getId)
+			.toList();
+
+		Timer.Sample subscriberCountSample = Timer.start(meterRegistry);
+		Map<UUID, Long> countMap = playlistSubscriptionRepository
+			.countByPlaylistIds(playlistIds)
+			.stream()
+			.collect(Collectors.toMap(
+				arr -> (UUID) arr[0],
+				arr -> (Long) arr[1]
+			));
+		subscriberCountSample.stop(Timer.builder("playlist.search.subscriberCount").register(meterRegistry));
+
+		Timer.Sample subscribedByMeSample = Timer.start(meterRegistry);
+		Set<UUID> subscribedIds = currentUserId != null
+			? new HashSet<>(playlistSubscriptionRepository.findSubscribedPlaylistIds(playlistIds, currentUserId))
+			: Collections.emptySet();
+		subscribedByMeSample.stop(Timer.builder("playlist.search.subscribedByMe").register(meterRegistry));
+
+		Timer.Sample contentsSample = Timer.start(meterRegistry);
+		Map<UUID, List<PlaylistContent>> contentsMap = playlistContentRepository
+			.findByPlaylistIds(playlistIds)
+			.stream()
+			.collect(Collectors.groupingBy(pc -> pc.getPlaylist().getId()));
+		contentsSample.stop(Timer.builder("playlist.search.contents").register(meterRegistry));
+
+		List<UUID> contentIds = contentsMap.values().stream()
+			.flatMap(List::stream)
+			.map(pc -> pc.getContent().getId())
+			.toList();
+
+		Timer.Sample tagsSample = Timer.start(meterRegistry);
+		Map<UUID, List<String>> tagsMap = contentIds.isEmpty()
+			? Collections.emptyMap()
+			: contentTagRepository.findByContentIds(contentIds)
+			.stream()
+			.collect(Collectors.groupingBy(
+				ct -> ct.getContent().getId(),
+				Collectors.mapping(ct -> ct.getTag().getName(), Collectors.toList())
+			));
+		tagsSample.stop(Timer.builder("playlist.search.tags").register(meterRegistry));
+
 		Timer.Sample mappingSample = Timer.start(meterRegistry);
 		List<PlaylistDto> playlistDtos = playlists.stream()
-			.map(playlist -> toDto(playlist, currentUserId))
+			.map(playlist -> toDto(playlist, countMap, subscribedIds, contentsMap, tagsMap))
 			.toList();
 		mappingSample.stop(Timer.builder("playlist.search.mapping").register(meterRegistry));
 
@@ -132,7 +179,7 @@ public class PlaylistService {
 		Playlist playlist = playlistRepository.findById(playlistId)
 			.orElseThrow(() -> new PlaylistNotFoundException(playlistId));
 
-		return toDto(playlist, currentUserId);
+		return toDtoSingle(playlist, currentUserId);
 	}
 
 	@Transactional
@@ -146,7 +193,7 @@ public class PlaylistService {
 
 		playlist.update(request.title(), request.description());
 
-		return toDto(playlist, userId);
+		return toDtoSingle(playlist, userId);
 	}
 
 	@Transactional
@@ -244,28 +291,28 @@ public class PlaylistService {
 		playlistSubscriptionRepository.deleteByPlaylistIdAndUserId(playlistId, userId);
 	}
 
-	private PlaylistDto toDto(Playlist playlist, UUID currentUserId) {
+	private PlaylistDto toDto(
+		Playlist playlist,
+		Map<UUID, Long> countMap,
+		Set<UUID> subscribedIds,
+		Map<UUID, List<PlaylistContent>> contentsMap,
+		Map<UUID, List<String>> tagsMap
+	) {
 		UserSummary owner = new UserSummary(
 			playlist.getOwner().getId(),
 			playlist.getOwner().getName(),
 			playlist.getOwner().getProfileImageUrl()
 		);
 
-		Timer.Sample subscriberCountSample = Timer.start(meterRegistry);
-		Long subscriberCount = playlistSubscriptionRepository.countByPlaylistId(playlist.getId());
-		subscriberCountSample.stop(Timer.builder("playlist.toDto.subscriberCount").register(meterRegistry));
+		Long subscriberCount = countMap.getOrDefault(playlist.getId(), 0L);
 
-		Timer.Sample subscribedByMeSample = Timer.start(meterRegistry);
-		Boolean subscribedByMe = currentUserId != null &&
-			playlistSubscriptionRepository.existsByPlaylistIdAndUserId(playlist.getId(), currentUserId);
-		subscribedByMeSample.stop(Timer.builder("playlist.toDto.subscribedByMe").register(meterRegistry));
+		Boolean subscribedByMe = subscribedIds.contains(playlist.getId());
 
-		Timer.Sample contentsSample = Timer.start(meterRegistry);
-		List<ContentSummary> contents = playlistContentRepository.findByPlaylistId(playlist.getId())
+		List<ContentSummary> contents = contentsMap
+			.getOrDefault(playlist.getId(), Collections.emptyList())
 			.stream()
-			.map(pc -> toContentSummary(pc.getContent()))
+			.map(pc -> toContentSummary(pc.getContent(), tagsMap))
 			.toList();
-		contentsSample.stop(Timer.builder("playlist.toDto.contents").register(meterRegistry));
 
 		LocalDateTime updatedAtLocal = LocalDateTime.ofInstant(
 			playlist.getUpdatedAt(),
@@ -284,13 +331,45 @@ public class PlaylistService {
 			.build();
 	}
 
-	private ContentSummary toContentSummary(Content content) {
-		Timer.Sample tagsSample = Timer.start(meterRegistry);
-		List<String> tags = contentTagRepository.findByContentId(content.getId())
+	private PlaylistDto toDtoSingle(Playlist playlist, UUID currentUserId) {
+		List<UUID> playlistIds = List.of(playlist.getId());
+
+		Map<UUID, Long> countMap = playlistSubscriptionRepository
+			.countByPlaylistIds(playlistIds)
 			.stream()
-			.map(ct -> ct.getTag().getName())
+			.collect(Collectors.toMap(
+				arr -> (UUID) arr[0],
+				arr -> (Long) arr[1]
+			));
+
+		Set<UUID> subscribedIds = currentUserId != null
+			? new HashSet<>(playlistSubscriptionRepository.findSubscribedPlaylistIds(playlistIds, currentUserId))
+			: Collections.emptySet();
+
+		Map<UUID, List<PlaylistContent>> contentsMap = playlistContentRepository
+			.findByPlaylistIds(playlistIds)
+			.stream()
+			.collect(Collectors.groupingBy(pc -> pc.getPlaylist().getId()));
+
+		List<UUID> contentIds = contentsMap.values().stream()
+			.flatMap(List::stream)
+			.map(pc -> pc.getContent().getId())
 			.toList();
-		tagsSample.stop(Timer.builder("playlist.toContentSummary.tags").register(meterRegistry));
+
+		Map<UUID, List<String>> tagsMap = contentIds.isEmpty()
+			? Collections.emptyMap()
+			: contentTagRepository.findByContentIds(contentIds)
+			.stream()
+			.collect(Collectors.groupingBy(
+				ct -> ct.getContent().getId(),
+				Collectors.mapping(ct -> ct.getTag().getName(), Collectors.toList())
+			));
+
+		return toDto(playlist, countMap, subscribedIds, contentsMap, tagsMap);
+	}
+
+	private ContentSummary toContentSummary(Content content, Map<UUID, List<String>> tagsMap) {
+		List<String> tags = tagsMap.getOrDefault(content.getId(), Collections.emptyList());
 
 		String fullThumbnailUrl = buildImageUrl(content.getType(), content.getThumbnailUrl());
 
