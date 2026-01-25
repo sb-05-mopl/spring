@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  spring:
+    image: 989775483620.dkr.ecr.ap-northeast-2.amazonaws.com/mopl/spring:latest
+    container_name: spring
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - PROFILE=prod
+      - JWT_ACCESS_TOKEN_EXPIRCATION_MS=${JWT_ACCESS_TOKEN_EXPIRCATION_MS}
+      - JWT_REFRESH_TOKEN_EXPIRCATION_MS=${JWT_REFRESH_TOKEN_EXPIRCATION_MS}
+      - JWT_ACCESS_TOKEN_KEY=${JWT_ACCESS_TOKEN_KEY}
+      - JWT_REFRESH_TOKEN_KEY=${JWT_REFRESH_TOKEN_KEY}
+
+      - INIT_ADMIN_EMAIL=${INIT_ADMIN_EMAIL}
+      - INIT_ADMIN_PASSWORD=${INIT_ADMIN_PASSWORD}
+      - INIT_USER_EMAIL=${INIT_USER_EMAIL}
+      - INIT_USER_PASSWORD=${INIT_USER_PASSWORD}
+
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_HOST=${SMTP_HOST}
+
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_BUCKET_NAME=${AWS_BUCKET_NAME}
+
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - KAKAO_CLIENT_ID=${KAKAO_CLIENT_ID}
+      - KAKAO_CLIENT_SECRET=${KAKAO_CLIENT_SECRET}
+
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+
+      - SPRING_ELASTIC_SERVERS=${SPRING_ELASTIC_SERVERS}
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+      - MOPL_KAFKA_TOPICS_NOTIFICATIONS=${MOPL_KAFKA_TOPICS_NOTIFICATIONS}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+    ports:
+      - "8080:8080"
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 40s
