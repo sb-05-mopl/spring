@@ -9,7 +9,7 @@ spring:
   application:
     name: mopl-core
   profiles:
-    active: ${PROFILE:dev}
+    active: ${PROFILE}
   servlet:
     multipart:
       enabled: true
@@ -64,10 +64,10 @@ spring:
 jwt:
   max-active: 1
   access-token:
-    secret: ${JWT_ACCESS_TOKEN_KEY:G3yksXYpKcPvNOHv5NbHuqylOuTIYEqGVY6INF2UX8OJRdyUo+rRCJmdq6Th82CGUoBOUv7WgMcxZxBiE0VIcg==}
+    secret: ${JWT_ACCESS_TOKEN_KEY}
     expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRCATION_MS}
   refresh-token:
-    secret: ${JWT_REFRESH_TOKEN_KEY:QsMI+9J9Aunm9vWRJbwSG87ICRuasbant8f6A4jxj7Qrq3ohYWuUf5XM1Tb29DHcSW7xVeHZVrw95YFlJkD0Ag==}
+    secret: ${JWT_REFRESH_TOKEN_KEY}
     expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRCATION_MS}
 
 management:
@@ -82,6 +82,8 @@ management:
 
   health:
     redis:
+      enabled: false
+    elasticsearch:
       enabled: false
 
   metrics:

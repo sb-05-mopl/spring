@@ -33,7 +33,8 @@ public class SecurityPaths {
 		"/uploads/**",
 		"/.well-known/**",
 		"/default-ui.css",
-		"/actuator/**"
+		"/actuator/**",
+		"/api/health"
 	};
 
 	public static class MethodSpecific {

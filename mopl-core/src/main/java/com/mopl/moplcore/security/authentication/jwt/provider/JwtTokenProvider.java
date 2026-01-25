@@ -140,7 +140,7 @@ public class JwtTokenProvider {
 	private Cookie createRefreshCookie(String value, int maxAgeSeconds) {
 		Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, value);
 		cookie.setHttpOnly(true);
-		cookie.setSecure(true);
+		cookie.setSecure(false);
 		cookie.setPath("/");
 		cookie.setMaxAge(maxAgeSeconds);
 		return cookie;
