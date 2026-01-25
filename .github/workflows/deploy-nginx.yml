@@ -2,7 +2,7 @@ name: Deploy Nginx To EC2
 on:
   push:
     branches:
-      - deploy
+      - main
     paths:
       - "nginx/**"
       - ".github/workflows/deploy-nginx.yml"
