@@ -26,6 +26,21 @@ public class MoplOAuth2SuccessHandler implements AuthenticationSuccessHandler {
 	private final JwtTokenProvider tokenProvider;
 	private final JwtRegistry jwtRegistry;
 
+	private String resolveRedirectUrl(HttpServletRequest request, String path) {
+		String proto = request.getHeader("X-Forwarded-Proto");
+		String host = request.getHeader("X-Forwarded-Host");
+		if (proto == null) {
+			proto = request.getScheme();
+		}
+		if (host == null) {
+			host = request.getHeader("Host");
+		}
+		if (host == null) {
+			host = request.getServerName();
+		}
+		return proto + "://" + host + path;
+	}
+
 	@Override
 	public void onAuthenticationSuccess(
 		HttpServletRequest request,
@@ -49,7 +64,7 @@ public class MoplOAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
 		Cookie refreshCookie = tokenProvider.generateRefreshTokenCookie(refreshToken);
 		response.addCookie(refreshCookie);
-		response.sendRedirect("/");
+		response.sendRedirect(resolveRedirectUrl(request, "/"));
 
 	}
 }

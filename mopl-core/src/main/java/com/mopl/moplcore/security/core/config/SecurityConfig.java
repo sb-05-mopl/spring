@@ -20,6 +20,7 @@ import com.mopl.moplcore.security.authentication.jwt.filter.JwtAuthenticationFil
 import com.mopl.moplcore.security.authentication.local.handler.MoplLoginSuccessHandler;
 import com.mopl.moplcore.security.authentication.local.handler.MoplLogoutSuccessHandler;
 import com.mopl.moplcore.security.authentication.oauth.handler.MoplOAuth2SuccessHandler;
+import com.mopl.moplcore.security.authentication.oauth.handler.MoplOAuth2FailureHandler;
 import com.mopl.moplcore.security.api.handler.SpaCsrfTokenRequestHandler;
 import com.mopl.moplcore.security.authentication.oauth.service.MoplOAuth2UserService;
 import com.mopl.moplcore.security.authentication.oauth.service.MoplOidcUserService;
@@ -38,6 +39,7 @@ public class SecurityConfig {
 		MoplOAuth2UserService oAuth2UserService,
 		MoplOidcUserService oidcUserService,
 		MoplOAuth2SuccessHandler moplOAuth2SuccessHandler,
+		MoplOAuth2FailureHandler moplOAuth2FailureHandler,
 		JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
 		JwtAccessDeniedHandler jwtAccessDeniedHandler
 	) throws Exception {
@@ -76,6 +78,7 @@ public class SecurityConfig {
 						.oidcUserService(oidcUserService)
 					)
 					.successHandler(moplOAuth2SuccessHandler)
+					.failureHandler(moplOAuth2FailureHandler)
 			)
 			.addFilterAfter(jwtAuthenticationFilter, ExceptionTranslationFilter.class);
 		;
