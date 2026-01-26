@@ -24,7 +24,6 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(value = AuditingEntityListener.class)
 public abstract class BaseEntity {
-
 	@Id
 	@Column(name = "id", updatable = false, nullable = false)
 	private UUID id;
