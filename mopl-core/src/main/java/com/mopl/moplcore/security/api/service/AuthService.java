@@ -63,7 +63,7 @@ public class AuthService {
 	@Transactional
 	public void resetPassword(String toEmail) {
 		User user = userRepository.findByEmail(toEmail).orElseThrow(() -> UserNotFoundException.withEmail(toEmail));
-		if (user.getProvider() == AuthProvider.LOCAL) {
+		if (user.getProvider() != AuthProvider.LOCAL) {
 			throw new AuthPasswordException();
 		}
 
