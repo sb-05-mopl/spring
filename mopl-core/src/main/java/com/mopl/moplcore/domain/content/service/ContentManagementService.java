@@ -28,8 +28,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ContentManagementService {
 
-	private static final String TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
-
 	private final ContentRepository contentRepository;
 	private final ContentTagRepository contentTagRepository;
 	private final TagRepository tagRepository;
@@ -170,34 +168,17 @@ public class ContentManagementService {
 			.map(ct -> ct.getTag().getName())
 			.toList();
 
-		String fullThumbnailUrl = buildImageUrl(content.getType(), content.getThumbnailUrl());
-
 		return ContentDto.builder()
 			.id(content.getId())
 			.type(content.getType())
 			.title(content.getTitle())
 			.description(content.getDescription())
-			.thumbnailUrl(fullThumbnailUrl)
+			.thumbnailUrl(content.getThumbnailUrl())
 			.tags(tags)
 			.averageRating(content.getAverageRating())
 			.reviewCount(content.getReviewCount())
 			.watcherCount(0)
 			.build();
-	}
-
-	private String buildImageUrl(Type type, String path) {
-		if (path == null) {
-			return null;
-		}
-
-		if (path.startsWith("http://") || path.startsWith("https://")) {
-			return path;
-		}
-
-		return switch (type) {
-			case MOVIE, TV_SERIES -> TMDB_IMAGE_BASE_URL + path;
-			case SPORTS -> path;
-		};
 	}
 
 	private boolean isS3Url(String url) {
