@@ -8,6 +8,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
@@ -18,6 +19,7 @@ import com.mopl.moplwebsocketsse.domain.watch.event.WatchingSessionEventPublishe
 import com.mopl.moplwebsocketsse.domain.watch.event.WatchingSessionStartedEvent;
 import com.mopl.moplwebsocketsse.domain.watch.registry.SessionMapping;
 import com.mopl.moplwebsocketsse.domain.watch.registry.WatchingSessionRegistry;
+import com.mopl.moplwebsocketsse.domain.watch.registry.WebSocketSessionHolder;
 import com.mopl.moplwebsocketsse.domain.watch.repository.WatchingSessionRepository;
 import com.mopl.moplwebsocketsse.domain.watch.service.WatchingSessionService;
 
@@ -34,6 +36,7 @@ public class WatchingSessionEventListener {
 	private final WatchingSessionService wsService;
 	private final WatchingSessionEventPublisher wsPublisher;
 	private final SimpMessagingTemplate messagingTemplate;
+	private final WebSocketSessionHolder webSocketSessionHolder;
 
 	@EventListener
 	public void handleSessionSubscribe(SessionSubscribeEvent event) {
@@ -61,16 +64,22 @@ public class WatchingSessionEventListener {
 			return;
 		}
 
+		WebSocketSession webSocketSession = webSocketSessionHolder.get(wsSessionId);
+		if (webSocketSession == null) {
+			log.warn("[WatchingSessionEventListener] WebSocketSession not found in holder. wsId={}", wsSessionId);
+			return;
+		}
+
 		WatchingSession existing = wsRepository.findSessionByWatcherId(userId);
 		boolean sameContentAlreadyWatching = existing != null && contentId.equals(existing.getContentId());
 
 		WatchingSession watchingSession = new WatchingSession(userId, contentId);
 
 		wsRepository.save(watchingSession);
-		wsRegistry.register(wsSessionId, subscriptionId, watchingSession.getId(), userId, contentId);
+		wsRegistry.register(wsSessionId, subscriptionId, watchingSession.getId(), userId, contentId, webSocketSession);
 
 		log.debug(
-			"[WatchingSessionEventListener] SUBSCRIBE After registry. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
+			"[WatchingSessionEventListener] SUBSCRIBE. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
 			wsSessionId, subscriptionId, watchingSession.getId(), userId, contentId
 		);
 
@@ -93,8 +102,8 @@ public class WatchingSessionEventListener {
 				wsPublisher.publish(startedEvent);
 			}
 		} catch (Exception e) {
-			log.error("[WatchingSessionEventListener] Failed to broadcast JOIN. sessionId={}", watchingSession.getId(),
-				e);
+			log.error("[WatchingSessionEventListener] Failed to broadcast JOIN. sessionId={}",
+				watchingSession.getId(), e);
 		}
 	}
 
@@ -117,20 +126,20 @@ public class WatchingSessionEventListener {
 
 		try {
 			WatchingSessionChange message = wsService.createLeaveMessage(
-				mapping.watchingSessionId(),
-				mapping.contentId()
+				mapping.getWatchingSessionId(),
+				mapping.getContentId()
 			);
-			broadcastToWatchers(mapping.contentId(), message);
+			broadcastToWatchers(mapping.getContentId(), message);
 		} catch (Exception e) {
 			log.error("[WatchingSessionEventListener] Failed to broadcast LEAVE. sessionId={}",
-				mapping.watchingSessionId(), e);
+				mapping.getWatchingSessionId(), e);
 		}
 
-		wsRepository.delete(mapping.watchingSessionId(), mapping.contentId(), mapping.userId());
+		wsRepository.delete(mapping.getWatchingSessionId(), mapping.getContentId(), mapping.getUserId());
 
 		log.debug(
 			"[WatchingSessionEventListener] UNSUBSCRIBE. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
-			wsSessionId, subscriptionId, mapping.watchingSessionId(), mapping.userId(), mapping.contentId()
+			wsSessionId, subscriptionId, mapping.getWatchingSessionId(), mapping.getUserId(), mapping.getContentId()
 		);
 	}
 
@@ -144,6 +153,7 @@ public class WatchingSessionEventListener {
 		}
 
 		List<SessionMapping> mappings = wsRegistry.removeAllByWsSessionId(wsSessionId);
+		webSocketSessionHolder.remove(wsSessionId);
 
 		if (mappings.isEmpty()) {
 			log.debug("[WatchingSessionEventListener] No mappings found on DISCONNECT. wsId={}", wsSessionId);
@@ -153,21 +163,21 @@ public class WatchingSessionEventListener {
 		for (SessionMapping mapping : mappings) {
 			try {
 				WatchingSessionChange message = wsService.createLeaveMessage(
-					mapping.watchingSessionId(),
-					mapping.contentId()
+					mapping.getWatchingSessionId(),
+					mapping.getContentId()
 				);
-				broadcastToWatchers(mapping.contentId(), message);
+				broadcastToWatchers(mapping.getContentId(), message);
 			} catch (Exception e) {
 				log.error("[WatchingSessionEventListener] Failed to broadcast LEAVE. sessionId={}",
-					mapping.watchingSessionId(), e);
+					mapping.getWatchingSessionId(), e);
 			}
 
-			wsRepository.delete(mapping.watchingSessionId(), mapping.contentId(), mapping.userId());
+			wsRepository.delete(mapping.getWatchingSessionId(), mapping.getContentId(), mapping.getUserId());
 
 			log.debug(
 				"[WatchingSessionEventListener] DISCONNECT. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",
-				wsSessionId, mapping.subscriptionId(), mapping.watchingSessionId(),
-				mapping.userId(), mapping.contentId()
+				wsSessionId, mapping.getSubscriptionId(), mapping.getWatchingSessionId(),
+				mapping.getUserId(), mapping.getContentId()
 			);
 		}
 	}

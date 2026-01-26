@@ -354,23 +354,7 @@ public class WatchingSessionRepository {
 		return count != null ? count : 0L;
 	}
 
-	public boolean refreshSessionTtl(UUID sessionId, UUID watcherId) {
-		Boolean sessionAlive = stringRedisTemplate.expire(
-			SESSION_PREFIX + sessionId,
-			SESSION_TTL_SECONDS,
-			TimeUnit.SECONDS
-		);
-
-		stringRedisTemplate.expire(
-			USER_WATCHING_PREFIX + watcherId,
-			SESSION_TTL_SECONDS,
-			TimeUnit.SECONDS
-		);
-
-		return Boolean.TRUE.equals(sessionAlive);
-	}
-
-	public List<Boolean> existsSessions(List<UUID> sessionIds) {
+	public List<Boolean> batchRefreshSessionTtl(List<UUID> sessionIds, List<UUID> watcherIds) {
 		if (sessionIds == null || sessionIds.isEmpty()) {
 			return Collections.emptyList();
 		}
@@ -379,18 +363,23 @@ public class WatchingSessionRepository {
 			new SessionCallback<Object>() {
 				@Override
 				public Object execute(RedisOperations operations) {
-					for (UUID sessionId : sessionIds) {
-						operations.hasKey(SESSION_PREFIX + sessionId);
+					for (int i = 0; i < sessionIds.size(); i++) {
+						UUID sessionId = sessionIds.get(i);
+						UUID watcherId = watcherIds.get(i);
+
+						operations.expire(SESSION_PREFIX + sessionId, SESSION_TTL_SECONDS, TimeUnit.SECONDS);
+						operations.expire(USER_WATCHING_PREFIX + watcherId, SESSION_TTL_SECONDS, TimeUnit.SECONDS);
 					}
 					return null;
 				}
 			}
 		);
 
-		List<Boolean> existsList = new ArrayList<>(results.size());
-		for (Object r : results) {
-			existsList.add(Boolean.TRUE.equals(r));
+		List<Boolean> sessionResults = new ArrayList<>();
+		for (int i = 0; i < results.size(); i += 2) {
+			sessionResults.add(Boolean.TRUE.equals(results.get(i)));
 		}
-		return existsList;
+
+		return sessionResults;
 	}
 }
