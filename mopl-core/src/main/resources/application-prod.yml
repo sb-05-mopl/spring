@@ -1,6 +1,10 @@
 server:
+  servlet:
+    session:
+      cookie:
+        same-site: none
+        secure: true
   forward-headers-strategy: framework
-
 spring:
   security:
     oauth2:
