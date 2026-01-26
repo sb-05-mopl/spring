@@ -13,6 +13,8 @@ import com.mopl.moplcore.domain.content.repository.ContentTagRepository;
 import com.mopl.moplcore.domain.content.repository.TagRepository;
 import com.mopl.moplcore.global.service.S3Service;
 
+import com.mopl.moplcore.domain.playlist.repository.PlaylistContentRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,6 +35,7 @@ public class ContentManagementService {
 	private final ContentRepository contentRepository;
 	private final ContentTagRepository contentTagRepository;
 	private final TagRepository tagRepository;
+	private final PlaylistContentRepository playlistContentRepository;
 	private final S3Service s3Service;
 	private final ContentSyncService contentSyncService;
 
@@ -152,6 +155,9 @@ public class ContentManagementService {
 		if (isS3Url(thumbnailUrl)) {
 			s3Service.delete(thumbnailUrl);
 		}
+
+		contentTagRepository.deleteByContentId(id);
+		playlistContentRepository.deleteByContentId(id);
 
 		contentRepository.delete(content);
 
