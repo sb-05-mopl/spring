@@ -4,7 +4,7 @@ server:
       cookie:
         same-site: none
         secure: true
-  forward-headers-strategy: framework
+  forward-headers-strategy: native
 spring:
   security:
     oauth2:
