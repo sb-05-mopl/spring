@@ -34,8 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ContentSearchService {
 
-	private static final String TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
-
 	private final ContentRepository contentRepository;
 	private final ContentTagRepository contentTagRepository;
 	private final ElasticsearchOperations elasticsearchOperations;
@@ -237,13 +235,6 @@ public class ContentSearchService {
 		return CursorResponseContentDto.encodeCursor(cursor);
 	}
 
-	private String buildImageUrl(Type type, String path) {
-		if (path == null)
-			return null;
-		if (path.startsWith("http"))
-			return path;
-		return (type == Type.MOVIE || type == Type.TV_SERIES) ? TMDB_IMAGE_BASE_URL + path : path;
-	}
 
 	public ContentDto getContent(UUID id) {
 		Content content = contentRepository.findById(id).orElseThrow(() -> new ContentNotFoundException(id));
@@ -256,7 +247,7 @@ public class ContentSearchService {
 			.type(document.getType())
 			.title(document.getTitle())
 			.description(document.getDescription())
-			.thumbnailUrl(buildImageUrl(document.getType(), document.getThumbnailUrl()))
+			.thumbnailUrl(document.getThumbnailUrl())
 			.tags(document.getTags() != null ? document.getTags() : List.of())
 			.averageRating(document.getAverageRating() != null ? document.getAverageRating() : 0.0)
 			.reviewCount(document.getReviewCount() != null ? document.getReviewCount() : 0)
@@ -275,7 +266,7 @@ public class ContentSearchService {
 			.type(content.getType())
 			.title(content.getTitle())
 			.description(content.getDescription())
-			.thumbnailUrl(buildImageUrl(content.getType(), content.getThumbnailUrl()))
+			.thumbnailUrl(content.getThumbnailUrl())
 			.tags(tags)
 			.averageRating(content.getAverageRating())
 			.reviewCount(content.getReviewCount())
@@ -290,7 +281,7 @@ public class ContentSearchService {
 			.type(document.getType())
 			.title(document.getTitle())
 			.description(document.getDescription())
-			.thumbnailUrl(buildImageUrl(document.getType(), document.getThumbnailUrl()))
+			.thumbnailUrl(document.getThumbnailUrl())
 			.tags(document.getTags() != null ? document.getTags() : List.of())
 			.averageRating(document.getAverageRating() != null ? document.getAverageRating() : 0.0)
 			.reviewCount(document.getReviewCount() != null ? document.getReviewCount() : 0)
