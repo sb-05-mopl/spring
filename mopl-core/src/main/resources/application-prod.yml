@@ -5,6 +5,11 @@ server:
         same-site: none
         secure: true
   forward-headers-strategy: native
+  tomcat:
+    remoteip:
+      protocol-header: X-Forwarded-Proto
+      remote-ip-header: X-Forwarded-For
+      internal-proxies: ".*"
 spring:
   security:
     oauth2:
