@@ -21,6 +21,7 @@ import com.mopl.moplcore.security.authentication.local.handler.MoplLoginSuccessH
 import com.mopl.moplcore.security.authentication.local.handler.MoplLogoutSuccessHandler;
 import com.mopl.moplcore.security.authentication.oauth.handler.MoplOAuth2SuccessHandler;
 import com.mopl.moplcore.security.authentication.oauth.handler.MoplOAuth2FailureHandler;
+import com.mopl.moplcore.security.authentication.oauth.repository.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.mopl.moplcore.security.api.handler.SpaCsrfTokenRequestHandler;
 import com.mopl.moplcore.security.authentication.oauth.service.MoplOAuth2UserService;
 import com.mopl.moplcore.security.authentication.oauth.service.MoplOidcUserService;
@@ -40,6 +41,7 @@ public class SecurityConfig {
 		MoplOidcUserService oidcUserService,
 		MoplOAuth2SuccessHandler moplOAuth2SuccessHandler,
 		MoplOAuth2FailureHandler moplOAuth2FailureHandler,
+		HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository,
 		JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
 		JwtAccessDeniedHandler jwtAccessDeniedHandler
 	) throws Exception {
@@ -73,6 +75,9 @@ public class SecurityConfig {
 			)
 			.oauth2Login(
 				login -> login
+					.authorizationEndpoint(endpoint -> endpoint
+						.authorizationRequestRepository(cookieAuthorizationRequestRepository)
+					)
 					.userInfoEndpoint(info -> info
 						.userService(oAuth2UserService)
 						.oidcUserService(oidcUserService)

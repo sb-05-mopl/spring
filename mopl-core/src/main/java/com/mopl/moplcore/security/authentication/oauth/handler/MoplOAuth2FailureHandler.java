@@ -20,7 +20,7 @@ public class MoplOAuth2FailureHandler implements AuthenticationFailureHandler {
 		HttpServletResponse response,
 		AuthenticationException exception
 	) throws IOException {
-		log.error("OAuth2 authentication failed: {}", exception.getMessage());
+		log.error("OAuth2 authentication failed: {}", exception.getMessage(), exception);
 		response.sendRedirect(resolveRedirectUrl(request, "/login?error"));
 	}
 
