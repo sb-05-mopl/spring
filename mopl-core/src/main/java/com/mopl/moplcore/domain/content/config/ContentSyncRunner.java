@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ContentSyncRunner implements CommandLineRunner {
 
     private final ContentSyncService contentSyncService;
-
     @Override
     public void run(String... args) {
         log.info("Content 자동 동기화 시작");
