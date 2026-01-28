@@ -23,13 +23,14 @@ public class DirectMessageSubscriptionRegistry {
 	public void unsubscribe(UUID conversationId, UUID userId) {
 		active.computeIfPresent(conversationId, (cid, users) -> {
 			Integer count = users.get(userId);
-			if (count == null)
+			if (count == null) {
 				return users;
-
-			if (count <= 1)
+			}
+			if (count <= 1) {
 				users.remove(userId);
-			else
+			} else {
 				users.put(userId, count - 1);
+			}
 
 			return users.isEmpty() ? null : users;
 		});
