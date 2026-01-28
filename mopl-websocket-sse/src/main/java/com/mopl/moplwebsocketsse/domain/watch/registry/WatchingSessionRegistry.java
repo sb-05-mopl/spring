@@ -26,11 +26,10 @@ public class WatchingSessionRegistry {
 	}
 
 	public void register(String wsSessionId, String subscriptionId,
-		UUID watchingSessionId, UUID userId, UUID contentId,
-		WebSocketSession webSocketSession) {
+		UUID watchingSessionId, UUID userId, UUID contentId) {
 
 		SessionMapping mapping = new SessionMapping(
-			wsSessionId, subscriptionId, watchingSessionId, userId, contentId, webSocketSession
+			wsSessionId, subscriptionId, watchingSessionId, userId, contentId
 		);
 
 		String key = makeKey(wsSessionId, subscriptionId);

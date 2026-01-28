@@ -8,7 +8,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
@@ -64,19 +63,13 @@ public class WatchingSessionEventListener {
 			return;
 		}
 
-		WebSocketSession webSocketSession = webSocketSessionHolder.get(wsSessionId);
-		if (webSocketSession == null) {
-			log.warn("[WatchingSessionEventListener] WebSocketSession not found in holder. wsId={}", wsSessionId);
-			return;
-		}
-
 		WatchingSession existing = wsRepository.findSessionByWatcherId(userId);
 		boolean sameContentAlreadyWatching = existing != null && contentId.equals(existing.getContentId());
 
 		WatchingSession watchingSession = new WatchingSession(userId, contentId);
 
 		wsRepository.save(watchingSession);
-		wsRegistry.register(wsSessionId, subscriptionId, watchingSession.getId(), userId, contentId, webSocketSession);
+		wsRegistry.register(wsSessionId, subscriptionId, watchingSession.getId(), userId, contentId);
 
 		log.debug(
 			"[WatchingSessionEventListener] SUBSCRIBE. wsId={}, subId={}, watchingId={}, userId={}, contentId={}",

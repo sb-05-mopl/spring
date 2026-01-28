@@ -13,6 +13,7 @@ import org.springframework.web.socket.WebSocketSession;
 
 import com.mopl.moplwebsocketsse.domain.watch.registry.SessionMapping;
 import com.mopl.moplwebsocketsse.domain.watch.registry.WatchingSessionRegistry;
+import com.mopl.moplwebsocketsse.domain.watch.registry.WebSocketSessionHolder;
 import com.mopl.moplwebsocketsse.domain.watch.repository.WatchingSessionRepository;
 import com.mopl.moplwebsocketsse.security.registry.JwtRegistry;
 
@@ -29,6 +30,7 @@ public class WatchingSessionBatchRefresher {
 	private final WatchingSessionRegistry registry;
 	private final WatchingSessionRepository repository;
 	private final JwtRegistry jwtRegistry;
+	private final WebSocketSessionHolder webSocketSessionHolder;
 
 	@Scheduled(fixedRate = 30_000)
 	public void refreshActiveSessions() {
@@ -95,7 +97,7 @@ public class WatchingSessionBatchRefresher {
 	}
 
 	private void closeWebSocketSession(SessionMapping mapping) {
-		WebSocketSession session = mapping.getWebSocketSession();
+		WebSocketSession session = webSocketSessionHolder.get(mapping.getWebSocketSessionId());
 
 		if (session == null) {
 			return;

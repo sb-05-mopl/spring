@@ -18,7 +18,6 @@ public class SessionMapping {
 	private final UUID watchingSessionId;
 	private final UUID userId;
 	private final UUID contentId;
-	private final WebSocketSession webSocketSession;
 
 	private volatile Instant lastActiveTime;
 
@@ -28,22 +27,19 @@ public class SessionMapping {
 	 * @param watchingSessionId 시청 세션 UUID
 	 * @param userId 사용자 UUID
 	 * @param contentId 콘텐츠 UUID
-	 * @param webSocketSession 인스턴스
 	 */
 	public SessionMapping(
 		String webSocketSessionId,
 		String subscriptionId,
 		UUID watchingSessionId,
 		UUID userId,
-		UUID contentId,
-		WebSocketSession webSocketSession
+		UUID contentId
 	) {
 		this.webSocketSessionId = webSocketSessionId;
 		this.subscriptionId = subscriptionId;
 		this.watchingSessionId = watchingSessionId;
 		this.userId = userId;
 		this.contentId = contentId;
-		this.webSocketSession = webSocketSession;
 		this.lastActiveTime = Instant.now();
 	}
 
