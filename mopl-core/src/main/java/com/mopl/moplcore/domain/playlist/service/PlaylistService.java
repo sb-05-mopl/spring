@@ -205,6 +205,9 @@ public class PlaylistService {
 			throw new IllegalArgumentException("플레이리스트 소유자만 삭제할 수 있습니다");
 		}
 
+		playlistContentRepository.deleteByPlaylistId(playlistId);
+		playlistSubscriptionRepository.deleteByPlaylistId(playlistId);
+
 		playlistRepository.delete(playlist);
 	}
 

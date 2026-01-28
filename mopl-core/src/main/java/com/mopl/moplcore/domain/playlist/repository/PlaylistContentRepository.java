@@ -25,6 +25,10 @@ public interface PlaylistContentRepository extends JpaRepository<PlaylistContent
 	List<PlaylistContent> findByPlaylistIds(List<UUID> playlistIds);
 	
 	Optional<PlaylistContent> findByPlaylistIdAndContentId(UUID playlistId, UUID contentId);
-	
+
 	void deleteByPlaylistIdAndContentId(UUID playlistId, UUID contentId);
+
+	void deleteByPlaylistId(UUID playlistId);
+
+	void deleteByContentId(UUID contentId);
 }
