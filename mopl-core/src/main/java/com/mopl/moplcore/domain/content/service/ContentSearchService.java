@@ -56,6 +56,11 @@ public class ContentSearchService {
 		boolean isAsc = request.getSortDirection() == ContentSearchRequest.SortDirection.ASCENDING;
 		SortOrder order = isAsc ? SortOrder.Asc : SortOrder.Desc;
 
+		// keyword 검색 시 relevance score 우선 정렬
+		if (request.getKeywordLike() != null && !request.getKeywordLike().trim().isEmpty()) {
+			queryBuilder.withSort(s -> s.score(sc -> sc.order(SortOrder.Desc)));
+		}
+
 		switch (request.getSortBy()) {
 			case createdAt -> queryBuilder.withSort(s -> s.field(f -> f.field("createdAt").order(order)));
 			case rate -> {
@@ -134,9 +139,17 @@ public class ContentSearchService {
 		BoolQuery.Builder boolQuery = new BoolQuery.Builder();
 
 		if (request.getKeywordLike() != null && !request.getKeywordLike().trim().isEmpty()) {
-			String keyword = request.getKeywordLike();
-			boolQuery.must(m -> m.bool(b -> b.should(s -> s.match(mt -> mt.field("title").query(keyword)))
-				.should(s -> s.match(mt -> mt.field("description").query(keyword)))
+			String keyword = request.getKeywordLike().trim() + " ";
+			boolQuery.must(m -> m.bool(b -> b
+				// 1. nori 구문 일치 (완전 일치 우선)
+				.should(s -> s.matchPhrase(mp -> mp.field("title").query(keyword).boost(100.0f)))
+				.should(s -> s.matchPhrase(mp -> mp.field("description").query(keyword).boost(2.0f)))
+				// 2. nori 접두사 일치
+				.should(s -> s.matchPhrasePrefix(mp -> mp.field("title").query(keyword).boost(50.0f)))
+				.should(s -> s.matchPhrasePrefix(mp -> mp.field("description").query(keyword).boost(1.5f)))
+				// 3. nori 토큰 일치
+				.should(s -> s.match(mt -> mt.field("title").query(keyword).boost(3.0f)))
+				.should(s -> s.match(mt -> mt.field("description").query(keyword).boost(1.0f)))
 				.minimumShouldMatch("1")));
 		}
 
