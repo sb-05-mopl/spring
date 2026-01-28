@@ -139,8 +139,11 @@ public class ContentSearchService {
 		BoolQuery.Builder boolQuery = new BoolQuery.Builder();
 
 		if (request.getKeywordLike() != null && !request.getKeywordLike().trim().isEmpty()) {
+			String rawKeyword = request.getKeywordLike().trim();
 			String keyword = request.getKeywordLike().trim() + " ";
 			boolQuery.must(m -> m.bool(b -> b
+				// 0. 완전 일치 (standard analyzer)
+				.should(s -> s.match(mt -> mt.field("title.raw").query(rawKeyword).boost(20.0f)))
 				// 1. nori 구문 일치 (완전 일치 우선)
 				.should(s -> s.matchPhrase(mp -> mp.field("title").query(keyword).boost(100.0f)))
 				.should(s -> s.matchPhrase(mp -> mp.field("description").query(keyword).boost(2.0f)))
