@@ -15,7 +15,6 @@ import com.mopl.moplcore.domain.content.dto.ContentDto;
 import com.mopl.moplcore.domain.content.dto.ContentSearchRequest;
 import com.mopl.moplcore.domain.content.dto.CursorResponseContentDto;
 import com.mopl.moplcore.domain.content.entity.Content;
-import com.mopl.moplcore.domain.content.entity.Type;
 import com.mopl.moplcore.domain.content.exception.ContentNotFoundException;
 import com.mopl.moplcore.domain.content.repository.ContentRepository;
 import com.mopl.moplcore.domain.content.repository.ContentTagRepository;
@@ -139,18 +138,25 @@ public class ContentSearchService {
 		BoolQuery.Builder boolQuery = new BoolQuery.Builder();
 
 		if (request.getKeywordLike() != null && !request.getKeywordLike().trim().isEmpty()) {
+			String rawKeyword = request.getKeywordLike().trim();
 			String keyword = request.getKeywordLike().trim() + " ";
-			boolQuery.must(m -> m.bool(b -> b
-				// 1. nori 구문 일치 (완전 일치 우선)
-				.should(s -> s.matchPhrase(mp -> mp.field("title").query(keyword).boost(100.0f)))
-				.should(s -> s.matchPhrase(mp -> mp.field("description").query(keyword).boost(2.0f)))
-				// 2. nori 접두사 일치
-				.should(s -> s.matchPhrasePrefix(mp -> mp.field("title").query(keyword).boost(50.0f)))
-				.should(s -> s.matchPhrasePrefix(mp -> mp.field("description").query(keyword).boost(1.5f)))
-				// 3. nori 토큰 일치
-				.should(s -> s.match(mt -> mt.field("title").query(keyword).boost(3.0f)))
-				.should(s -> s.match(mt -> mt.field("description").query(keyword).boost(1.0f)))
-				.minimumShouldMatch("1")));
+			String[] words = rawKeyword.split("\\s+");
+
+			boolQuery.must(m -> m.bool(b -> {
+				b.should(s -> s.match(mt -> mt.field("title.raw").query(rawKeyword).boost(200.0f)));
+
+				float[] boost = {300.0f};
+				for (String word : words) {
+					String wordWithSpace = word + " ";
+					float currentBoost = boost[0];
+					b.should(s -> s.match(mt -> mt.field("title").query(wordWithSpace).boost(currentBoost)));
+					boost[0] *= 0.5f;
+				}
+
+				b.should(s -> s.match(mt -> mt.field("description").query(keyword).boost(1.0f)));
+
+				return b.minimumShouldMatch("1");
+			}));
 		}
 
 		if (request.getTypeEqual() != null) {
@@ -247,7 +253,6 @@ public class ContentSearchService {
 			request.getSortBy() == ContentSearchRequest.SortBy.watcherCount ? last.getWatcherCount() : null);
 		return CursorResponseContentDto.encodeCursor(cursor);
 	}
-
 
 	public ContentDto getContent(UUID id) {
 		Content content = contentRepository.findById(id).orElseThrow(() -> new ContentNotFoundException(id));

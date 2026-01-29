@@ -10,6 +10,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Setting;
 
 import com.mopl.moplcore.domain.content.entity.Type;
@@ -39,7 +41,10 @@ public class ContentDocument {
 	@Field(type = FieldType.Keyword)
 	private Type type;
 
-	@Field(type = FieldType.Text, analyzer = "nori")
+	@MultiField(
+		mainField = @Field(type = FieldType.Text, analyzer = "nori"),
+		otherFields = @InnerField(suffix = "raw", type = FieldType.Text, analyzer = "standard")
+	)
 	private String title;
 
 	@Field(type = FieldType.Text, analyzer = "nori")
