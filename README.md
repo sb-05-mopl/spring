@@ -281,19 +281,7 @@ mopl_spring/
 
 ### ERD 개요
 
-```
-users ──────┬──── reviews ──── contents ──── content_tags ──── tags
-            │                      │
-            ├──── follows          ├──── playlist_contents ──── playlists
-            │                      │                               │
-            ├──── notifications    │                    playlist_subscriptions
-            │                      │
-            ├──── conversation_participants ──── conversations
-            │                                       │
-            └──── direct_messages ──────────────────┘
-                                                    │
-                                            watching_sessions
-```
+<img width="1147" height="501" alt="image" src="https://github.com/user-attachments/assets/6b34995f-165f-401e-9112-2f0b34c22927" />
 
 ### 주요 테이블
 
@@ -629,30 +617,8 @@ BaseException
 
 ### 시스템 구성도
 
-```
-                         ┌────────────────┐
-        Client ──────────│     Nginx      │ (Reverse Proxy, Port 80)
-                         │ WebSocket/SSE  │
-                         └───────┬────────┘
-                                 │
-                  ┌──────────────┴──────────────┐
-                  │                             │
-           ┌──────┴──────┐              ┌───────┴───────┐
-           │  mopl-core   │              │ mopl-ws-sse   │
-           │  (Port 8080) │              │  (Port 8080)  │
-           │              │              │               │
-           │  - REST API  │              │  - WebSocket  │
-           │  - Auth      │◄── Kafka ───►│  - SSE        │
-           │  - Search    │              │  - Chat       │
-           └──────┬───────┘              └───────┬───────┘
-                  │                              │
-     ┌────────────┼────────────┐                 │
-     │            │            │                 │
-┌────┴────┐ ┌────┴────┐ ┌─────┴──────┐   ┌─────┴────┐
-│PostgreSQL│ │  Redis  │ │Elastic     │   │  Kafka   │
-│   :5433  │ │  :6379  │ │search:9200 │   │  :9092   │
-└──────────┘ └─────────┘ └────────────┘   └──────────┘
-```
+<img width="1154" height="560" alt="image" src="https://github.com/user-attachments/assets/18009b49-b621-4a2a-be72-56bcdbdd93d2" />
+<img width="1175" height="525" alt="image" src="https://github.com/user-attachments/assets/0793362f-af98-4be6-9af0-e3c9d480a047" />
 
 ### 코드 아키텍처
 
