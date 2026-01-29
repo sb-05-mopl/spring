@@ -2,17 +2,6 @@
 
 MOPL은 콘텐츠 탐색, 소셜 기능, 실시간 시청 세션을 제공하는 커뮤니티 기반 스트리밍 플랫폼의 백엔드 서버입니다.
 
-### 시스템 구성도
-
-<img width="1154" height="560" alt="image" src="https://github.com/user-attachments/assets/18009b49-b621-4a2a-be72-56bcdbdd93d2" />
-<img width="1175" height="525" alt="image" src="https://github.com/user-attachments/assets/0793362f-af98-4be6-9af0-e3c9d480a047" />
-
-### ERD 개요
-
-<img width="1147" height="501" alt="image" src="https://github.com/user-attachments/assets/6b34995f-165f-401e-9112-2f0b34c22927" />
-
----
-
 ## 목차
 
 - [프로젝트 구조](#프로젝트-구조)
@@ -33,6 +22,15 @@ MOPL은 콘텐츠 탐색, 소셜 기능, 실시간 시청 세션을 제공하는
 - [Docker 구성](#docker-구성)
 - [배포](#배포)
 - [모니터링](#모니터링)
+
+### 시스템 구성도
+
+<img width="1154" height="560" alt="image" src="https://github.com/user-attachments/assets/18009b49-b621-4a2a-be72-56bcdbdd93d2" />
+<img width="1175" height="525" alt="image" src="https://github.com/user-attachments/assets/0793362f-af98-4be6-9af0-e3c9d480a047" />
+
+### ERD 개요
+
+<img width="1147" height="501" alt="image" src="https://github.com/user-attachments/assets/6b34995f-165f-401e-9112-2f0b34c22927" />
 
 ---
 
