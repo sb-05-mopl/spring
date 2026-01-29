@@ -11,7 +11,9 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisOperations;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
@@ -354,23 +356,7 @@ public class WatchingSessionRepository {
 		return count != null ? count : 0L;
 	}
 
-	public boolean refreshSessionTtl(UUID sessionId, UUID watcherId) {
-		Boolean sessionAlive = stringRedisTemplate.expire(
-			SESSION_PREFIX + sessionId,
-			SESSION_TTL_SECONDS,
-			TimeUnit.SECONDS
-		);
-
-		stringRedisTemplate.expire(
-			USER_WATCHING_PREFIX + watcherId,
-			SESSION_TTL_SECONDS,
-			TimeUnit.SECONDS
-		);
-
-		return Boolean.TRUE.equals(sessionAlive);
-	}
-
-	public List<Boolean> existsSessions(List<UUID> sessionIds) {
+	public List<Boolean> batchRefreshSessionTtl(List<UUID> sessionIds, List<UUID> watcherIds) {
 		if (sessionIds == null || sessionIds.isEmpty()) {
 			return Collections.emptyList();
 		}
@@ -379,18 +365,88 @@ public class WatchingSessionRepository {
 			new SessionCallback<Object>() {
 				@Override
 				public Object execute(RedisOperations operations) {
-					for (UUID sessionId : sessionIds) {
-						operations.hasKey(SESSION_PREFIX + sessionId);
+					for (int i = 0; i < sessionIds.size(); i++) {
+						UUID sessionId = sessionIds.get(i);
+						UUID watcherId = watcherIds.get(i);
+
+						operations.expire(SESSION_PREFIX + sessionId, SESSION_TTL_SECONDS, TimeUnit.SECONDS);
+						operations.expire(USER_WATCHING_PREFIX + watcherId, SESSION_TTL_SECONDS, TimeUnit.SECONDS);
 					}
 					return null;
 				}
 			}
 		);
 
-		List<Boolean> existsList = new ArrayList<>(results.size());
-		for (Object r : results) {
-			existsList.add(Boolean.TRUE.equals(r));
+		List<Boolean> sessionResults = new ArrayList<>();
+		for (int i = 0; i < results.size(); i += 2) {
+			sessionResults.add(Boolean.TRUE.equals(results.get(i)));
 		}
-		return existsList;
+
+		return sessionResults;
+	}
+
+	public int cleanupGhostEntries() {
+		int totalRemoved = 0;
+
+		ScanOptions scanKeysOptions = ScanOptions.scanOptions()
+			.match(CONTENT_WATCHERS_PREFIX + "*")
+			.count(100)
+			.build();
+
+		try (Cursor<String> keysCursor = stringRedisTemplate.scan(scanKeysOptions)) {
+			while (keysCursor.hasNext()) {
+				String contentKey = keysCursor.next();
+
+				ScanOptions memberScanOptions = ScanOptions.scanOptions()
+					.count(100)
+					.build();
+
+				try (Cursor<ZSetOperations.TypedTuple<String>> membersCursor =
+						 stringRedisTemplate.opsForZSet().scan(contentKey, memberScanOptions)) {
+
+					List<String> batch = new ArrayList<>();
+
+					while (membersCursor.hasNext()) {
+						ZSetOperations.TypedTuple<String> tuple = membersCursor.next();
+						if (tuple.getValue() != null) {
+							batch.add(tuple.getValue());
+						}
+
+						if (batch.size() >= 100 || !membersCursor.hasNext()) {
+							if (batch.isEmpty()) continue;
+
+							List<String> currentBatch = new ArrayList<>(batch);
+							batch.clear();
+
+							List<Object> existsResults = stringRedisTemplate.executePipelined(
+								new SessionCallback<Object>() {
+									@Override
+									public Object execute(RedisOperations operations) {
+										for (String sessionId : currentBatch) {
+											operations.hasKey(SESSION_PREFIX + sessionId);
+										}
+										return null;
+									}
+								}
+							);
+
+							List<String> ghosts = new ArrayList<>();
+							for (int i = 0; i < currentBatch.size(); i++) {
+								if (!Boolean.TRUE.equals(existsResults.get(i))) {
+									ghosts.add(currentBatch.get(i));
+								}
+							}
+
+							if (!ghosts.isEmpty()) {
+								stringRedisTemplate.opsForZSet().remove(contentKey, ghosts.toArray());
+								totalRemoved += ghosts.size();
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return totalRemoved;
 	}
 }
