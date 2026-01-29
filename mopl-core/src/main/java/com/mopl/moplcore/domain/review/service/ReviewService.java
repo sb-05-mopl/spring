@@ -77,7 +77,7 @@ public class ReviewService {
 				NotificationMetaSpec.ACTOR_NAME, author.getName(),
 				NotificationMetaSpec.CONTENT_TITLE, content.getTitle(),
 				NotificationMetaSpec.REVIEW_ID, saved.getId().toString(),
-				NotificationMetaSpec.REVIEW_CONTENT, saved.getText()
+				NotificationMetaSpec.REVIEW_CONTENT, truncate(saved.getText(), 20)
 			)
 		);
 
@@ -171,5 +171,14 @@ public class ReviewService {
 		Double avgRating = reviewRepository.calculateAverageRating(content.getId());
 		int count = reviewRepository.countByContentId(content.getId());
 		content.updateRating(avgRating != null ? avgRating : 0.0, count);
+	}
+
+	// Review 알림 글자 수 제한 메서드
+	private String truncate(String content, int limit) {
+		if (content == null) {
+			return "";
+		}
+
+		return content.length() <= limit ? content : content.substring(0, limit);
 	}
 }

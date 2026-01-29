@@ -14,6 +14,7 @@ import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 import com.mopl.moplwebsocketsse.domain.directMessage.registry.DirectMessageSubscriptionRegistry;
+import com.mopl.moplwebsocketsse.domain.directMessage.service.DirectMessageReadService;
 import com.mopl.moplwebsocketsse.security.principal.MoplUserDetails;
 
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,8 @@ public class DirectMessageEventListener {
 
 	private static final String DM_DEST_PREFIX = "/sub/conversations/";
 	private static final String DM_DEST_SUFFIX = "/direct-messages";
+
+	private final DirectMessageReadService directMessageReadService;
 
 	private record Subscription(UUID conversationId, UUID userId) {
 	}
@@ -56,6 +59,8 @@ public class DirectMessageEventListener {
 
 		registry.subscribe(conversationId, userId);
 		subscriptionMap.put(key(sessionId, subscriptionId), new Subscription(conversationId, userId));
+
+		directMessageReadService.clearDmNotifications(userId, conversationId);
 
 		log.debug("[DM][SUB] userId={}, conversationId={}, sessionId={}, subId={}",
 			userId, conversationId, sessionId, subscriptionId);
@@ -90,13 +95,14 @@ public class DirectMessageEventListener {
 			return;
 		}
 
+		String prefix = sessionId + ":";
 		subscriptionMap.entrySet().removeIf(entry -> {
-			String key = entry.getKey();
-			if (!key.startsWith(sessionId + ":")) {
+			if (!entry.getKey().startsWith(prefix)) {
 				return false;
 			}
 			Subscription sub = entry.getValue();
 			registry.unsubscribe(sub.conversationId(), sub.userId());
+
 			log.debug("[DM][DISCONNECT-CLEAN] userId={}, conversationId={}, sessionId={}",
 				sub.userId(), sub.conversationId(), sessionId);
 			return true;
@@ -127,10 +133,30 @@ public class DirectMessageEventListener {
 
 		if (principal instanceof Authentication auth) {
 			Object p = auth.getPrincipal();
+
 			if (p instanceof MoplUserDetails mud && mud.getUserDto() != null) {
 				return mud.getUserDto().getId();
 			}
+
+			if (p instanceof UUID uuid) {
+				return uuid;
+			}
+
+			if (p instanceof String s) {
+				try {
+					return UUID.fromString(s);
+				} catch (Exception ignored) {
+				}
+			}
 		}
+
+		if (principal instanceof Principal p) {
+			try {
+				return UUID.fromString(p.getName());
+			} catch (Exception ignored) {
+			}
+		}
+
 		return null;
 	}
 
